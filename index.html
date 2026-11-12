@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emulator Desk</title>
+<style>
+:root{
+  --bg:#0e1013; --panel:#171a1f; --panel2:#1e2228; --line:#2a2f37;
+  --text:#eef1f5; --muted:#8b939f; --accent:#ff6a2b; --ok:#3ccf7a; --bad:#ff4d5a;
+  --radius:14px; --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:800;color:#111;font-size:15px}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.2px}
+.ver{color:var(--muted);font-size:12px;margin-left:2px}
+.spacer{flex:1}
+.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:7px 12px;border-radius:999px}
+.dot{width:8px;height:8px;border-radius:50%;background:#555}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+button{font:inherit;border:0;border-radius:10px;padding:9px 14px;background:var(--panel2);color:var(--text);cursor:pointer;border:1px solid var(--line)}
+button:hover{border-color:#3a414b}
+button.primary{background:var(--accent);color:#111;border-color:var(--accent);font-weight:650}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pid{display:grid;grid-template-columns:120px 1fr 74px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.pid:first-of-type{border-top:0}
+.pid label{font-size:13px}
+.pid label small{display:block;color:var(--muted);font-family:var(--mono);font-size:11px}
+.pid output{font-family:var(--mono);text-align:right;font-size:14px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+input[type=text],select{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+input[type=text]{font-family:var(--mono)}
+.field{margin-bottom:10px}
+.field > span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:6px 11px;border-radius:999px;font-size:13px}
+.chip.active{background:var(--accent);color:#111;border-color:var(--accent)}
+.console{background:#0a0b0d;border:1px solid var(--line);border-radius:10px;height:220px;overflow:auto;font-family:var(--mono);font-size:12px;padding:10px;line-height:1.55}
+.console .tx{color:#9fc4ff}.console .rx{color:var(--ok)}.console .er{color:var(--bad)}.console .sys{color:var(--muted)}
+.notice{background:#2a1a12;border:1px solid #5a3420;color:#ffc7ad;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
+.info{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">OB</div>
+    <div><h1>Emulator Desk <span class="ver">v1.0</span></h1></div>
+    <div class="spacer"></div>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
+    <button class="primary" id="connectBtn">Connect emulator</button>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <div class="grid">
+    <div class="stack">
+      <div class="card">
+        <h2>Live data</h2>
+        <div class="chips" id="presets"></div>
+        <div class="row" style="margin-bottom:10px">
+          <label class="toggle"><input type="checkbox" id="autoSend" checked> Send as I drag</label>
+          <label class="toggle"><input type="checkbox" id="driveSim"> Drive loop</label>
+          <div class="spacer"></div>
+          <button id="sendAll">Send all</button>
+        </div>
+        <div id="pids"></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>Vehicle</h2>
+        <div class="field"><span>Protocol</span>
+          <select id="bus">
+            <option value="CAN_11B_500K">CAN 11-bit 500K (default)</option>
+            <option value="CAN_29B_500K">CAN 29-bit 500K</option>
+            <option value="CAN_11B_250K">CAN 11-bit 250K</option>
+            <option value="CAN_29B_250K">CAN 29-bit 250K</option>
+            <option value="KWP2000_FAST">KWP2000 fast</option>
+            <option value="KWP2000_5KBPS">KWP2000 5 baud</option>
+            <option value="ISO9141">ISO 9141-2</option>
+          </select>
+        </div>
+        <div class="field"><span>VIN (17 characters)</span>
+          <div class="row" style="flex-wrap:nowrap"><input type="text" id="vin" maxlength="17" value="WP0AA2A71KL100001"><button id="setVin">Set</button></div>
+        </div>
+        <div class="row"><button id="setBus">Set protocol</button><button id="getVin">Read VIN</button><button id="reset" class="danger">Reset (ATZ)</button></div>
+        <div class="info" id="devInfo">Device: unknown</div>
+      </div>
+
+      <div class="card">
+        <h2>Trouble codes</h2>
+        <div class="field"><span>Mode 03 codes, up to 6, comma separated</span>
+          <input type="text" id="dtc" value="P0301,P0420">
+        </div>
+        <div class="chips" id="dtcChips"></div>
+        <div class="row"><button id="setDtc" class="primary">Set codes</button><button id="clrDtc">Clear all</button></div>
+      </div>
+
+      <div class="card">
+        <h2>Console</h2>
+        <div class="console" id="log"></div>
+        <div class="row" style="margin-top:10px;flex-wrap:nowrap">
+          <input type="text" id="raw" placeholder="Any AT command, e.g. ATGET 010D"><button id="sendRaw">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = "1.0";
+const DEMO = new URLSearchParams(location.search).has("demo");
+
+// PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
+const PIDS = [
+  {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4))},
+  {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x]},
+  {pid:"0104", name:"Engine load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)]},
+  {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)]},
+  {pid:"0105", name:"Coolant temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40]},
+  {pid:"010F", name:"Intake air temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40]},
+  {pid:"012F", name:"Fuel level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)]},
+  {pid:"0142", name:"Battery voltage", unit:"V", min:9, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000))},
+  {pid:"0110", name:"MAF air flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100))},
+  {pid:"0146", name:"Ambient temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40]},
+];
+const PRESETS = {
+  "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"0142":12.4,"0110":0},
+  "Idle":     {"010C":850,"010D":0,"0104":18,"0111":12,"0105":88,"0142":14.1,"0110":3.5},
+  "City":     {"010C":2100,"010D":45,"0104":42,"0111":24,"0105":90,"0142":14.2,"0110":14},
+  "Highway":  {"010C":2800,"010D":110,"0104":55,"0111":31,"0105":92,"0142":14.3,"0110":32},
+  "Hard pull":{"010C":6400,"010D":140,"0104":96,"0111":100,"0105":101,"0142":14.0,"0110":190},
+  "Overheat": {"010C":900,"010D":0,"0104":22,"0111":12,"0105":124,"0142":13.6,"0110":4},
+};
+function u16(n){n=Math.max(0,Math.min(65535,n));return [n>>8, n&255]}
+function pct(x){return Math.round(Math.max(0,Math.min(100,x))*255/100)}
+function hex(b){return "0x"+Math.max(0,Math.min(255,b|0)).toString(16).toUpperCase().padStart(2,"0")}
+
+const $ = id => document.getElementById(id);
+const logEl = $("log");
+function log(text, cls="sys"){
+  const d=document.createElement("div"); d.className=cls; d.textContent=text;
+  logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight;
+  while(logEl.childNodes.length>400) logEl.removeChild(logEl.firstChild);
+}
+
+// ---------- Serial link with a one-at-a-time command queue ----------
+let port=null, writer=null, reader=null, connected=false;
+let rxBuf="", waiter=null, queue=Promise.resolve();
+
+function onLine(line){
+  line=line.trim(); if(!line) return;
+  if(waiter){ waiter.lines.push(line); if(/^(OK|ERROR|\?)$/i.test(line) || waiter.single){ const w=waiter; waiter=null; clearTimeout(w.t); w.resolve(w.lines); } }
+  else log("← "+line,"rx");
+}
+async function readLoop(){
+  const dec=new TextDecoder();
+  while(port && port.readable){
+    reader=port.readable.getReader();
+    try{
+      for(;;){
+        const {value,done}=await reader.read(); if(done) break;
+        rxBuf+=dec.decode(value);
+        let i; while((i=rxBuf.search(/[\r\n]/))>=0){ const l=rxBuf.slice(0,i); rxBuf=rxBuf.slice(i+1); onLine(l); }
+        if(rxBuf.trim()==">") rxBuf="";
+      }
+    }catch(e){ log("Read error: "+e.message,"er"); break; }
+    finally{ reader.releaseLock(); }
+  }
+}
+function send(cmd, {timeout=1200, single=false, quiet=false}={}){
+  const run = async ()=>{
+    if(!connected) { log("Not connected: "+cmd,"er"); return ["ERROR"]; }
+    if(!quiet) log("→ "+cmd,"tx");
+    const p=new Promise(res=>{ waiter={lines:[],single,resolve:res,t:setTimeout(()=>{const w=waiter;waiter=null;res(w?w.lines:[])},timeout)}; });
+    if(DEMO) demoReply(cmd); else await writer.write(new TextEncoder().encode(cmd+"\r"));
+    const lines=await p;
+    if(!quiet || lines.some(l=>/ERROR/i.test(l))){
+      if(lines.length===0) log("(no reply)","er");
+      lines.forEach(l=>log("← "+l, /ERROR|\?/i.test(l)?"er":"rx"));
+    }
+    return lines;
+  };
+  queue = queue.then(run, run);
+  return queue;
+}
+
+async function connect(){
+  if(connected){ return disconnect(); }
+  if(DEMO){ connected=true; setStatus(true,"Connected · demo"); await hello(); return; }
+  try{
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate:38400, dataBits:8, stopBits:1, parity:"none"});
+    writer = port.writable.getWriter(); connected=true;
+    const info=port.getInfo();
+    setStatus(true, "Connected"+(info.usbVendorId?` · ${chip(info.usbVendorId)}`:""));
+    readLoop();
+    await new Promise(r=>setTimeout(r,300));
+    await hello();
+  }catch(e){ log("Could not connect: "+e.message,"er"); setStatus(false,"Not connected"); }
+}
+function chip(v){ return v===0x10C4?"CP2102":v===0x1A86?"CH340":"USB 0x"+v.toString(16) }
+async function disconnect(){
+  connected=false;
+  try{ reader && await reader.cancel(); }catch{}
+  try{ writer && writer.releaseLock(); }catch{}
+  try{ port && await port.close(); }catch{}
+  port=null; setStatus(false,"Not connected"); log("Disconnected");
+}
+async function hello(){
+  await send("ATE0");
+  const id = await send("ATI",{single:true,timeout:800});
+  if(id[0] && !/ERROR/i.test(id[0])) $("devInfo").textContent="Device: "+id[0];
+  const v = await send("ATGET VIN",{single:true});
+  if(v[0] && /^[A-HJ-NPR-Z0-9]{16,17}$/i.test(v[0])) $("vin").value=v[0];
+  if(!DEMO) log("Ready. Live values are not read back on connect; press Send all to push what you see.");
+}
+function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect":"Connect emulator"; }
+
+// ---------- PID UI ----------
+const pidsEl=$("pids"); const sendTimers={};
+PIDS.forEach(p=>{
+  const row=document.createElement("div"); row.className="pid";
+  row.innerHTML=`<label>${p.name}<small>${p.pid}</small></label><input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"><output></output>`;
+  const r=row.querySelector("input"), o=row.querySelector("output");
+  p.el=r; p.out=o; const show=()=>{o.textContent=fmt(p,+r.value)+" "+p.unit}; show();
+  r.addEventListener("input",()=>{ show(); if($("autoSend").checked){ clearTimeout(sendTimers[p.pid]); sendTimers[p.pid]=setTimeout(()=>sendPid(p),120); } });
+  pidsEl.appendChild(row);
+});
+function fmt(p,x){ return p.step<1 ? x.toFixed(1) : String(Math.round(x)) }
+function setPid(p,x,push=true){ p.el.value=x; p.out.textContent=fmt(p,+p.el.value)+" "+p.unit; if(push) sendPid(p); }
+function sendPid(p,quiet=false){ return send(`ATSET ${p.pid}=`+p.enc(+p.el.value).map(hex).join(","),{quiet}); }
+$("sendAll").onclick=()=>PIDS.forEach(p=>sendPid(p));
+
+const presetsEl=$("presets");
+Object.keys(PRESETS).forEach(name=>{
+  const b=document.createElement("button"); b.className="chip"; b.textContent=name;
+  b.onclick=()=>{ document.querySelectorAll("#presets .chip").forEach(c=>c.classList.remove("active")); b.classList.add("active");
+    stopSim(); $("driveSim").checked=false;
+    PIDS.forEach(p=>{ if(name in PRESETS && p.pid in PRESETS[name]) setPid(p,PRESETS[name][p.pid]); }); };
+  presetsEl.appendChild(b);
+});
+
+// Drive loop: a gentle accelerate / cruise / brake cycle pushed every 600 ms
+let simT=null, simPhase=0;
+function stopSim(){ clearInterval(simT); simT=null; }
+$("driveSim").onchange=e=>{
+  if(!e.target.checked){ stopSim(); return; }
+  document.querySelectorAll("#presets .chip").forEach(c=>c.classList.remove("active"));
+  simPhase=0;
+  simT=setInterval(()=>{
+    simPhase=(simPhase+1)%100;
+    const t=simPhase/100, sp = t<.35? t/.35*90 : t<.7? 90+Math.sin(t*40)*4 : Math.max(0,(1-t)/.3*90);
+    const accel = t<.35, rpm = sp<1? 850 : 1200+sp*18+(accel?600:0);
+    const m={ "010D":Math.round(sp), "010C":Math.round(rpm/50)*50, "0111":accel?38:(t<.7?20:0), "0104":accel?62:(t<.7?35:12), "0110":+(rpm/150).toFixed(1) };
+    PIDS.forEach(p=>{ if(p.pid in m){ setPid(p,m[p.pid],false); if(connected) sendPid(p,true); } });
+  },600);
+};
+
+// ---------- Vehicle / DTC / console ----------
+$("connectBtn").onclick=connect;
+$("setBus").onclick=()=>send("ATSET BUS "+$("bus").value);
+$("setVin").onclick=()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ log("VIN must be 17 letters/digits, no I, O or Q","er"); return;} send("ATSET VIN="+v); };
+$("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if(v[0]&&!/ERROR/i.test(v[0])) $("vin").value=v[0]; };
+$("reset").onclick=()=>{ send("ATZ",{single:true,timeout:2000}).then(()=>send("ATE0")); log("Note: ATZ sets every PID back to zero.","sys"); };
+function dtcList(){ return $("dtc").value.toUpperCase().split(/[\s,]+/).filter(Boolean); }
+function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; dtcList().forEach(c=>{const s=document.createElement("span"); s.className="chip"; s.style.border="1px solid var(--line)"; s.style.color=/^[PCBU][0-3][0-9A-F]{3}$/.test(c)?"var(--text)":"var(--bad)"; s.textContent=c; el.appendChild(s);}); }
+$("dtc").oninput=renderDtc; renderDtc();
+$("setDtc").onclick=()=>{ const l=dtcList(); if(l.length>6){log("The emulator holds up to 6 codes","er");return;} if(l.some(c=>!/^[PCBU][0-3][0-9A-F]{3}$/.test(c))){log("Codes look like P0301 or U0100","er");return;} send("ATSET DTC="+l.join(",")); };
+$("clrDtc").onclick=()=>send("ATCLR DTC");
+$("sendRaw").onclick=()=>{ const c=$("raw").value.trim(); if(c){ send(c.toUpperCase()); $("raw").value=""; } };
+$("raw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("sendRaw").click(); });
+
+// ---------- Environment checks ----------
+if(!DEMO && !("serial" in navigator)){
+  const n=$("notice"); n.style.display="block";
+  n.innerHTML = location.protocol==="file:" || window.isSecureContext
+    ? "This browser can't talk to USB serial devices. Open this file in <b>Google Chrome</b> or Microsoft Edge (Safari and Firefox don't support it)."
+    : "USB serial needs a secure page. Open this file directly from your Mac in Google Chrome.";
+  $("connectBtn").disabled=true;
+}
+log(DEMO?"Demo mode: no hardware needed.":"Plug in the emulator's 12V power and USB, then press Connect and pick the USB serial device.");
+
+// ---------- Demo replies (for screenshots and trying it without hardware) ----------
+let demoVin="WP0AA2A71KL100001";
+function demoReply(cmd){
+  setTimeout(()=>{
+    let out=["OK"];
+    if(cmd==="ATI"||cmd==="ATZ") out=["Freematics OBD-II Emulator MK2 V1.3"];
+    else if(cmd==="ATGET VIN") out=[demoVin];
+    else if(cmd.startsWith("ATSET VIN=")) demoVin=cmd.slice(10);
+    else if(!/^AT/.test(cmd)) out=["ERROR"];
+    out.forEach(onLine);
+  },60);
+}
+if(DEMO) window.__demo = {connect};
+</script>
+</body>
+</html>
