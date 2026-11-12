@@ -45,9 +45,9 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v1.0</b><br>Document <b>v1.0</b></div>
+    <div class="vers">App <b>v1.1</b><br>Document <b>v1.1</b></div>
   </div>
-  <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It is one HTML file with nothing to install.</p>
+  <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install.</p>
   <div class="shots">
     <div class="shot"><img src="shots/2-live.png"><b>Live data</b><p>Ten sliders for the common Mode 01 values, with presets from Parked to Overheat. Values go out as you drag.</p></div>
     <div class="shot"><img src="shots/3-vehicle.png"><b>Vehicle and codes</b><p>Pick the protocol, set or read back the VIN, and load up to six Mode 03 trouble codes. Clear them in one tap.</p></div>
@@ -57,7 +57,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
     <div class="g"><div class="n">10</div><div class="l">live PIDs with sliders</div></div>
     <div class="g"><div class="n">6</div><div class="l">driving presets plus a drive loop</div></div>
     <div class="g"><div class="n">7</div><div class="l">bus protocols to choose from</div></div>
-    <div class="g"><div class="n">0</div><div class="l">installs, accounts or servers</div></div>
+    <div class="g"><div class="n">1</div><div class="l">link to open it, nothing to install</div></div>
   </div>
     <div class="cols">
     <div>
@@ -69,8 +69,8 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
     <div>
       <h2>Good to know</h2>
       <p>Values aren't read back from the emulator on connect, so press Send all to sync. Reset (ATZ) sets every PID to zero. Protocol names are from Freematics' docs; if a choice returns ERROR, your firmware doesn't support it.</p>
-      <h2>Coming next</h2>
-      <p>Nothing planned yet.</p>
+      <h2>Engine sound</h2>
+      <p>Turn on Sound and a synthesized flat-six revs with the RPM slider, getting louder and brighter as throttle opens. It follows presets and the drive loop too.</p>
     </div>
   </div>
   <div class="foot"><span>Emulator Desk</span><span>Updated November 12, 2026 · 1</span></div>
@@ -78,12 +78,12 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v1.0</b><br>Document <b>v1.0</b></div></div>
+  <div class="vers">App <b>v1.1</b><br>Document <b>v1.1</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
     <tr><th>Piece</th><th>Version</th><th>What it does</th><th>Loaded from</th><th>Licence</th></tr>
-    <tr><td>Emulator Desk</td><td>1.0</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop</td><td>One local file, <code>Emulator Desk.html</code></td><td>Written for this app</td></tr>
+    <tr><td>Emulator Desk</td><td>1.1</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound</td><td><code>index.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
     <tr><td>Freematics AT command set</td><td>MK2 firmware V1.2 / V1.3</td><td>Commands the app sends: <code>ATE0</code>, <code>ATI</code>, <code>ATZ</code>, <code>ATSET</code>, <code>ATGET VIN</code>, <code>ATCLR DTC</code></td><td>Built into the emulator</td><td>Freematics</td></tr>
     <tr><td>OBD-II PID formulas</td><td>SAE J1979</td><td>Byte encodings for each slider (e.g. RPM × 4 as two bytes, temperature + 40)</td><td>Hard-coded in the app</td><td>Public standard</td></tr>
     <tr><td>System fonts</td><td>n/a</td><td>SF Pro and SF Mono on Mac, Arial and Consolas elsewhere</td><td>The operating system</td><td>OS fonts</td></tr>
@@ -95,6 +95,8 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
     <tr><th>Integration</th><th>Used for</th><th>Details</th></tr>
     <tr><td>Web Serial API</td><td>Talking to the emulator</td><td><code>navigator.serial.requestPort()</code>, opened at 38400 baud, 8N1. Commands end in <code>\r</code>. You pick the port in Chrome's chooser; no auth. Works in Chrome and Edge, not Safari or Firefox.</td></tr>
     <tr><td>Freematics OBD-II Emulator MK2</td><td>The device being controlled</td><td>USB to serial through a CP2102 (newer units, <code>/dev/cu.usbserial-*</code>) or CH340 bridge, both with drivers built into macOS. Needs its 12V adapter for power. The app labels the chip from the USB vendor ID.</td></tr>
+    <tr><td>Web Audio API</td><td>Engine sound</td><td>Three oscillators at the flat-six firing rate (RPM ÷ 60 × 3) plus filtered noise, through a waveshaper, low-pass filter and compressor. Starts only when you press Sound.</td></tr>
+    <tr><td>GitHub Pages</td><td>Hosting</td><td><code>davidanthonyalleyne-dot.github.io/emulator-desk</code>, served from the <code>main</code> branch of the public <code>emulator-desk</code> repo. Static files only.</td></tr>
     <tr><td>Your OBD-II dongle or scan tool</td><td>Reads the emulated car</td><td>Plugs into the emulator's 16-pin port. Emulator Desk never talks to it directly.</td></tr>
   </table>
 
@@ -102,7 +104,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="cols">
     <div>
       <p><b>On your Mac:</b> everything. The page runs in Chrome and sends one command at a time, waiting up to 1.2 seconds for OK or ERROR before the next.</p>
-      <p><b>Network:</b> none. The app makes no web requests and works offline.</p>
+      <p><b>Network:</b> one page load from GitHub Pages. After that the app makes no web requests.</p>
     </div>
     <div>
       <p><b>Data kept:</b> nothing. Slider values, VIN and codes live only in the open page and on the emulator itself.</p>
