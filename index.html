@@ -53,6 +53,14 @@ input[type=text]{font-family:var(--mono)}
 .notice{background:#2a1a12;border:1px solid #5a3420;color:#ffc7ad;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
 .info{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px}
 .stack{display:flex;flex-direction:column;gap:14px}
+.bt-grid{display:grid;grid-template-columns:1fr 110px 110px 24px;gap:8px 10px;align-items:center;font-size:13px}
+.bt-h{font-size:11px;color:var(--muted);text-align:right}
+.bt-v,.bt-e{font-family:var(--mono);text-align:right}
+.bt-e{color:var(--muted)}
+.bt-m{width:10px;height:10px;border-radius:50%;justify-self:center;background:transparent}
+.bt-m.ok{background:var(--ok)}.bt-m.no{background:var(--bad)}
+.badge{font-size:12px;padding:5px 10px;border-radius:999px;display:none}
+.badge.ok{display:inline-block;background:#12301f;color:var(--ok)}.badge.no{display:inline-block;background:#3a1418;color:var(--bad)}
 .toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 </style>
 </head>
@@ -60,7 +68,7 @@ input[type=text]{font-family:var(--mono)}
 <div class="wrap">
   <header>
     <div class="logo">OB</div>
-    <div><h1>Emulator Desk <span class="ver">v1.2</span></h1></div>
+    <div><h1>Emulator Desk <span class="ver">v1.3</span></h1></div>
     <div class="spacer"></div>
     <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
     <button id="soundBtn" title="Engine sound follows the RPM slider">Sound off</button>
@@ -81,6 +89,22 @@ input[type=text]{font-family:var(--mono)}
           <button id="sendAll">Send all</button>
         </div>
         <div id="pids"></div>
+      </div>
+      <div class="card" id="btCard">
+        <h2>Dongle over Bluetooth</h2>
+        <div class="row" style="margin-bottom:10px">
+          <button class="primary" id="btBtn">Connect dongle</button>
+          <span class="info" id="btInfo" style="margin:0">Not connected</span>
+          <div class="spacer"></div>
+          <span class="badge" id="btVerdict"></span>
+        </div>
+        <div class="bt-grid">
+          <div></div><div class="bt-h">Dongle reads</div><div class="bt-h">Emulator serves</div><div></div>
+          <div>Engine RPM</div><div class="bt-v" id="bt010C">–</div><div class="bt-e" id="em010C">–</div><div class="bt-m" id="m010C"></div>
+          <div>Speed</div><div class="bt-v" id="bt010D">–</div><div class="bt-e" id="em010D">–</div><div class="bt-m" id="m010D"></div>
+          <div>Coolant temp</div><div class="bt-v" id="bt0105">–</div><div class="bt-e" id="em0105">–</div><div class="bt-m" id="m0105"></div>
+        </div>
+        <div class="info" id="btHint">Works with Bluetooth LE dongles. Older Bluetooth Classic ones can't connect from a browser.</div>
       </div>
     </div>
 
@@ -126,7 +150,7 @@ input[type=text]{font-family:var(--mono)}
 </div>
 
 <script>
-const APP_VERSION = "1.2";
+const APP_VERSION = "1.3";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
@@ -311,6 +335,89 @@ const engine = (()=>{
   return {update,toggle};
 })();
 $("soundBtn").onclick=()=>engine.toggle();
+
+// ---------- Bluetooth LE OBD dongle (ELM327-style) ----------
+const BT_SERVICES=[0xFFE0,0xFFF0,0x18F0,"e7810a71-73ae-499d-8c15-faa9aef0c3f2","0000fff0-0000-1000-8000-00805f9b34fb"];
+const bt={dev:null,tx:null,rx:null,buf:"",wait:null,poll:null,busy:false};
+const BT_PIDS={"010C":b=>(b[0]*256+b[1])/4,"010D":b=>b[0],"0105":b=>b[0]-40};
+function btSetInfo(t){ $("btInfo").textContent=t; }
+function btOnData(e){
+  bt.buf+=new TextDecoder().decode(e.target.value);
+  if(bt.buf.includes(">")){ const r=bt.buf.split(">")[0]; bt.buf=""; if(bt.wait){ const w=bt.wait; bt.wait=null; clearTimeout(w.t); w.res(r); } }
+}
+function btSend(cmd,timeout=3000){
+  if(DEMO) return new Promise(r=>setTimeout(()=>r(demoElm(cmd)),80));
+  return new Promise(async res=>{
+    bt.wait={res,t:setTimeout(()=>{ bt.wait=null; bt.buf=""; res(null); },timeout)};
+    const data=new TextEncoder().encode(cmd+"\r");
+    try{ if(bt.tx.properties.writeWithoutResponse) await bt.tx.writeValueWithoutResponse(data); else await bt.tx.writeValue(data); }
+    catch(e){ clearTimeout(bt.wait&&bt.wait.t); bt.wait=null; res(null); }
+  });
+}
+async function btConnect(){
+  if(bt.dev||bt.demo){ return btDisconnect(); }
+  if(DEMO){ bt.demo=true; btSetInfo("Demo dongle · ELM327 v1.5"); $("btBtn").textContent="Disconnect"; btStartPoll(); return; }
+  if(!navigator.bluetooth){ btSetInfo("This browser has no Bluetooth support. Use Chrome."); return; }
+  try{
+    const dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BT_SERVICES});
+    btSetInfo("Connecting to "+(dev.name||"dongle")+"…");
+    const srv=await dev.gatt.connect();
+    let tx=null,rx=null; const seen=[];
+    for(const s of await srv.getPrimaryServices()){ seen.push(s.uuid);
+      for(const c of await s.getCharacteristics()){
+        if(!rx && (c.properties.notify||c.properties.indicate)) rx=c;
+        if(!tx && (c.properties.write||c.properties.writeWithoutResponse)) tx=c;
+      }
+      if(tx&&rx) break;
+    }
+    if(!tx||!rx){ btSetInfo("Connected, but this dongle doesn't offer a serial channel Chrome can use."); dev.gatt.disconnect(); return; }
+    bt.dev=dev; bt.tx=tx; bt.rx=rx;
+    dev.addEventListener("gattserverdisconnected",()=>{ log("BT dongle disconnected","sys"); btCleanup(); });
+    await rx.startNotifications(); rx.addEventListener("characteristicvaluechanged",btOnData);
+    $("btBtn").textContent="Disconnect";
+    log("BT services: "+seen.join(", "),"sys");
+    const raw=await btSend("ATZ",5000);
+    if(raw===null){ btSetInfo((dev.name||"Dongle")+" connected but didn't answer OBD commands"); $("btVerdict").className="badge no"; $("btVerdict").textContent="Not an ELM327 dongle";
+      log("The dongle connected over Bluetooth but didn't answer ELM327 commands. Some dongles, including Automatic adapters, use a locked protocol of their own.","er"); return; }
+    const id=raw.replace(/\s+/g," ").trim();
+    for(const c of ["ATE0","ATL0","ATS0","ATH0","ATSP0"]) await btSend(c);
+    btSetInfo((dev.name||"Dongle")+(id?" · "+id.replace(/^ATZ ?/,""):""));
+    log("BT dongle connected: "+(dev.name||"unnamed")+(id?" ("+id+")":""),"sys");
+    btStartPoll();
+  }catch(e){ if(e.name!=="NotFoundError") btSetInfo("Couldn't connect: "+e.message); else btSetInfo("Not connected"); }
+}
+function btStartPoll(){
+  clearInterval(bt.poll);
+  bt.poll=setInterval(async()=>{
+    if(bt.busy) return; bt.busy=true;
+    let ok=0, bad=0, none=0;
+    for(const pid of Object.keys(BT_PIDS)){
+      const r=await btSend(pid);
+      const em=+PIDS.find(p=>p.pid===pid).el.value;
+      const unit=PIDS.find(p=>p.pid===pid).unit;
+      $("em"+pid).textContent=(pid==="010C"?Math.round(em):em)+" "+unit;
+      const clean=(r||"").replace(/[\s\r\n]/g,"").toUpperCase();
+      const i=clean.indexOf("41"+pid.slice(2));
+      if(i<0){ $("bt"+pid).textContent=/NODATA|UNABLE|ERROR|STOPPED|CANERROR/.test(clean)?"no data":"–"; $("m"+pid).className="bt-m no"; none++; continue; }
+      const hex=clean.slice(i+4,i+8); const b=[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16)];
+      const v=BT_PIDS[pid](b); $("bt"+pid).textContent=(pid==="010C"?Math.round(v):v)+" "+unit;
+      const match=Math.abs(v-em)<=(pid==="010C"?50:1); $("m"+pid).className="bt-m "+(match?"ok":"no"); match?ok++:bad++;
+    }
+    const vd=$("btVerdict");
+    if(ok===3){ vd.className="badge ok"; vd.textContent="Dongle is reading the emulator"; }
+    else if(none===3){ vd.className="badge no"; vd.textContent="Dongle sees no car"; }
+    else { vd.className="badge no"; vd.textContent="Values don't match yet"; }
+    bt.busy=false;
+  },900);
+}
+function btCleanup(){ clearInterval(bt.poll); bt.dev=null; bt.demo=false; bt.busy=false; $("btBtn").textContent="Connect dongle"; btSetInfo("Not connected"); $("btVerdict").className="badge"; }
+function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
+function demoElm(cmd){
+  const p=PIDS.find(q=>q.pid===cmd); if(!p) return "OK";
+  return "41"+cmd.slice(2)+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join("")+"\r";
+}
+$("btBtn").onclick=btConnect;
+
 function sendPid(p,quiet=false){ return send(`ATSET ${p.pid}=`+p.enc(+p.el.value).map(hex).join(","),{quiet}); }
 $("sendAll").onclick=()=>PIDS.forEach(p=>sendPid(p));
 
