@@ -246,7 +246,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .lt img{width:78%;height:78%;object-fit:contain}
 .lt.none{background:var(--g,var(--fill));color:var(--l2,var(--label2))}
 .lt.none svg{width:60%;height:60%}
-.phcar{display:flex;align-items:center;gap:10px;background:var(--g);border-radius:12px;padding:8px 10px;margin:0 0 8px}
+.phcar{margin:0 0 8px}.phcar .kv b{font-family:var(--font);font-size:inherit;font-weight:500;word-break:normal}
 .phcar[hidden]{display:none}
 .phcar .lt{width:34px;height:34px;border-radius:9px}
 .phcar b{font-size:14px;font-weight:600;display:block}.phcar span.v{font:500 11.5px var(--mono);color:var(--l2);letter-spacing:.3px}
@@ -384,7 +384,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.11</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.12</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -457,7 +457,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
           <div class="pane-wrap">
             <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
               <div class="app-h"><div class="app-t">Live</div></div>
-              <div class="phcar" id="phCar" hidden></div>
+              <div class="pgroup phcar" id="phCar" hidden aria-label="Connected car"></div>
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
@@ -1036,7 +1036,7 @@ async function btPollOnce(){ {
     if(bt.round%4===0){
       const d=await readDtcs();
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
-      const vin=parseVin(await btSend(bt.std==="uds"?"22F802":"0902",4000)); if(vin){ $$("phVin").textContent=vin; vinFromDongle(vin); vinDecode(vin,"dongle"); }
+      const vin=parseVin(await btSend(bt.std==="uds"?"22F802":"0902",4000)); if(vin){ $$("phVin").textContent=vin; vinFromDongle(vin); bt.carVin=vin; vinDecode(vin,"dongle"); }
       const rv=await btSend("ATRV"); if(rv) $$("phRv").textContent=rv.replace(/\s/g,"");
       const dp=await btSend("ATDP"); if(dp) $$("phProto").textContent=dp.replace(/^AUTO,\s*/i,"").trim();
     }
@@ -1047,7 +1047,7 @@ async function btPollOnce(){ {
   }
   if((bt.round||0)===1) dbg("first live round finished");
 }
-function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
+function btCleanup(){ bt.carVin=""; if($$("phCar")) $$("phCar").hidden=true; clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 const DEMO_MODE=new URLSearchParams(location.search).get("demo"), DEMO_UDS=DEMO_MODE==="uds"||DEMO_MODE==="zev", DEMO_ZEV=DEMO_MODE==="zev";
 function demoElm(cmd){
@@ -1210,7 +1210,13 @@ function carInfo(v,L,x){
 }
 function phCarShow(v,L,x){
   const c=carInfo(v,L,x);
-  $$("phCar").hidden=false; $$("phCar").innerHTML=`${logoTile(c.slug,34)}<div><b>${c.name}</b><span class="v">${v}</span></div>`;
+  // Live screen: the connected car only (VIN read by the Kē), as Make / Model / Trim / Model Year rows, no crest
+  const live=(bt.dev||bt.demo) && v===bt.carVin, pc=$$("phCar"); pc.hidden=!live;
+  if(live){ const esc=t=>String(t||"").replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+    const nice=t=>t?String(t).toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\bBmw\b/,"BMW"):"";
+    const make=x ? nice(x.Make) : (L.maker||"").replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"");
+    const rows=[["Make",make||"–"],["Model",x?(x.Model||"–"):"…"],["Trim",x?(x.Trim||x.Series||"–"):"…"],["Model Year",(x&&x.ModelYear)||L.year||"–"]];
+    pc.innerHTML=rows.map(([k,t])=>`<div class="kv"><span>${k}</span><b>${esc(t)}</b></div>`).join(""); }
   $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
 }
 
@@ -1451,7 +1457,7 @@ if(!DEMO && !("serial" in navigator)){
 log(DEMO?"Demo mode: no hardware needed.":"Plug in the emulator's 12V power and USB, then press Connect and pick the USB serial device.");
 
 // ---------- Demo replies (for screenshots and trying it without hardware) ----------
-let demoVin="1A1JC5444R7252367";
+let demoVin="WP0BB2A90TS200123";
 function demoReply(cmd){
   setTimeout(()=>{
     let out=["OK"];
