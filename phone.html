@@ -1026,5 +1026,21 @@ liveCard("idle");
 if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*95:f<.7?95:Math.max(0,(1-f)/.3*95), acc=f<.35;
   const set=(pid,v)=>PIDS.find(p=>p.pid===pid).el.value=v; set("010D",Math.round(sp)); set("010C",sp<1?850:1200+sp*18+(acc?2600:0)); set("0111",acc?70:f<.7?18:0); set("0104",acc?80:f<.7?35:12); },600); }
 </script>
+<script>
+// Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
+// On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
+const APP_VER="2.15";
+async function checkForUpdate(){
+  try{
+    const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
+    const m=/const APP_VER="([^"]+)"/.exec(html);
+    if(m && m[1]!==APP_VER && !(typeof bt!=="undefined" && bt.dev)){
+      const q=new URLSearchParams(location.search); q.set("v",m[1]); location.replace(location.pathname+"?"+q.toString());
+    }
+  }catch(e){}
+}
+checkForUpdate();
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") checkForUpdate(); });
+</script>
 </body>
 </html>

@@ -46,7 +46,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v2.14</b><br>Document <b>v2.14</b></div>
+    <div class="vers">App <b>v2.15</b><br>Document <b>v2.15</b></div>
   </div>
   <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install, and follows Apple's Human Interface Guidelines in light and dark mode.</p>
   <div class="shots">
@@ -81,7 +81,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">Appearance, car logos and the VIN scanner</div></div>
-    <div class="vers">App <b>v2.14</b><br>Document <b>v2.14</b></div>
+    <div class="vers">App <b>v2.15</b><br>Document <b>v2.15</b></div>
   </div>
   <div class="wide"><img src="shots/10-light.png" style="aspect-ratio:1200/600;object-fit:cover;object-position:top"></div>
   <p style="margin-top:8px;color:var(--muted);font-size:12px"><b style="color:var(--text)">Light mode.</b> The switch beside Engine Sound picks Auto, Light or Dark, and the choice is remembered. Here a sample Porsche VIN is loaded, so the Vehicle panel shows the car and its logo.</p>
@@ -102,12 +102,12 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page tech">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v2.14</b><br>Document <b>v2.14</b></div></div>
+  <div class="vers">App <b>v2.15</b><br>Document <b>v2.15</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
     <tr><th>Piece</th><th>Version</th><th>What it does</th><th>Loaded from</th><th>Licence</th></tr>
-    <tr><td>Emulator Desk</td><td>2.14</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check, VIN decoder</td><td><code>index.html</code> and <code>phone.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
+    <tr><td>Emulator Desk</td><td>2.15</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check, VIN decoder</td><td><code>index.html</code> and <code>phone.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
     <tr><td>Freematics AT command set</td><td>EMULATOR-OBDII V3 (tested)</td><td>Commands the app sends: <code>ATE0</code>, <code>ATZ</code>, <code>ATSET</code>, <code>ATGET</code> (PIDs), <code>ATCLR DTC</code></td><td>Built into the emulator</td><td>Freematics</td></tr>
     <tr><td>OBD-II PIDs and VSS names</td><td>SAE J1979, J1979-2/-3, ISO 14229; VSS 4</td><td>Each value is tracked by its VSS name (e.g. Vehicle.Speed) and fetched by its PID, with byte encodings such as RPM × 4</td><td>Hard-coded in the app</td><td>Public standard</td></tr>
     <tr><td>barcode-detector (with zxing-wasm)</td><td>3.2.3 (zxing-wasm 3.1.6)</td><td>Reads VIN barcodes where the browser has no built-in barcode reader (Safari, Bluefy)</td><td>jsDelivr CDN, loaded only when you first tap Scan</td><td>MIT; ZXing C++ Apache-2.0</td></tr>
