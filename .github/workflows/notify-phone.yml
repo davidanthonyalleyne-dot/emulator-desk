@@ -1,0 +1,25 @@
+# After GitHub Pages publishes a new build, send a phone notification through ntfy with the version and its link.
+# The ntfy channel name lives in the NTFY_TOPIC repository secret so it isn't visible in this public repo.
+name: Notify phone of new build
+on:
+  workflow_run:
+    workflows: ["pages-build-deployment"]
+    types: [completed]
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Send ntfy notification
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          MSG: ${{ github.event.workflow_run.head_commit.message }}
+        run: |
+          [ -z "$NTFY_TOPIC" ] && { echo "NTFY_TOPIC secret not set"; exit 0; }
+          VER=$(grep -o 'const APP_VER="[^"]*"' phone.html | cut -d'"' -f2)
+          URL="https://davidanthonyalleyne-dot.github.io/emulator-desk/phone.html?v=$VER"
+          BODY=$(printf '%s' "$MSG" | head -n1 | cut -c1-180)
+          curl -fsS -H "Title: Kē v$VER is live" -H "Click: $URL" -H "Tags: car" -d "$BODY" "https://ntfy.sh/$NTFY_TOPIC"
