@@ -19,7 +19,7 @@ jobs:
           MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           [ -z "$NTFY_TOPIC" ] && { echo "NTFY_TOPIC secret not set"; exit 0; }
-          VER=$(grep -o 'const APP_VER="[^"]*"' phone.html | cut -d'"' -f2)
+          VER=$(grep -m1 -o 'const APP_VER="[0-9][^"]*"' phone.html | head -1 | cut -d'"' -f2)
           URL="https://davidanthonyalleyne-dot.github.io/emulator-desk/phone.html?v=$VER"
           BODY=$(printf '%s' "$MSG" | head -n1 | cut -c1-180)
           # JSON publish so the "ē" in the title survives (headers must be plain ASCII)
