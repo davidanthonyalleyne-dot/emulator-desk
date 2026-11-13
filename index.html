@@ -198,7 +198,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v1.6</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v1.7</span></div></div>
     <div class="spacer"></div>
     <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
@@ -238,7 +238,8 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
             </select>
             <button class="btn plain" id="setBus">Apply</button>
           </div>
-          <div class="row"><input class="field" id="vin" maxlength="17" value="WP0AA2A71KL100001" aria-label="VIN, 17 characters" spellcheck="false"><button class="btn plain" id="setVin">Set VIN</button></div>
+          <div class="row"><input class="field" id="vin" maxlength="17" value="" placeholder="Type a 17-character VIN" aria-label="VIN, 17 characters" aria-describedby="vinSrc" spellcheck="false" autocapitalize="characters"><button class="btn plain" id="setVin">Set VIN</button></div>
+          <div class="row" style="min-height:0;padding-top:0"><span class="k" style="font-size:12.5px;color:var(--label2)" id="vinSrc">Current VIN unknown. Connect a dongle to read it.</span></div>
           <div class="row"><span class="k" style="font-size:13px;color:var(--label2)" id="devInfo">Device: unknown</span></div>
         </div>
         <div class="btn-row" style="padding:10px 0 0"><button class="btn" id="getVin">Read VIN</button><button class="btn destructive" id="reset">Restart Emulator</button></div>
@@ -328,7 +329,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 </div>
 <script>
 
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.7";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
@@ -670,7 +671,7 @@ function btStartPoll(){
     if(bt.round%4===0){
       const d=parseDtc(await btSend("03",4000));
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
-      const vin=parseVin(await btSend("0902",4000)); if(vin) $$("phVin").textContent=vin;
+      const vin=parseVin(await btSend("0902",4000)); if(vin){ $$("phVin").textContent=vin; vinFromDongle(vin); }
       const rv=await btSend("ATRV"); if(rv) $$("phRv").textContent=rv.replace(/\s/g,"");
       const dp=await btSend("ATDP"); if(dp) $$("phProto").textContent=dp.replace(/^AUTO,\s*/i,"").trim();
     }
@@ -687,7 +688,7 @@ function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
   if(p) return "41"+cmd.slice(2)+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join("")+"\r";
   if(cmd==="03"){ const l=dtcList().filter(c=>/^[PCBU][0-3][0-9A-F]{3}$/.test(c)); return "43"+l.length.toString(16).padStart(2,"0")+l.map(c=>(("PCBU".indexOf(c[0])<<2)|+c[1]).toString(16)+c.slice(2)).join("")+"\r"; }
-  if(cmd==="0902"){ const v=$$("vin").value; return "0:490201"+[...v].map(ch=>ch.charCodeAt(0).toString(16).toUpperCase()).join("")+"\r"; }
+  if(cmd==="0902"){ const v=demoVin; return "0:490201"+[...v].map(ch=>ch.charCodeAt(0).toString(16).toUpperCase()).join("")+"\r"; }
   if(cmd==="ATRV") return "12.6V"; if(cmd==="ATDP") return "AUTO, ISO 15765-4 (CAN 11/500)"; if(cmd==="ATI") return "ELM327 v1.5"; if(cmd==="ATZ") return "ELM327 v1.5";
   return "OK";
 }
@@ -737,7 +738,18 @@ $("driveSim").onchange=e=>{
 // ---------- Vehicle / DTC / console ----------
 $("connectBtn").onclick=connect;
 $("setBus").onclick=()=>send("ATSET BUS "+$("bus").value);
-$("setVin").onclick=()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ log("VIN must be 17 letters/digits, no I, O or Q","er"); return;} send("ATSET VIN="+v); };
+// VIN box: shows what the emulator really has (read through the dongle), or what you've typed but not sent
+let vinDirty=false, vinKnown="", vinPending="";
+function vinNote(t){ $("vinSrc").textContent=t; }
+function vinFromDongle(v){
+  vinKnown=v;
+  if(vinPending){ if(v!==vinPending) return; vinPending=""; $("vin").value=v; vinNote("Confirmed. The dongle reads the new VIN."); return; }
+  if(!vinDirty && document.activeElement!==$("vin")){ $("vin").value=v; vinNote("Read from the emulator by the dongle."); }
+  else if(vinDirty && $("vin").value.toUpperCase()===v){ vinDirty=false; vinNote("Read from the emulator by the dongle."); }
+}
+$("vin").addEventListener("input",()=>{ $("vin").value=$("vin").value.toUpperCase(); vinDirty=$("vin").value!==vinKnown; vinNote(vinDirty?"Not sent yet. Press Set VIN to send it.":(vinKnown?"Read from the emulator by the dongle.":"Current VIN unknown. Connect a dongle to read it.")); });
+$("setVin").onclick=async()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ log("VIN must be 17 letters/digits, no I, O or Q","er"); vinNote("A VIN is 17 letters and digits, without I, O or Q."); return;}
+  const r=await send("ATSET VIN="+v); if(r.some(l=>/^OK$/i.test(l))){ vinDirty=false; vinPending=(bt.dev||bt.demo)?v:""; vinNote(bt.dev||bt.demo?"Sent. Waiting for the dongle to confirm…":"Sent to the emulator. Connect a dongle to confirm it."); } else vinNote("The emulator didn't accept that VIN."); };
 $("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if(v[0]&&!/ERROR/i.test(v[0])) $("vin").value=v[0]; else log("This firmware can't read the VIN back. Setting it still works.","sys"); };
 $("reset").onclick=async()=>{ log("Restarting the emulator. This takes a few seconds and sets every value to zero.","sys");
   await send("ATZ",{single:true,timeout:12000,until:/EMULATOR|OBD/i}); await send("ATE0"); await readBack(); };
@@ -760,7 +772,7 @@ if(!DEMO && !("serial" in navigator)){
 log(DEMO?"Demo mode: no hardware needed.":"Plug in the emulator's 12V power and USB, then press Connect and pick the USB serial device.");
 
 // ---------- Demo replies (for screenshots and trying it without hardware) ----------
-let demoVin="WP0AA2A71KL100001";
+let demoVin="1A1JC5444R7252367";
 function demoReply(cmd){
   setTimeout(()=>{
     let out=["OK"];
