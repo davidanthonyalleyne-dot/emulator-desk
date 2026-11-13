@@ -21,6 +21,9 @@ const srv = http.createServer((q, s) => { const f = path.join(root, decodeURICom
   await p.fill('#raw', 'ATGET VIN'); await p.press('#raw', 'Enter'); await p.waitForTimeout(400);
   await p.evaluate(() => document.querySelector('#log').closest('.card').scrollIntoView());
   await p.waitForTimeout(200); await p.screenshot({ path: out('5-console') });
+  await p.click('#btBtn'); await p.waitForTimeout(3500);
+  await p.evaluate(() => { document.querySelector('.screen').scrollTop = 0; document.querySelector('#btCard').scrollIntoView(); });
+  await p.waitForTimeout(300); await p.locator('.phone').screenshot({ path: out('7-phone') });
   await p.setViewportSize({ width: 1200, height: 860 }); await p.evaluate(()=>scrollTo(0,0));
   await p.click('#driveSim'); await p.waitForTimeout(3000);
   await p.screenshot({ path: out('6-desktop') });
