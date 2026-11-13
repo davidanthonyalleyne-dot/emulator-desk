@@ -461,7 +461,23 @@ async function btWrite(data){
     await c.writeValue(part);
   }
 }
-function btSend(cmd,timeout=3000){
+// ---------- UDS negative responses (ISO 14229-1) ----------
+// A reply of 7F <service> <code> means the car said no. Code 78 means "received, still working": the car may take up to
+// 5 s (P2*) before the real answer, so the Kē lengthens the ELM327's wait and asks again, up to twice.
+const NRC={"10":"generalReject","11":"serviceNotSupported","12":"subFunctionNotSupported","13":"incorrectMessageLengthOrInvalidFormat","14":"responseTooLong","21":"busyRepeatRequest","22":"conditionsNotCorrect","24":"requestSequenceError","25":"noResponseFromSubnetComponent","26":"failurePreventsExecution","31":"requestOutOfRange","33":"securityAccessDenied","35":"invalidKey","36":"exceededNumberOfAttempts","37":"requiredTimeDelayNotExpired","70":"uploadDownloadNotAccepted","72":"generalProgrammingFailure","78":"responsePending","7E":"subFunctionNotSupportedInActiveSession","7F":"serviceNotSupportedInActiveSession","81":"rpmTooHigh","88":"vehicleSpeedTooHigh","92":"voltageTooHigh","93":"voltageTooLow"};
+function nrcOf(r,cmd){ const c=hexOf(r), m=new RegExp("7F"+String(cmd||"").slice(0,2)+"([0-9A-F]{2})").exec(c); return m?m[1]:null; }
+async function btSend(cmd,timeout=3000){
+  let r=await btSendRaw(cmd,timeout);
+  if(!/^(1[0-9A-F]|2[0-9A-F]|3[0-9A-F])/.test(cmd) || r===null) return r;
+  const pos=(parseInt(cmd.slice(0,2),16)+0x40).toString(16).toUpperCase();
+  for(let tries=0; tries<2 && nrcOf(r,cmd)==="78" && hexOf(r).indexOf(pos)<0; tries++){
+    dbg("car says "+cmd+" is still being worked on (7F 78), waiting up to 5 s");
+    await btSendRaw("ATSTFF"); r=await btSendRaw(cmd,6000); await btSendRaw("ATST32");
+  }
+  const n=nrcOf(r,cmd); bt.nrcSeen=bt.nrcSeen||{}; if(n && hexOf(r).indexOf(pos)<0 && !bt.nrcSeen[cmd+n] && (bt.nrcSeen[cmd+n]=1)) dbg("car said no to "+cmd+": "+(NRC[n]||"code "+n)+" (7F "+cmd.slice(0,2)+" "+n+")");
+  return r;
+}
+function btSendRaw(cmd,timeout=3000){
   bt.req++; $$("phReq").textContent=bt.req; const t0=performance.now();
   const track=r=>{ if(r===null) bt.to++; else { bt.rtt.push(performance.now()-t0); if(bt.rtt.length>50) bt.rtt.shift(); }
     if((bt.dbgN=(bt.dbgN||0)+1)<=80) dbg("→ "+cmd+"  ← "+(r===null?"(no reply)":JSON.stringify(r.replace(/\s+/g," ").trim().slice(0,48)))+"  "+Math.round(performance.now()-t0)+" ms");
@@ -604,7 +620,7 @@ function btStartPoll(){
 }
 async function btPollOnce(){ {
     let ok=0, bad=0, none=0;
-    for(const p of PIDS){ const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
+    for(const p of PIDS){ if(bt.std==="uds" && bt.sup && bt.sup.length && !bt.sup.includes(p.pid.slice(2))){ show(p.pid,null); none++; continue; } const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
     if(bt.ev){ const c=hexOf(await btSend(bt.std==="uds"?"22F45B":"015B")), k=bt.std==="uds"?"62F45B":"415B", i=c.indexOf(k);
       if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else $$("phEv").textContent="–"; }
@@ -650,6 +666,7 @@ function demoUds(cmd){
   if(cmd==="22F800") return "62F80055000000\r";
   if(cmd==="22F802"){ const h=asc(demoVin); return "014\r0:62F802"+h.slice(0,6)+"\r1:"+h.slice(6)+"\r"; }
   if(cmd==="22F80A") return DEMO_ZEV ? "62F80A"+asc("BECM-B+EnergyCtrl")+"000000\r" : "62F80A"+asc("ECM-EngineControl")+"000000\r";
+  if(cmd==="1942330802" && DEMO_ZEV && (demoUds.pend=(demoUds.pend||0)+1)===1) return "7F1978\r";  // battery module asks for more time once
   if(cmd==="1942330802") return "594233FF0204"+(DEMO_ZEV?["01421100","0A221100"]:["03010000","04200000"]).map(d=>"02"+d.slice(0,6)+"AF").join("")+"\r";
   if(/^0[1-9]/.test(cmd)) return "NO DATA";
   if(cmd==="ATRV") return "12.6V"; if(cmd==="ATDP") return "AUTO, ISO 15765-4 (CAN 11/500)"; if(cmd==="ATDPN") return "A6";
@@ -704,7 +721,7 @@ async function btCapabilities(){
       bt.zev = market===0x1B || (sup.includes("5B") && !sup.includes("0C"));
     } else dbg("22 F810: no answer either");
   }
-  bt.ev = sup.includes("5B");
+  bt.ev = sup.includes("5B"); bt.sup = sup;
   bcSet("bcDiag", sup.length===0 ? "No reply to either" : bt.std==="classic" ? "Classic OBD-II (SAE J1979)" : bt.zev ? "ZEVonUDS (SAE J1979-3)" : "OBDonUDS (SAE J1979-2)");
   dbg("diagnostics: using "+bt.std+(bt.zev?" (ZEV)":"")+", "+sup.length+" items, battery charge "+(bt.ev?"yes":"no"));
   if(bt.std==="uds"){
