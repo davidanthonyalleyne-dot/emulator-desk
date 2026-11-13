@@ -661,6 +661,28 @@ $("soundSw").onclick=()=>engine.toggle();
 
 // ---------- Bluetooth LE OBD dongle (ELM327-style), shown as a phone app ----------
 const BT_SERVICES=[0xFFE0,0xFFF0,0x18F0,"e7810a71-73ae-499d-8c15-faa9aef0c3f2"];
+const fullUuid=n=>typeof n==="number"? "0000"+n.toString(16).padStart(4,"0")+"-0000-1000-8000-00805f9b34fb" : n;
+const BT_SVC_FULL=BT_SERVICES.map(fullUuid);
+const BT_NAMES=["OBD","Viecar","VIECAR","IOS-Vlink","Android-Vlink","V-LINK","Vgate","vLinker","VEEPEAK","Veepeak","KONNWEI","OBDBLE","OBDLink","LELink","Carista","FIXD","iCar","ELM327","BLE"];
+function errText(e){ if(!e) return "no details"; if(typeof e==="string") return e; return [e.name,e.message,e.code].filter(x=>x!==undefined&&x!=="").join(": ")||String(e)||JSON.stringify(e); }
+// Ask for a device. Some browsers (Bluefy on iPhone) reject "show me everything" requests, so fall back to a list of
+// the serial services and the names OBD dongles usually advertise.
+async function btPick(){
+  const ways=[
+    ["all devices", {acceptAllDevices:true, optionalServices:BT_SVC_FULL}],
+    ["OBD dongles by service and name", {filters:[...BT_SVC_FULL.map(u=>({services:[u]})), ...BT_NAMES.map(n=>({namePrefix:n}))], optionalServices:BT_SVC_FULL}],
+    ["OBD dongles by name", {filters:BT_NAMES.map(n=>({namePrefix:n})), optionalServices:BT_SVC_FULL}]
+  ];
+  const start = bt.pickWay||0; let last=null;
+  for(let i=start;i<ways.length;i++){
+    dbg("asking for a device ("+ways[i][0]+")…");
+    try{ const d=await navigator.bluetooth.requestDevice(ways[i][1]); bt.pickWay=i; return d; }
+    catch(e){ last=e; dbg("that didn't work: "+errText(e));
+      if(e && e.name==="NotFoundError" && /cancel/i.test(e.message||"")) throw e;   // you closed the list
+      bt.pickWay=i+1; if(i+1<ways.length) $$("btBtn").textContent="Try Again"; }
+  }
+  bt.pickWay=0; throw last||new Error("no way to pick a device worked");
+}
 const bt={dev:null,tx:null,rx:null,buf:"",wait:null,poll:null,busy:false,demo:false,round:0,req:0};
 const PH_LEN={"010C":2,"0142":2,"0110":2};
 const $$=id=>document.getElementById(id);
@@ -712,13 +734,13 @@ async function btConnect(){
   if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo Dongle"); btSetInfo("Connected"); bcLink(null,"0000fff0-0000-1000-8000-00805f9b34fb"); await btInit(); await btCapabilities(); btStartPoll(); phTab("paneLive"); return; }
   if(!navigator.bluetooth){ btSetInfo("No Bluetooth in this browser. Use Chrome."); return; }
   try{
-    dbg("asking for a device…"); const dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BT_SERVICES}); dbg("picked: "+(dev.name||dev.id));
+    const dev=await btPick(); dbg("picked: "+(dev.name||dev.id));
     btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connecting…");
     const srv=await dev.gatt.connect(); dbg("GATT connected");
     let tx=null,rx=null,svcU=null; const seen=[];
     let svcs=[];
     try{ svcs=await srv.getPrimaryServices(); }catch(e){ dbg("getPrimaryServices failed: "+e.message+", trying known services"); }
-    if(!svcs.length){ for(const u of BT_SERVICES){ try{ svcs.push(await srv.getPrimaryService(u)); }catch(e){} } }
+    if(!svcs.length){ for(const u of BT_SVC_FULL){ try{ svcs.push(await srv.getPrimaryService(u)); }catch(e){} } }
     dbg("services: "+svcs.map(x=>x.uuid).join(", "));
     for(const s of svcs){ seen.push(s.uuid);
       if(tx&&rx) continue;
@@ -741,7 +763,7 @@ async function btConnect(){
     log("BT dongle connected: "+(dev.name||"unnamed"),"sys");
     btSetInfo("Checking what it supports…"); await btCapabilities(); btSetInfo("Connected");
     btStartPoll(); phTab("paneLive");
-  }catch(e){ dbg("error: "+e.name+": "+e.message); btSetInfo(e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+e.message); }
+  }catch(e){ dbg("error: "+errText(e)); btSetInfo(e&&e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+errText(e)); }
 }
 function hexOf(r){ return (r||"").replace(/\s|\r|\n/g,"").toUpperCase(); }
 function parsePid(pid,r){
