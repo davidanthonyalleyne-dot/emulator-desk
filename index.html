@@ -71,7 +71,7 @@ input[type=text]{font-family:var(--mono)}
 .gauge{position:relative;margin:10px auto 4px;width:230px;height:160px}
 .gauge svg{width:100%;height:100%}
 .g-bg,.g-fg{fill:none;stroke-width:12;stroke-linecap:round}
-.g-bg{stroke:#262a31}.g-fg{stroke:var(--accent);stroke-dasharray:0 999;transition:stroke-dasharray .35s ease}
+.g-bg{stroke:#262a31}.g-fg{stroke:var(--accent);stroke-dasharray:0 999;opacity:0;transition:stroke-dasharray .35s ease}
 .g-c{position:absolute;inset:38px 0 0;text-align:center}
 .g-big{font-size:46px;font-weight:700;letter-spacing:-1.5px;line-height:1}.g-u{font-size:12px;color:var(--muted)}
 .g-rpm{font-family:var(--mono);font-size:13px;margin-top:6px}
@@ -482,7 +482,7 @@ function btStartPoll(){
     if(bt.busy) return; bt.busy=true;
     let ok=0, bad=0, none=0;
     for(const p of PIDS){ const r=await btSend(p.pid); if(!bt.dev&&!bt.demo){ bt.busy=false; return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
-      if(p.pid==="010C"&&v!==null){ const L=$$("gArc").getTotalLength(), f=Math.max(0,Math.min(1,v/8000)); $$("gArc").style.strokeDasharray=(L*f)+" 999"; } }
+      if(p.pid==="010C"&&v!==null){ const L=$$("gArc").getTotalLength(), f=Math.max(0,Math.min(1,v/8000)); $$("gArc").style.strokeDasharray=(L*f)+" 999"; $$("gArc").style.opacity=f>0?1:0; } }
     if(bt.round%4===0){
       const d=parseDtc(await btSend("03",4000));
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
@@ -497,7 +497,7 @@ function btStartPoll(){
     bt.busy=false;
   },700);
 }
-function btCleanup(){ clearInterval(bt.poll); bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); btSetInfo("Not connected"); verdict("","Connect a dongle to see what it reads"); }
+function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); btSetInfo("Not connected"); verdict("","Connect a dongle to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
