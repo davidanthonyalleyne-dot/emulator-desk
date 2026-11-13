@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -166,6 +167,65 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
 .ph-note{font-size:13px}
 @media (prefers-reduced-transparency: reduce){ .tabbar{background:#161618;backdrop-filter:none;-webkit-backdrop-filter:none} }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+/* Car logos, loaded from the Asetrix logo API. Option A: always on a white tile. */
+.lt{background:#fff;border-radius:10px;display:grid;place-items:center;flex:none;overflow:hidden}
+.lt img{width:78%;height:78%;object-fit:contain}
+.lt.none{background:var(--g,var(--fill));color:var(--l2,var(--label2))}
+.lt.none svg{width:60%;height:60%}
+.phcar{display:flex;align-items:center;gap:10px;background:var(--g);border-radius:12px;padding:8px 10px;margin:0 0 8px}
+.phcar[hidden]{display:none}
+.phcar .lt{width:34px;height:34px;border-radius:9px}
+.phcar b{font-size:14px;font-weight:600;display:block}.phcar span.v{font:500 11.5px var(--mono);color:var(--l2);letter-spacing:.3px}
+.vdhead{display:flex;flex-direction:column;align-items:center;gap:5px;margin:4px 0 10px;text-align:center}
+.vdhead[hidden]{display:none}
+.vdhead .lt{width:64px;height:64px;border-radius:16px}
+.vdhead b{font-size:17px;font-weight:600}.vdhead span{font-size:12px;color:var(--l2)}
+/* Light mode: follows the phone setting */
+@media (prefers-color-scheme: light){
+html,body{background:#f2f2f7;color:#000}
+:root .phone{background:#e5e5ea;box-shadow:0 0 0 1.5px #c7c7cc,0 0 0 3.5px #d1d1d6,0 24px 60px rgba(0,0,0,.15)}
+:root .screen{background:#f2f2f7;color:#000;--g:#fff;--l2:rgba(60,60,67,.66)}
+:root .sicons i,:root .sicons b::after{background:#000}
+:root .sicons b{border-color:rgba(0,0,0,.45)}
+:root .g-bg{stroke:#e5e5ea}
+:root .g-fg{stroke:#ff9500}
+:root .g-fg.hot,:root .g-red,:root .g-tk.red{stroke:#d70015}
+:root .g-lb.red{fill:#d70015}
+:root .g-tk{stroke:rgba(60,60,67,.3)}
+:root .g-tk.mj{stroke:rgba(60,60,67,.8)}
+:root .g-lb{fill:rgba(60,60,67,.75)}
+:root .g-x{fill:rgba(60,60,67,.5)}
+:root .verdict.ok{background:rgba(36,138,61,.12);color:#248a3d}
+:root .verdict.no{background:rgba(215,0,21,.1);color:#d70015}
+:root .dtc{background:rgba(215,0,21,.1);color:#d70015}
+:root .dtcs .ok,:root .kv b .ok{color:#248a3d}
+:root .kv b .bad{color:#d70015}
+:root .kv + .kv::before{background:#c6c6c8}
+:root .mdot.ok{background:#34c759}
+:root .bt-dot{background:#c7c7cc}
+:root .bt-dot.on{background:#34c759}
+:root .ph-btn{background:#ff9500}
+:root .ph-btn.on{background:#e5e5ea;color:#d70015}
+:root .tabbar{background:rgba(249,249,249,.9);border-top-color:rgba(60,60,67,.29)}
+:root .tabbar button{color:#8e8e93}
+:root .tabbar button[aria-selected="true"]{color:#c35a00}
+:root .home-ind{background:rgba(0,0,0,.85)}
+:root .bt-ring{background:#e5e5ea;color:#8e8e93}
+:root .bt-ring.on{background:#007aff;color:#fff}
+:root .s-wmi{color:#c35a00}
+:root .s-vds{color:#0071a4}
+:root .s-chk{color:#8944ab}
+:root .s-yr{color:#248a3d}
+:root .s-pl{color:#a05a00}
+:root .s-sn{color:rgba(0,0,0,.75)}
+:root .vd-search input{color:#000}
+:root .vd-search button{background:#ff9500}
+:root .pchip{background:rgba(0,113,164,.1);color:#0071a4}
+:root .logcopy{color:#c35a00}
+:root .nobt{background:rgba(255,149,0,.14);color:#a05a00}
+:root .nobt a{color:#c35a00}
+:root .lt{box-shadow:inset 0 0 0 1px rgba(60,60,67,.18)}
+}
 </style>
 </head>
 <body>
@@ -178,6 +238,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
                 <div class="lc-t" id="liveCardText">Plug the Kē into the emulator or a car, then tap Connect.</div>
                 <button class="ph-btn" id="liveConnect">Connect Kē</button>
               </div>
+              <div class="phcar" id="phCar" hidden></div>
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
@@ -189,6 +250,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
             <div class="pane" id="paneVehicle" role="tabpanel" aria-labelledby="tabVehicle" hidden>
               <div class="app-h"><div class="app-t">Vehicle</div></div>
               <div class="vd-card">
+                <div class="vdhead" id="vdHead" hidden></div>
                 <div class="vd-vin" id="vdVin"><span class="muted">No VIN yet</span></div>
                 <div class="vd-legend"><span class="s-wmi">Maker</span><span class="s-vds">Model</span><span class="s-chk">Check</span><span class="s-yr">Year</span><span class="s-pl">Plant</span><span class="s-sn">Serial</span></div>
                 <div class="vd-src" id="vdSrc">Connect the Kē, or decode any VIN below</div>
@@ -590,6 +652,37 @@ function gaugeRpm(v){
   arc.style.strokeDasharray=(L*f)+" 999"; arc.style.opacity=f>0?1:0; arc.classList.toggle("hot",v>=7000);
 }
 
+// ---------- Car logos (Asetrix logo API, free, no key; returns a monogram when it has no logo) ----------
+const LOGO_API="https://api.asetrix.online/api/v1/logos/";
+const MAKE_NICE={bmw:"BMW",gmc:"GMC",mini:"MINI",ram:"Ram","mercedes-benz":"Mercedes-Benz","land-rover":"Land Rover","alfa-romeo":"Alfa Romeo","rolls-royce":"Rolls-Royce","aston-martin":"Aston Martin",mclaren:"McLaren"};
+function makeSlug(s){
+  s=String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\(.*?\)/g,"").split("/")[0]
+    .replace(/\b(suv|truck|commercial|bus|van|sport|germany)\b/g,"").trim();
+  if(/^bmw\b/.test(s)) s="bmw"; if(s==="gm korea") s="chevrolet"; if(s==="renault samsung") s="renault";
+  if(!s||s==="unknown") return "";
+  return s.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+function makeNice(slug,raw){ return MAKE_NICE[slug] || String(raw||"").toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
+function logoTile(slug,size){
+  if(!slug) return `<span class="lt none" style="width:${size}px;height:${size}px" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="16" r="1"/><circle cx="16.5" cy="16" r="1"/></svg></span>`;
+  return `<span class="lt" style="width:${size}px;height:${size}px"><img src="${LOGO_API}${slug}" alt="" loading="lazy" onerror="this.parentNode.classList.add('none');this.parentNode.innerHTML='<svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M5 16V11l2-5h10l2 5v5&quot;/><path d=&quot;M3 16h18v3H3z&quot;/><circle cx=&quot;7.5&quot; cy=&quot;16&quot; r=&quot;1&quot;/><circle cx=&quot;16.5&quot; cy=&quot;16&quot; r=&quot;1&quot;/></svg>'"></span>`;
+}
+// Builds the car's name from the offline decode, then from NHTSA when it answers.
+function carInfo(v,L,x){
+  const raw=(x&&x.Make)||L.maker, slug=makeSlug(raw), make=raw&&raw!=="Unknown"?makeNice(slug,(x&&x.Make)||raw.replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"")):"";
+  const year=(x&&x.ModelYear)||L.year||"", model=(x&&x.Model)||"";
+  const name=[year,make,model].filter(Boolean).join(" ")||"Unknown car";
+  const t=s=>String(s||"").toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()).replace(/\bAg\b/g,"AG").replace(/\b(Usa|Llc|Bmw)\b/g,m=>m.toUpperCase());
+  const where=x&&(x.PlantCity||x.PlantCountry)?[t(x.PlantCity),t(x.PlantCountry).replace(/\s*\(.*?\)/g,"")].filter(Boolean).join(", "):(L.country!=="Unknown"?L.country:L.region);
+  let maker=x&&x.Manufacturer?t(x.Manufacturer).replace(/,?\s*(Inc|Llc|LLC|Ltd|Co)\.?$/,""):make; if(maker.length>26) maker=make;
+  return {slug,name,sub:[maker,where].filter(Boolean).join(" · ")};
+}
+function phCarShow(v,L,x){
+  const c=carInfo(v,L,x);
+  $$("phCar").hidden=false; $$("phCar").innerHTML=`${logoTile(c.slug,34)}<div><b>${c.name}</b><span class="v">${v}</span></div>`;
+  $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
+}
+
 // ---------- VIN decoder ----------
 const VIN_WMI={
   "WP0":"Porsche","WP1":"Porsche SUV","WAU":"Audi","WA1":"Audi SUV","WUA":"Audi Sport","WVW":"Volkswagen","WVG":"Volkswagen SUV","WV1":"Volkswagen Commercial","WV2":"Volkswagen Bus",
@@ -621,6 +714,7 @@ async function vinDecode(v, src){
   v=(v||"").toUpperCase().trim(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ if(src==="typed") $$("vdMsg").textContent="A VIN is 17 letters and digits, without I, O or Q."; return; }
   if(v===vinShown && src!=="typed") return; vinShown=v;
   const L=vinDecodeLocal(v);
+  phCarShow(v,L,null);
   $$("vdVin").innerHTML=`<span class="s-wmi">${v.slice(0,3)}</span><span class="s-vds">${v.slice(3,8)}</span><span class="s-chk">${v[8]}</span><span class="s-yr">${v[9]}</span><span class="s-pl">${v[10]}</span><span class="s-sn">${v.slice(11)}</span>`;
   $$("vdSrc").textContent = src==="dongle" ? "Read from the car by the Kē" : "Typed on the phone";
   const set=(id,t)=>{ $$(id).textContent=t||"–"; };
@@ -640,6 +734,7 @@ async function vinDecode(v, src){
     set("vdBuilt",[title(x.PlantCity),title(x.PlantCountry)].filter(Boolean).join(", "));
     if(x.ModelYear) set("vdYear",x.ModelYear);
     if(x.Manufacturer) set("vdMaker",title(x.Manufacturer));
+    phCarShow(v,L,x);
     const err=(x.ErrorText||"").split(";").map(t=>t.trim()).filter(t=>t && !/^0 /.test(t));
     $$("vdMsg").textContent = !x.Make ? "NHTSA has no record of this VIN. The details above come from the VIN's structure alone." : (err.length? "NHTSA note: "+err[0].replace(/^\d+ - /,"") : "Details from NHTSA's vPIC database.");
   }catch(e){
