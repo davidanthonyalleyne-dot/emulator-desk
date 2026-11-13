@@ -93,10 +93,11 @@ button,select,input{font:inherit;color:inherit}
 @media (max-width:520px){ .seg{grid-template-columns:repeat(3,1fr)} }
 
 /* Slider rows */
-.pid{display:grid;grid-template-columns:132px 1fr 86px;gap:14px;align-items:center;min-height:48px;padding:6px 14px;position:relative}
+.pid{display:grid;grid-template-columns:200px 1fr 86px;gap:14px;align-items:center;min-height:48px;padding:6px 14px;position:relative}
 .pid + .pid::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--sep);transform:scaleY(.5)}
 .pid label{font-size:15px}
-.pid label small{display:block;font-size:11.5px;color:var(--label2);font-family:var(--mono)}
+.pid label{min-width:0}
+.pid label small{display:block;font-size:10.5px;color:var(--label2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pid output{font-size:15px;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
 .pid output span{color:var(--label2);font-weight:400;font-size:13px;margin-left:3px}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer;--p:0%}
@@ -219,6 +220,8 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .btlog{background:var(--g);border-radius:14px;padding:10px 12px;font:11px/1.5 var(--mono);color:var(--l2);white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto;margin:0}
 .logcopy{border:0;background:none;color:#ff9f0a;font:600 13px var(--font);cursor:pointer;padding:0}
 .bt-real{font-size:12.5px;color:var(--l2);margin-top:2px}
+.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{min-width:0}
+.tvss{font-family:var(--mono);font-size:9.5px;color:var(--l2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ---- Console ---- */
 .term{background:var(--term);color:var(--term-text);border-radius:var(--r);height:200px;overflow:auto;font-family:var(--mono);font-size:12.5px;padding:12px 14px;line-height:1.6}
 @media (prefers-color-scheme: light){ .term{box-shadow:inset 0 0 0 1px var(--sep)} }
@@ -233,7 +236,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.4</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.5</span></div></div>
     <div class="spacer"></div>
     <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
@@ -423,21 +426,21 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 </div>
 <script>
 
-const APP_VERSION = "2.4";
+const APP_VERSION = "2.5";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
 const PIDS = [
-  {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
-  {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
-  {pid:"0104", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0105", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"010F", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"012F", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0142", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
-  {pid:"0110", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
-  {pid:"0146", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010C", vss:"Vehicle.Powertrain.CombustionEngine.Speed", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
+  {pid:"010D", vss:"Vehicle.Speed", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
+  {pid:"0104", vss:"Vehicle.OBD.EngineLoad", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0111", vss:"Vehicle.OBD.ThrottlePosition", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0105", vss:"Vehicle.Powertrain.CombustionEngine.ECT", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010F", vss:"Vehicle.OBD.IntakeTemp", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"012F", vss:"Vehicle.Powertrain.FuelSystem.RelativeLevel", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
+  {pid:"0110", vss:"Vehicle.Powertrain.CombustionEngine.MAF", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
+  {pid:"0146", vss:"Vehicle.Exterior.AirTemperature", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
 ];
 const PRESETS = {
   "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"0142":12.4,"0110":0},
@@ -452,6 +455,9 @@ function pct(x){return Math.round(Math.max(0,Math.min(100,x))*255/100)}
 function hex(b){return "0x"+Math.max(0,Math.min(255,b|0)).toString(16).toUpperCase().padStart(2,"0")}
 
 const $ = id => document.getElementById(id);
+// Every value is tracked by its COVESA VSS name; the OBD-II PID is only how the dongle is asked for it
+const READINGS = {};  // e.g. READINGS["Vehicle.Speed"] = {value: 45, unit: "km/h", pid: "010D", at: 1731…}
+function recordReading(p,v,src){ READINGS[p.vss]={value:v, unit:p.unit, pid:p.pid, source:src, at:Date.now()}; }
 const logEl = $("log");
 function log(text, cls="sys"){
   const d=document.createElement("div"); d.className=cls; d.textContent=text;
@@ -547,7 +553,7 @@ function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText")
 const pidsEl=$("pids"); const sendTimers={};
 PIDS.forEach(p=>{
   const row=document.createElement("div"); row.className="pid";
-  row.innerHTML=`<label for="r${p.pid}">${p.name}<small>${p.pid}</small></label><input id="r${p.pid}" type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"><output></output>`;
+  row.innerHTML=`<label for="r${p.pid}" title="${p.vss} · OBD-II PID ${p.pid}">${p.name}<small>${p.pid} · ${p.vss}</small></label><input id="r${p.pid}" type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"><output></output>`;
   const r=row.querySelector("input"), o=row.querySelector("output");
   p.el=r; p.out=o; const show=()=>paintPid(p); show();
   r.addEventListener("input",()=>{ show(); if($("autoSend").checked){ clearTimeout(sendTimers[p.pid]); sendTimers[p.pid]=setTimeout(()=>sendPid(p),120); } });
@@ -555,7 +561,7 @@ PIDS.forEach(p=>{
 });
 function fmt(p,x){ return p.step<1 ? x.toFixed(1) : String(Math.round(x)) }
 function paintPid(p){ const v=+p.el.value; p.out.innerHTML=fmt(p,v)+"<span>"+p.unit+"</span>"; p.el.style.setProperty("--p",((v-p.min)/(p.max-p.min)*100)+"%"); }
-function setPid(p,x,push=true){ p.el.value=x; paintPid(p); if(p.pid==="010C"||p.pid==="0111") engine.update(); if(push) sendPid(p); }
+function setPid(p,x,push=true){ p.el.value=x; paintPid(p); recordReading(p,+p.el.value,"emulator"); if(p.pid==="010C"||p.pid==="0111") engine.update(); if(push) sendPid(p); }
 PIDS.forEach(p=>{ if(p.pid==="010C"||p.pid==="0111") p.el.addEventListener("input",()=>engine.update()); });
 
 // ---------- Engine sound: firing-pulse model of a flat-six, run in an AudioWorklet ----------
@@ -692,7 +698,7 @@ const $$=id=>document.getElementById(id);
 // tiles for every PID except speed and RPM (those are in the gauge)
 PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
   const t=document.createElement("div"); t.className="tile";
-  t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><span class="mdot" id="pm${p.pid}"></span>`;
+  t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
 });
 function phClock(){ const d=new Date(); $$("phClock").textContent=d.getHours()%12||12; $$("phClock").textContent+=":"+String(d.getMinutes()).padStart(2,"0"); }
@@ -798,6 +804,7 @@ function parseVin(r){
 function show(pid,v){
   const p=PIDS.find(q=>q.pid===pid), el=$$("ph"+pid), m=$$("pm"+pid), em=+p.el.value;
   if(v===null){ el.textContent="–"; if(m) m.className="mdot no"; return null; }
+  recordReading(p,v,"dongle");
   el.textContent= p.step<1? v.toFixed(1) : Math.round(v);
   const ok=Math.abs(v-em)<=(pid==="010C"?50:p.step<1?Math.max(p.step,0.2):1.5); if(m) m.className="mdot "+(ok?"ok":"no"); return ok;
 }

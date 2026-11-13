@@ -90,6 +90,8 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
 .live-card .ph-btn{margin-top:0}
 .linkbtn{display:block;width:100%;border:0;background:none;color:#ff9f0a;font:500 14px var(--font);padding:10px 0 4px;cursor:pointer}
 .bt-real{font-size:12.5px;color:var(--l2);margin-top:2px}
+.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{min-width:0}
+.tvss{font-family:var(--mono);font-size:10.5px;color:var(--l2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-transparency: reduce){ .tabbar{background:#161618;backdrop-filter:none;-webkit-backdrop-filter:none} }
 
 
@@ -286,23 +288,26 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
           </nav>
           </div>
 <script>
-const APP_VERSION="2.4";
+const APP_VERSION="2.5";
 const DEMO=new URLSearchParams(location.search).has("demo");
 const $=id=>document.getElementById(id);
+// Every value is tracked by its COVESA VSS name; the OBD-II PID is only how the dongle is asked for it
+const READINGS = {};
+function recordReading(p,v,src){ READINGS[p.vss]={value:v, unit:p.unit, pid:p.pid, source:src, at:Date.now()}; }
 function log(t){ console.log(t); }
 function u16(n){n=Math.max(0,Math.min(65535,n));return [n>>8, n&255]}
 function pct(x){return Math.round(Math.max(0,Math.min(100,x))*255/100)}
 const PIDS = [
-  {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
-  {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
-  {pid:"0104", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0105", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"010F", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"012F", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0142", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
-  {pid:"0110", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
-  {pid:"0146", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010C", vss:"Vehicle.Powertrain.CombustionEngine.Speed", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
+  {pid:"010D", vss:"Vehicle.Speed", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
+  {pid:"0104", vss:"Vehicle.OBD.EngineLoad", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0111", vss:"Vehicle.OBD.ThrottlePosition", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0105", vss:"Vehicle.Powertrain.CombustionEngine.ECT", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010F", vss:"Vehicle.OBD.IntakeTemp", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"012F", vss:"Vehicle.Powertrain.FuelSystem.RelativeLevel", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
+  {pid:"0110", vss:"Vehicle.Powertrain.CombustionEngine.MAF", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
+  {pid:"0146", vss:"Vehicle.Exterior.AirTemperature", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
 ];
 
 PIDS.forEach(p=>p.el={value:p.v});
@@ -338,7 +343,7 @@ const $$=id=>document.getElementById(id);
 // tiles for every PID except speed and RPM (those are in the gauge)
 PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
   const t=document.createElement("div"); t.className="tile";
-  t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><span class="mdot" id="pm${p.pid}"></span>`;
+  t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
 });
 function phClock(){ if(!$$("phClock")) return; const d=new Date(); $$("phClock").textContent=d.getHours()%12||12; $$("phClock").textContent+=":"+String(d.getMinutes()).padStart(2,"0"); }
@@ -469,6 +474,7 @@ function parseVin(r){
 function show(pid,v){
   const p=PIDS.find(q=>q.pid===pid), el=$$("ph"+pid);
   if(v===null){ el.textContent="–"; return null; }
+  recordReading(p,v,"dongle");
   el.textContent= p.step<1? v.toFixed(1) : (p.pid==="010C"? Math.round(v/10)*10 : Math.round(v)); p.el.value=v; return true;
 }
 function btStartPoll(){
