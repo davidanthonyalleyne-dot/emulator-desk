@@ -83,6 +83,12 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
 #paneBt .kv b#bcId,#paneBt .kv b#bcSvc,#paneBt .kv b#bcRx,#paneBt .kv b#bcTx,#paneBt .kv b#bcAll{font-family:var(--mono);font-size:11.5px}
 .btlog{background:var(--g);border-radius:14px;padding:10px 12px;font:11px/1.5 var(--mono);color:var(--l2);white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto;margin:0}
 .logcopy{border:0;background:none;color:#ff9f0a;font:600 13px var(--font);cursor:pointer;padding:0}
+.live-card{background:var(--g);border-radius:16px;padding:16px;text-align:center;margin:0 0 6px}
+.live-card[hidden],.verdict[hidden]{display:none}
+.lc-ic{width:52px;height:52px;border-radius:50%;background:#0a84ff;color:#fff;display:grid;place-items:center;margin:0 auto 10px}.lc-ic svg{width:28px;height:28px}
+.lc-t{font-size:15px;color:var(--l2);margin-bottom:12px;line-height:1.35}
+.live-card .ph-btn{margin-top:0}
+.linkbtn{display:block;width:100%;border:0;background:none;color:#ff9f0a;font:500 14px var(--font);padding:10px 0 4px;cursor:pointer}
 @media (prefers-reduced-transparency: reduce){ .tabbar{background:#161618;backdrop-filter:none;-webkit-backdrop-filter:none} }
 
 
@@ -164,6 +170,11 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
 <div class="pane-wrap">
             <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
               <div class="app-h"><div class="app-t">Live</div></div>
+              <div class="live-card" id="liveCard">
+                <div class="lc-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="lc-t" id="liveCardText">Plug the dongle into the emulator or a car, then tap Connect.</div>
+                <button class="ph-btn" id="liveConnect">Connect Dongle</button>
+              </div>
               <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
@@ -222,6 +233,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
                 <div class="bt-state"><span class="bt-dot" id="btDot"></span><span id="btInfo">Not connected</span></div>
               </div>
               <button class="ph-btn" id="btBtn" style="margin:0 0 4px">Connect Dongle</button>
+              <button class="linkbtn" id="btAll" type="button">Don't see your dongle? Show all Bluetooth devices</button>
               <div class="psec">Connection</div>
               <div class="pgroup">
                 <div class="kv"><span>Connected For</span><b id="bcUp">–</b></div>
@@ -272,7 +284,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:var(--font
           </nav>
           </div>
 <script>
-const APP_VERSION="2.2";
+const APP_VERSION="2.3";
 const DEMO=new URLSearchParams(location.search).has("demo");
 const $=id=>document.getElementById(id);
 function log(t){ console.log(t); }
@@ -304,11 +316,11 @@ function errText(e){ if(!e) return "no details"; if(typeof e==="string") return 
 // the serial services and the names OBD dongles usually advertise.
 async function btPick(){
   const ways=[
-    ["all devices", {acceptAllDevices:true, optionalServices:BT_SVC_FULL}],
     ["OBD dongles by service and name", {filters:[...BT_SVC_FULL.map(u=>({services:[u]})), ...BT_NAMES.map(n=>({namePrefix:n}))], optionalServices:BT_SVC_FULL}],
+    ["all devices", {acceptAllDevices:true, optionalServices:BT_SVC_FULL}],
     ["OBD dongles by name", {filters:BT_NAMES.map(n=>({namePrefix:n})), optionalServices:BT_SVC_FULL}]
   ];
-  const start = bt.pickWay||0; let last=null;
+  const start = bt.forceAll ? 1 : (bt.pickWay||0); bt.forceAll=false; let last=null;
   for(let i=start;i<ways.length;i++){
     dbg("asking for a device ("+ways[i][0]+")…");
     try{ const d=await navigator.bluetooth.requestDevice(ways[i][1]); bt.pickWay=i; return d; }
@@ -358,7 +370,7 @@ function btSend(cmd,timeout=3000){
     catch(e){ if(bt.wait){ clearTimeout(bt.wait.t); bt.wait=null; } res(null); }
   });
 }
-function btConnectedUI(name){ $$("btBtn").textContent="Disconnect"; $$("btBtn").classList.add("on"); $$("btDot").classList.add("on"); $$("btRing").classList.add("on"); }
+function btConnectedUI(name){ liveCard("connected"); $$("btBtn").textContent="Disconnect"; $$("btBtn").classList.add("on"); $$("btDot").classList.add("on"); $$("btRing").classList.add("on"); }
 async function btInit(){
   bt.dbgRx=0; const raw=await btSend("ATZ",5000); dbg("ATZ reply: "+JSON.stringify(raw));
   if(raw===null) return false;
@@ -366,12 +378,13 @@ async function btInit(){
   $$("phElm").textContent=(await btSend("ATI")||raw).replace(/ATZ|ATI/g,"").replace(/\s+/g," ").trim()||"ELM327";
   return true;
 }
-async function btConnect(){
-  if(bt.dev||bt.demo) return btDisconnect();
+async function btConnect(devGiven){
+  if(!devGiven && (bt.dev||bt.demo)) return btDisconnect();
+  bt.userDisc=false; liveCard("connecting");
   if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo Dongle"); btSetInfo("Connected"); bcLink(null,"0000fff0-0000-1000-8000-00805f9b34fb"); await btInit(); await btCapabilities(); btStartPoll(); phTab("paneLive"); return; }
   if(!navigator.bluetooth){ btCheckAvail(); dbg("Connect tapped but Web Bluetooth isn't available"); btSetInfo("This browser can't use Bluetooth"); return; }
   try{
-    const dev=await btPick(); dbg("picked: "+(dev.name||dev.id));
+    const dev=devGiven || await btPick(); dbg((devGiven?"reconnecting to: ":"picked: ")+(dev.name||dev.id));
     btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connecting…");
     const srv=await dev.gatt.connect(); dbg("GATT connected");
     let tx=null,rx=null,svcU=null; const seen=[];
@@ -394,15 +407,39 @@ async function btConnect(){
     log("BT services: "+(seen.join(", ")||"none visible"),"sys");
     if(!tx||!rx){ btSetInfo((dev.name||"Dongle")+": no serial channel"); verdict("no","Connected, but there's no channel to talk to"); dev.gatt.disconnect(); return; }
     bt.dev=dev; bt.tx=tx; bt.rx=rx;
-    dev.addEventListener("gattserverdisconnected",()=>{ log("BT dongle disconnected","sys"); btCleanup(); });
+    if(!dev.__edHooked){ dev.__edHooked=true; dev.addEventListener("gattserverdisconnected",()=>{ dbg("dongle disconnected"+(bt.userDisc?"":" unexpectedly")); const auto=!bt.userDisc; btCleanup(); if(auto) btAutoReconnect(dev,1); }); }
     await rx.startNotifications(); rx.addEventListener("characteristicvaluechanged",btOnData); dbg("notifications on");
     btConnectedUI(); btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connected"); bcLink(dev,svcU,rx,tx,seen);
     if(!await btInit()){ verdict("no","Connected, but it doesn't answer OBD commands"); btSetInfo("Connected, but it doesn't answer OBD commands");
       log("The dongle connected but didn't answer ELM327 commands. Some dongles, including Automatic adapters, use a locked protocol of their own.","er"); return; }
     log("BT dongle connected: "+(dev.name||"unnamed"),"sys");
     btSetInfo("Checking what it supports…"); dbg("checking capabilities"); try{ await btCapabilities(); dbg("capabilities done"); }catch(e){ dbg("capabilities failed: "+errText(e)+(e&&e.stack?" @ "+String(e.stack).split("\n")[0]:"")); } btSetInfo("Connected"); dbg("starting live polling");
-    btStartPoll(); phTab("paneLive");
-  }catch(e){ dbg("error: "+errText(e)); btSetInfo(e&&e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+errText(e)); }
+    btStartPoll(); phTab("paneLive"); bt.reconnTry=0;
+    try{ localStorage.setItem("ed.lastDongle",JSON.stringify({id:dev.id,name:dev.name||""})); }catch(e){}
+    wake(true);
+    return true;
+  }catch(e){ dbg("error: "+errText(e)); btSetInfo(e&&e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+errText(e)); if(!bt.dev) liveCard("idle"); return false; }
+}
+// If the link drops (dongle unplugged, phone walked away), try to get it back without asking again
+function btAutoReconnect(dev,n){
+  const waits=[1,2,4,8,15]; if(n>waits.length){ dbg("gave up reconnecting"); btSetInfo("Lost the dongle. Tap Connect to try again."); liveCard("idle"); return; }
+  btSetInfo("Reconnecting… (try "+n+" of "+waits.length+")"); liveCard("reconnecting");
+  setTimeout(async()=>{ if(bt.dev||bt.userDisc) return; const ok=await btConnect(dev); if(!ok && !bt.userDisc) btAutoReconnect(dev,n+1); }, waits[n-1]*1000);
+}
+// Keep the screen on while connected, so iOS doesn't sleep mid-session
+let wakeLock=null;
+async function wake(on){ try{ if(on && "wakeLock" in navigator && !wakeLock){ wakeLock=await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release",()=>wakeLock=null); dbg("screen will stay on"); } if(!on && wakeLock){ await wakeLock.release(); wakeLock=null; } }catch(e){ dbg("couldn't keep screen on: "+errText(e)); } }
+["click","touchend"].forEach(ev=>document.addEventListener(ev,()=>{ if(bt.dev && !wakeLock) wake(true); },{passive:true}));
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && bt.dev) wake(true); });
+// Big connect card on the Live tab, so you don't need to visit Bluetooth first
+function liveCard(state){
+  const c=$$("liveCard"); if(!c) return;
+  c.hidden = state==="connected"; const v=$$("btVerdict"); if(v) v.hidden = state!=="connected";
+  const b=$$("liveConnect"), t=$$("liveCardText");
+  if(state==="connecting"){ b.disabled=true; b.textContent="Connecting…"; }
+  else if(state==="reconnecting"){ b.disabled=false; b.textContent="Reconnecting… Tap to Pick Again"; }
+  else { b.disabled=false; const last=(()=>{ try{ return JSON.parse(localStorage.getItem("ed.lastDongle")||"null"); }catch(e){ return null; } })(); b.textContent=last&&last.name?"Connect "+last.name:"Connect Dongle"; }
+  t.textContent = state==="reconnecting" ? "The dongle dropped out. Trying to get it back on its own." : "Plug the dongle into the emulator or a car, then tap Connect.";
 }
 function hexOf(r){ return (r||"").replace(/\s|\r|\n/g,"").toUpperCase(); }
 function parsePid(pid,r){
@@ -458,8 +495,8 @@ async function btPollOnce(){ {
   }
   if((bt.round||0)===1) dbg("first live round finished");
 }
-function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Dongle"); phBadge(0); bcClear(); verdict("","Connect a dongle to see what it reads"); }
-function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
+function btCleanup(){ wake(false); liveCard("idle"); clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Dongle"); phBadge(0); bcClear(); verdict("","Connect a dongle to see what it reads"); }
+function btDisconnect(){ bt.userDisc=true; try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
   if(p) return "41"+cmd.slice(2)+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join("")+"\r";
@@ -614,11 +651,21 @@ document.querySelectorAll(".tabbar [role=tab]").forEach((t,i,all)=>{
   t.onclick=()=>phTab(t.dataset.pane);
   t.onkeydown=e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=all[(i+(e.key==="ArrowRight"?1:all.length-1))%all.length]; phTab(n.dataset.pane); n.focus(); } };
 });
-phTab("paneBt");
+phTab("paneLive");
 function phBadge(n){ const b=$("tbBadge"); b.hidden=!n; b.textContent=n||""; }
 // Bluefy and similar browsers can add Web Bluetooth a moment after the page starts, so check late and never lock the button
 function btCheckAvail(){ const ok=!!navigator.bluetooth||DEMO; $("noBt").hidden=ok; return ok; }
 setTimeout(()=>{ btCheckAvail(); dbg("after load · Web Bluetooth "+(navigator.bluetooth?"available":"NOT available")); },1500);
+$$("liveConnect").onclick=()=>{ if(bt.dev) return; bt.userDisc=true; btConnect(); };
+$$("btAll").onclick=()=>{ if(bt.dev) return; bt.forceAll=true; btConnect(); };
+liveCard("idle");
+// Reconnect to the last dongle on launch, without the picker, where the browser allows it
+(async()=>{ try{
+  const last=JSON.parse(localStorage.getItem("ed.lastDongle")||"null"); if(!last||DEMO) return;
+  if(!navigator.bluetooth||typeof navigator.bluetooth.getDevices!=="function"){ dbg("this browser can't reconnect without the picker; tap Connect "+(last.name||"")); return; }
+  const devs=await navigator.bluetooth.getDevices(); const d=devs.find(x=>x.id===last.id)||devs.find(x=>x.name&&x.name===last.name);
+  if(d){ dbg("found "+(d.name||"last dongle")+" from last time, connecting"); btConnect(d); } else dbg("last dongle not remembered by the browser");
+}catch(e){ dbg("auto-connect skipped: "+errText(e)); } })();
 // demo: a car that drives around, so the screen can be tried without hardware
 if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*95:f<.7?95:Math.max(0,(1-f)/.3*95), acc=f<.35;
   const set=(pid,v)=>PIDS.find(p=>p.pid===pid).el.value=v; set("010D",Math.round(sp)); set("010C",sp<1?850:1200+sp*18+(acc?2600:0)); set("0111",acc?70:f<.7?18:0); set("0104",acc?80:f<.7?35:12); },600); }
