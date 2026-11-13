@@ -45,13 +45,13 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v1.7</b><br>Document <b>v1.7</b></div>
+    <div class="vers">App <b>v1.8</b><br>Document <b>v1.8</b></div>
   </div>
   <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install, and follows Apple's Human Interface Guidelines in light and dark mode.</p>
   <div class="shots">
     <div class="shot"><img src="shots/2-live.png"><b>Live data</b><p>Ten sliders for the common Mode 01 values, with presets from Parked to Overheat. Values go out as you drag.</p></div>
     <div class="shot"><img src="shots/3-vehicle.png"><b>Vehicle and codes</b><p>A compact panel for protocol, VIN and up to six trouble codes, set or cleared in one tap.</p></div>
-    <div class="shot"><img src="shots/7-phone.png" style="object-fit:contain;background:var(--bg)"><b>Dongle phone view</b><p>A phone screen with a tab bar: Live for the gauge and ten values, Vehicle for codes and VIN, Bluetooth for the connection.</p></div>
+    <div class="shot"><img src="shots/7-phone.png" style="object-fit:contain;background:var(--bg)"><b>Dongle phone view</b><p>A phone with a tab bar. Live has an rpm gauge with a 0 to 8 scale and redline, Vehicle decodes the VIN, Bluetooth handles the link.</p></div>
   </div>
   <div class="glance">
     <div class="g"><div class="n">10</div><div class="l">live PIDs with sliders</div></div>
@@ -64,7 +64,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
       <h2>Live data</h2>
       <p>Ten common values sent as raw OBD-II bytes. Drive Loop cycles pulling away, cruising and braking.</p>
       <h2>Dongle over Bluetooth</h2>
-      <p>Connect a Bluetooth LE ELM327 dongle from the Bluetooth tab. Dots show whether each value matches, and Vehicle gets a red badge for stored codes.</p>
+      <p>Connect a Bluetooth LE ELM327 dongle from the Bluetooth tab. Dots show matches, and Vehicle decodes the VIN it reads into make, model, engine and origin.</p>
     </div>
     <div>
       <h2>Good to know</h2>
@@ -78,25 +78,25 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v1.7</b><br>Document <b>v1.7</b></div></div>
+  <div class="vers">App <b>v1.8</b><br>Document <b>v1.8</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
     <tr><th>Piece</th><th>Version</th><th>What it does</th><th>Loaded from</th><th>Licence</th></tr>
-    <tr><td>Emulator Desk</td><td>1.7</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check</td><td><code>index.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
+    <tr><td>Emulator Desk</td><td>1.8</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check</td><td><code>index.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
     <tr><td>Freematics AT command set</td><td>EMULATOR-OBDII V3 (tested)</td><td>Commands the app sends: <code>ATE0</code>, <code>ATZ</code>, <code>ATSET</code>, <code>ATGET</code> (PIDs), <code>ATCLR DTC</code></td><td>Built into the emulator</td><td>Freematics</td></tr>
     <tr><td>OBD-II PID formulas</td><td>SAE J1979</td><td>Byte encodings for each slider (e.g. RPM × 4 as two bytes, temperature + 40)</td><td>Hard-coded in the app</td><td>Public standard</td></tr>
-    <tr><td>System fonts</td><td>n/a</td><td>SF Pro and SF Mono on Mac, Arial and Consolas elsewhere</td><td>The operating system</td><td>OS fonts</td></tr>
   </table>
-  <p style="margin-top:6px;color:var(--muted);font-size:11.5px">No third-party libraries, CDNs or web fonts are used.</p>
+  <p style="margin-top:6px;color:var(--muted);font-size:11.5px">No third-party libraries, CDNs or web fonts are used; type is the system font.</p>
 
   <h2>Integrations</h2>
   <table>
     <tr><th>Integration</th><th>Used for</th><th>Details</th></tr>
     <tr><td>Web Serial API</td><td>Talking to the emulator</td><td><code>navigator.serial.requestPort()</code>, opened at 38400 baud, 8N1. Commands end in <code>\r</code>. You pick the port in Chrome's chooser; no auth. Works in Chrome and Edge, not Safari or Firefox.</td></tr>
-    <tr><td>Freematics OBD-II Emulator MK2</td><td>The device being controlled</td><td>USB to serial through a CP2102 (newer units, <code>/dev/cu.usbserial-*</code>) or CH340 bridge, both with drivers built into macOS. Needs its 12V adapter for power. The app labels the chip from the USB vendor ID.</td></tr>
+    <tr><td>Freematics OBD-II Emulator MK2</td><td>The device being controlled</td><td>USB to serial through a CP2102 or CH340 bridge, both with drivers built into macOS. Needs its 12V adapter for power.</td></tr>
     <tr><td>Web Bluetooth</td><td>Reading a plugged-in dongle</td><td><code>navigator.bluetooth.requestDevice()</code>, you pick the dongle. Finds a notify and a write characteristic (FFE0, FFF0, 18F0 and similar), sends ELM327 commands (<code>ATZ</code>, <code>ATSP0</code>, all ten Mode 01 PIDs, <code>03</code>, <code>0902</code>, <code>ATRV</code>, <code>ATDP</code>). Locked dongles such as Automatic's don't answer.</td></tr>
-    <tr><td>Web Audio API</td><td>Engine sound</td><td>An AudioWorklet fires six cylinders every two revolutions (RPM ÷ 120 × 6 pulses a second), each a decaying thump plus combustion noise, through two exhaust pipe resonators, a muffler low-pass and a soft clipper, then EQ and a compressor. Starts only when you flip the switch.</td></tr>
+    <tr><td>NHTSA vPIC</td><td>VIN details</td><td><code>vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{VIN}?format=json</code>, no key. Sends only the VIN; returns model, engine, body and plant. Maker, country, year and check digit decode offline.</td></tr>
+    <tr><td>Web Audio API</td><td>Engine sound</td><td>An AudioWorklet fires six cylinder pulses every two revolutions through exhaust resonators, a muffler filter, EQ and a compressor. Starts only when you flip the switch.</td></tr>
     <tr><td>GitHub Pages</td><td>Hosting</td><td><code>davidanthonyalleyne-dot.github.io/emulator-desk</code>, served from the <code>main</code> branch of the public <code>emulator-desk</code> repo. Static files only.</td></tr>
   </table>
 
@@ -104,7 +104,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="cols">
     <div>
       <p><b>On your Mac:</b> everything. The page runs in Chrome and sends one command at a time, waiting up to 1.2 seconds for OK or ERROR before the next.</p>
-      <p><b>Network:</b> one page load from GitHub Pages. After that the app makes no web requests.</p>
+      <p><b>Network:</b> the page load from GitHub Pages, plus one NHTSA lookup per new VIN decoded.</p>
     </div>
     <div>
       <p><b>Data kept:</b> nothing. Slider values, VIN and codes live only in the open page and on the emulator itself.</p>
