@@ -218,6 +218,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 #paneBt .kv b#bcId,#paneBt .kv b#bcSvc,#paneBt .kv b#bcRx,#paneBt .kv b#bcTx,#paneBt .kv b#bcAll{font-family:var(--mono);font-size:11.5px}
 .btlog{background:var(--g);border-radius:14px;padding:10px 12px;font:11px/1.5 var(--mono);color:var(--l2);white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto;margin:0}
 .logcopy{border:0;background:none;color:#ff9f0a;font:600 13px var(--font);cursor:pointer;padding:0}
+.bt-real{font-size:12.5px;color:var(--l2);margin-top:2px}
 /* ---- Console ---- */
 .term{background:var(--term);color:var(--term-text);border-radius:var(--r);height:200px;overflow:auto;font-family:var(--mono);font-size:12.5px;padding:12px 14px;line-height:1.6}
 @media (prefers-color-scheme: light){ .term{box-shadow:inset 0 0 0 1px var(--sep)} }
@@ -232,7 +233,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.3</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.4</span></div></div>
     <div class="spacer"></div>
     <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
@@ -290,7 +291,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
     </section>
 
     <section class="phone-col" id="btCard">
-      <div class="sh"><h2>Dongle over Bluetooth</h2></div>
+      <div class="sh"><h2>Kē over Bluetooth</h2></div>
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
@@ -298,7 +299,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
           <div class="pane-wrap">
             <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
               <div class="app-h"><div class="app-t">Live</div></div>
-              <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
+              <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
                 <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
@@ -311,7 +312,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <div class="vd-card">
                 <div class="vd-vin" id="vdVin"><span class="muted">No VIN yet</span></div>
                 <div class="vd-legend"><span class="s-wmi">Maker</span><span class="s-vds">Model</span><span class="s-chk">Check</span><span class="s-yr">Year</span><span class="s-pl">Plant</span><span class="s-sn">Serial</span></div>
-                <div class="vd-src" id="vdSrc">Connect a dongle, or decode any VIN below</div>
+                <div class="vd-src" id="vdSrc">Connect the Kē, or decode any VIN below</div>
               </div>
               <div class="psec">Vehicle</div>
               <div class="pgroup">
@@ -336,7 +337,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               </div>
               <div class="ph-note" style="text-align:left;margin:8px 4px 0" id="vdMsg"></div>
               <div class="psec">Trouble Codes <span id="phDtcN"></span></div>
-              <div class="pgroup"><div class="dtcs" id="phDtc"><span class="muted">Connect a dongle to read codes</span></div></div>
+              <div class="pgroup"><div class="dtcs" id="phDtc"><span class="muted">Connect the Kē to read codes</span></div></div>
               <div class="psec">Connection</div>
               <div class="pgroup">
                 <div class="kv"><span>VIN</span><b id="phVin">–</b></div>
@@ -351,10 +352,11 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <div class="app-h"><div class="app-t">Bluetooth</div></div>
               <div class="bt-hero">
                 <div class="bt-ring" id="btRing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                <div class="bt-name" id="btName">No Dongle</div>
+                <div class="bt-name" id="btName">No Kē</div>
+                <div class="bt-real" id="btReal"></div>
                 <div class="bt-state"><span class="bt-dot" id="btDot"></span><span id="btInfo">Not connected</span></div>
               </div>
-              <button class="ph-btn" id="btBtn" style="margin:0 0 4px">Connect Dongle</button>
+              <button class="ph-btn" id="btBtn" style="margin:0 0 4px">Connect Kē</button>
               <div class="psec">Connection</div>
               <div class="pgroup">
                 <div class="kv"><span>Connected For</span><b id="bcUp">–</b></div>
@@ -383,12 +385,12 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <div class="psec">Connection Log <button class="logcopy" id="btLogCopy" type="button">Copy</button></div>
               <pre class="btlog" id="btLog"></pre>
               <div class="psec">Supported Data <span id="bcPidN"></span></div>
-              <div class="pgroup"><div class="pids-sup" id="bcPids"><span class="muted">Connect a dongle to ask the car what it supports</span></div></div>
+              <div class="pgroup"><div class="pids-sup" id="bcPids"><span class="muted">Connect the Kē to ask the car what it supports</span></div></div>
               <div class="pgroup" style="margin-top:8px">
                 <div class="kv"><span>Vehicle Info (Mode 09)</span><b id="bcM9">–</b></div>
               </div>
 
-              <div class="ph-note">Bluetooth LE dongles only. Chrome asks you to pick the dongle each time the page loads.</div>
+              <div class="ph-note">The Kē talks to one device at a time. Chrome asks you to pick it each time the page loads.</div>
             </div>
           </div>
           <nav class="tabbar" role="tablist" aria-label="Phone sections">
@@ -421,7 +423,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 </div>
 <script>
 
-const APP_VERSION = "2.3";
+const APP_VERSION = "2.4";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
@@ -696,7 +698,8 @@ PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
 function phClock(){ const d=new Date(); $$("phClock").textContent=d.getHours()%12||12; $$("phClock").textContent+=":"+String(d.getMinutes()).padStart(2,"0"); }
 phClock(); setInterval(phClock,20000);
 function btSetInfo(t){ $$("btInfo").textContent=t; }
-function btSetName(t){ $$("btName").textContent=t; }
+const DONGLE_NAME="Kē";
+function btSetName(real){ const none=!real||/^No /.test(real); $$("btName").textContent= none? "No "+DONGLE_NAME : DONGLE_NAME; const r=$$("btReal"); if(r) r.textContent = none? "" : "Bluetooth name: "+real; }
 function verdict(cls,t){ const v=$$("btVerdict"); v.className="verdict "+cls; v.textContent=t; }
 function btOnData(e){
   const dv=e.target.value; bt.buf+=new TextDecoder().decode(new Uint8Array(dv.buffer,dv.byteOffset,dv.byteLength)); if(bt.dbgRx<6){ bt.dbgRx++; dbg("rx: "+JSON.stringify(bt.buf.slice(-40))); }
@@ -734,11 +737,11 @@ async function btInit(){
 }
 async function btConnect(){
   if(bt.dev||bt.demo) return btDisconnect();
-  if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo Dongle"); btSetInfo("Connected"); bcLink(null,"0000fff0-0000-1000-8000-00805f9b34fb"); await btInit(); await btCapabilities(); btStartPoll(); phTab("paneLive"); return; }
+  if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo"); btSetInfo("Connected"); bcLink(null,"0000fff0-0000-1000-8000-00805f9b34fb"); await btInit(); await btCapabilities(); btStartPoll(); phTab("paneLive"); return; }
   if(!navigator.bluetooth){ btSetInfo("No Bluetooth in this browser. Use Chrome."); return; }
   try{
     const dev=await btPick(); dbg("picked: "+(dev.name||dev.id));
-    btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connecting…");
+    btSetName(dev.name||"unnamed"); btSetInfo("Connecting…");
     const srv=await dev.gatt.connect(); dbg("GATT connected");
     let tx=null,rx=null,svcU=null; const seen=[];
     let svcs=[];
@@ -758,12 +761,12 @@ async function btConnect(){
       if(t&&r){ tx=t; rx=r; svcU=s.uuid; dbg("using service "+s.uuid+": receive "+r.uuid+", send "+t.uuid); }
     }
     log("BT services: "+(seen.join(", ")||"none visible"),"sys");
-    if(!tx||!rx){ btSetInfo((dev.name||"Dongle")+": no serial channel"); verdict("no","Connected, but there's no channel to talk to"); dev.gatt.disconnect(); return; }
+    if(!tx||!rx){ btSetInfo("No serial channel on this device"); verdict("no","Connected, but there's no channel to talk to"); dev.gatt.disconnect(); return; }
     bt.dev=dev; bt.tx=tx; bt.rx=rx;
     dev.addEventListener("gattserverdisconnected",()=>{ log("BT dongle disconnected","sys"); btCleanup(); });
     await rx.startNotifications(); rx.addEventListener("characteristicvaluechanged",btOnData); dbg("notifications on");
-    btConnectedUI(); btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connected"); bcLink(dev,svcU,rx,tx,seen);
-    if(!await btInit()){ verdict("no","Connected, but it doesn't answer OBD commands"); btSetInfo("Connected, but it doesn't answer OBD commands");
+    btConnectedUI(); btSetName(dev.name||"unnamed"); btSetInfo("Connected"); bcLink(dev,svcU,rx,tx,seen);
+    if(!await btInit()){ verdict("no","Connected, but the Kē doesn't answer OBD commands"); btSetInfo("Connected, but the Kē doesn't answer OBD commands");
       log("The dongle connected but didn't answer ELM327 commands. Some dongles, including Automatic adapters, use a locked protocol of their own.","er"); return; }
     log("BT dongle connected: "+(dev.name||"unnamed"),"sys");
     btSetInfo("Checking what it supports…"); dbg("checking capabilities"); try{ await btCapabilities(); dbg("capabilities done"); }catch(e){ dbg("capabilities failed: "+errText(e)+(e&&e.stack?" @ "+String(e.stack).split("\n")[0]:"")); } btSetInfo("Connected"); dbg("starting live polling");
@@ -819,13 +822,13 @@ async function btPollOnce(){ {
       const dp=await btSend("ATDP"); if(dp) $$("phProto").textContent=dp.replace(/^AUTO,\s*/i,"").trim();
     }
     bt.round++;
-    if(ok===PIDS.length) verdict("ok","Dongle is reading the emulator");
+    if(ok===PIDS.length) verdict("ok","Kē is reading the emulator");
     else if(none===PIDS.length) verdict("no","Dongle sees no car");
     else verdict("no",`${ok} of ${PIDS.length} readings match`);
   }
   if((bt.round||0)===1) dbg("first live round finished");
 }
-function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Dongle"); phBadge(0); bcClear(); verdict("","Connect a dongle to see what it reads"); }
+function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
@@ -886,7 +889,7 @@ function bcLink(dev,svc,rx,tx,all){
   bcSet("bcWt", tx? (tx.properties.writeWithoutResponse?"Without response (faster)":"With response") : "Without response (faster)");
   bcSet("bcAll", all && all.length ? all.map(shortUuid).join(", ") : "0xFFF0");
 }
-function bcClear(){ ["bcUp","bcRtt","bcId","bcSvc","bcRx","bcTx","bcWt","bcAll","bcDesc","bcStn","bcProto","bcStd","bcM9"].forEach(id=>bcSet(id,"–")); bcSet("bcTo",0); bcSet("bcPidN",""); $$("bcPids").innerHTML='<span class="muted">Connect a dongle to ask the car what it supports</span>'; bt.since=0; }
+function bcClear(){ ["bcUp","bcRtt","bcId","bcSvc","bcRx","bcTx","bcWt","bcAll","bcDesc","bcStn","bcProto","bcStd","bcM9"].forEach(id=>bcSet(id,"–")); bcSet("bcTo",0); bcSet("bcPidN",""); $$("bcPids").innerHTML='<span class="muted">Connect the Kē to ask the car what it supports</span>'; bt.since=0; }
 
 // ---------- RPM scale on the phone gauge ----------
 // 240° sweep, 0 to 8,000 rpm, centre (110,100). Ticks every 500, labels every 1,000, redline from 7,000.
@@ -943,7 +946,7 @@ async function vinDecode(v, src){
   if(v===vinShown && src!=="typed") return; vinShown=v;
   const L=vinDecodeLocal(v);
   $$("vdVin").innerHTML=`<span class="s-wmi">${v.slice(0,3)}</span><span class="s-vds">${v.slice(3,8)}</span><span class="s-chk">${v[8]}</span><span class="s-yr">${v[9]}</span><span class="s-pl">${v[10]}</span><span class="s-sn">${v.slice(11)}</span>`;
-  $$("vdSrc").textContent = src==="dongle" ? "Read from the car by the dongle" : "Typed on the phone";
+  $$("vdSrc").textContent = src==="dongle" ? "Read from the car by the Kē" : "Typed on the phone";
   const set=(id,t)=>{ $$(id).textContent=t||"–"; };
   set("vdMaker",L.maker); set("vdCountry",L.country!=="Unknown"?L.country:L.region); set("vdYear",L.year?String(L.year):"Unknown");
   set("vdPlant",L.plant); set("vdSerial",L.serial);
