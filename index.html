@@ -384,7 +384,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.8</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.9</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -542,6 +542,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
                 <div class="kv"><span>Protocol</span><b id="bcProto">–</b></div>
                 <div class="kv"><span>OBD Standard</span><b id="bcStd">–</b></div>
                 <div class="kv"><span>Diagnostics</span><b id="bcDiag">–</b></div>
+                <div class="kv"><span>Modules</span><b id="bcEcus">–</b></div>
               </div>
               <div class="psec">Connection Log <button class="logcopy" id="btLogCopy" type="button">Copy</button></div>
               <pre class="btlog" id="btLog"></pre>
@@ -870,6 +871,10 @@ PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
   t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
 });
+// high-voltage battery charge (PID 5B / DID F45B, A×100/255), shown only when the car reports it
+(()=>{ const t=document.createElement("div"); t.className="tile"; t.id="phEvTile"; t.hidden=true;
+  t.innerHTML=`<div class="tl">HV Battery</div><div class="tv"><span id="phEv">–</span><small>%</small></div><div class="tvss" title="Vehicle.Powertrain.TractionBattery.StateOfCharge.Current · PID 5B / DID F45B">5B · Powertrain.TractionBattery.StateOfCharge</div>`;
+  $$("phTiles").appendChild(t); })();
 function phClock(){ const d=new Date(); $$("phClock").textContent=d.getHours()%12||12; $$("phClock").textContent+=":"+String(d.getMinutes()).padStart(2,"0"); }
 phClock(); setInterval(phClock,20000);
 function btSetInfo(t){ $$("btInfo").textContent=t; }
@@ -969,19 +974,19 @@ function parseDtc(r){
 }
 // UDS diagnostic trouble codes: service 19, sub-function 42 (WWH-OBD, emissions group 33) or plain 02 (by status mask).
 // Each record carries a 3-byte DTC: the first two bytes are the classic P0301-style code, the third is a failure type.
-function dtcName(w){ const n=parseInt(w[0],16); return "PCBU"[n>>2]+(n&3)+w.slice(1,4); }
+function dtcName(w){ const n=parseInt(w[0],16), ftb=w.slice(4,6); return "PCBU"[n>>2]+(n&3)+w.slice(1,4)+(ftb&&ftb!=="00"?"-"+ftb:""); }
 function parseUdsDtc(r){
   if(r===null) return null;
   const c=(r||"").split(/[\r\n]+/).map(l=>l.replace(/^[0-9A-F]:/i,"")).join("").replace(/\s/g,"").toUpperCase();
   if(/NODATA/.test(c)) return [];
   let i=c.indexOf("5942"), out=[];
-  if(i>=0){ const d=c.slice(i+12); for(let k=0;k+10<=d.length;k+=10){ const w=d.slice(k+2,k+6); if(w!=="0000") out.push(dtcName(w)); } return [...new Set(out)]; }
+  if(i>=0){ const d=c.slice(i+12); for(let k=0;k+10<=d.length;k+=10){ const w=d.slice(k+2,k+8); if(w.slice(0,4)!=="0000") out.push(dtcName(w)); } return [...new Set(out)]; }
   i=c.indexOf("5902"); if(i<0) return null;
-  const d=c.slice(i+6); for(let k=0;k+8<=d.length;k+=8){ const w=d.slice(k,k+4); if(w!=="0000") out.push(dtcName(w)); } return [...new Set(out)];
+  const d=c.slice(i+6); for(let k=0;k+8<=d.length;k+=8){ const w=d.slice(k,k+6); if(w.slice(0,4)!=="0000") out.push(dtcName(w)); } return [...new Set(out)];
 }
 async function readDtcs(){
   if(bt.std!=="uds") return parseDtc(await btSend("03",4000));
-  const a=parseUdsDtc(await btSend("19423308FF",4000)); if(a!==null) return a;
+  const a=parseUdsDtc(await btSend("1942330802",4000)); if(a!==null) return a;
   return parseUdsDtc(await btSend("190208",4000));
 }
 function parseVin(r){
@@ -1010,6 +1015,8 @@ async function btPollOnce(){ {
     let ok=0, bad=0, none=0;
     for(const p of PIDS){ const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
+    if(bt.ev){ const c=hexOf(await btSend(bt.std==="uds"?"22F45B":"015B")), k=bt.std==="uds"?"62F45B":"415B", i=c.indexOf(k);
+      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else $$("phEv").textContent="–"; }
     if(bt.round%4===0){
       const d=await readDtcs();
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
@@ -1026,7 +1033,7 @@ async function btPollOnce(){ {
 }
 function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
-const DEMO_UDS=new URLSearchParams(location.search).get("demo")==="uds";
+const DEMO_MODE=new URLSearchParams(location.search).get("demo"), DEMO_UDS=DEMO_MODE==="uds"||DEMO_MODE==="zev", DEMO_ZEV=DEMO_MODE==="zev";
 function demoElm(cmd){
   if(DEMO_UDS) return demoUds(cmd);
   const p=PIDS.find(q=>q.pid===cmd);
@@ -1039,13 +1046,20 @@ function demoElm(cmd){
   return "OK";
 }
 function demoUds(cmd){
-  const hx=a=>a.map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join("");
+  const hx=a=>a.map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join(""), asc=t=>hx([...t].map(c=>c.charCodeAt(0)));
+  const have = DEMO_ZEV ? ["01","0D","1C","1F","21","2F","30","31","42","46","4D","4E","5B"] : PIDS.map(p=>p.pid.slice(2)).concat(["01","1C","20","40"]);
+  const mask=base=>{ let n=0; const b0=parseInt(base,16); have.forEach(p=>{ const v=parseInt(p,16)-b0; if(v>=1&&v<=32) n|=1<<(32-v); }); if(have.some(p=>parseInt(p,16)>b0+32)) n|=1; return (n>>>0).toString(16).toUpperCase().padStart(8,"0"); };
+  if(cmd==="22F810") return "62F81001\r";
+  if(cmd==="22F41C") return DEMO_ZEV ? "62F41C1B\r" : "62F41C06\r";
   const m=/^22F4([0-9A-F]{2})$/.exec(cmd);
-  if(m){ const p=PIDS.find(q=>q.pid==="01"+m[1]); if(p) return "62F4"+m[1]+hx(p.enc(+p.el.value))+"\r";
-    return {"00":"62F400BE3FA813","20":"62F4208007A011","40":"62F440FED00400","1C":"62F41C06"}[m[1]]||"7F2231"; }
+  if(m){ if(["00","20","40","60"].includes(m[1])) return parseInt(m[1],16)===0||have.some(p=>parseInt(p,16)>parseInt(m[1],16)) ? "62F4"+m[1]+mask(m[1])+"\r" : "7F2231\r";
+    if(m[1]==="5B") return "62F45B"+hx([Math.round(78.4*255/100)])+"\r";
+    const p=have.includes(m[1]) && PIDS.find(q=>q.pid==="01"+m[1]); if(p) return "62F4"+m[1]+hx(p.enc(+p.el.value))+"\r";
+    return "7F2231\r"; }
   if(cmd==="22F800") return "62F80055000000\r";
-  if(cmd==="22F802") return "014\r0:62F802"+hx([...demoVin].map(c=>c.charCodeAt(0))).slice(0,6)+"\r1:"+hx([...demoVin].map(c=>c.charCodeAt(0))).slice(6)+"\r";
-  if(cmd==="19423308FF") return "594233FF1E01"+["P0301","P0420"].map(c=>"08"+(("PCBU".indexOf(c[0])<<2)|+c[1]).toString(16).toUpperCase()+c.slice(2)+"00"+"2F").join("")+"\r";
+  if(cmd==="22F802"){ const h=asc(demoVin); return "014\r0:62F802"+h.slice(0,6)+"\r1:"+h.slice(6)+"\r"; }
+  if(cmd==="22F80A") return DEMO_ZEV ? "62F80A"+asc("BECM-B+EnergyCtrl")+"000000\r" : "62F80A"+asc("ECM-EngineControl")+"000000\r";
+  if(cmd==="1942330802") return "594233FF0204"+(DEMO_ZEV?["01421100","0A221100"]:["03010000","04200000"]).map(d=>"02"+d.slice(0,6)+"AF").join("")+"\r";
   if(/^0[1-9]/.test(cmd)) return "NO DATA";
   if(cmd==="ATRV") return "12.6V"; if(cmd==="ATDP") return "AUTO, ISO 15765-4 (CAN 11/500)"; if(cmd==="ATDPN") return "A6";
   if(cmd==="AT@1") return "OBDII to RS232 Interpreter"; if(cmd==="STI") return "?"; if(cmd==="ATI"||cmd==="ATZ") return "ELM327 v1.5";
@@ -1086,17 +1100,34 @@ async function btCapabilities(){
   const sti=clean(await btSend("STI")); bcSet("bcStn", sti && sti!=="?" && !/ERROR/i.test(sti) ? sti : "No (plain ELM327 commands)");
   // which PIDs does the car answer? (asking also makes the dongle find the protocol)
   let sup=[]; for(const base of ["00","20","40","60"]){ const bits=bcBits(await btSend("01"+base,5000),base); if(!bits) break; sup=sup.concat(bits.filter(p=>!["20","40","60","80"].includes(p))); if(!bits.includes((parseInt(base,16)+0x20).toString(16).toUpperCase().padStart(2,"0"))) break; }
-  // does the car also answer OBD on UDS (SAE J1979-2 for engines, J1979-3 for EVs)? Same bitmask, asked with 22 F400.
-  let usup=[]; for(const base of ["00","20","40","60"]){ const bits=udsBits(await btSend("22F4"+base,5000),base); if(!bits) break; usup=usup.concat(bits.filter(p=>!["20","40","60","80"].includes(p))); if(!bits.includes((parseInt(base,16)+0x20).toString(16).toUpperCase().padStart(2,"0"))) break; }
-  bt.std = sup.length ? "classic" : usup.length ? "uds" : "classic";
-  if(!sup.length && usup.length) sup=usup;
-  bcSet("bcDiag", sup.length===0 ? "No reply to either" : bt.std==="uds" ? "OBD on UDS (SAE J1979-2/-3)" : usup.length ? "Classic in use · UDS also answers" : "Classic OBD-II (SAE J1979)");
-  dbg("diagnostics: classic "+(bt.std==="classic"&&sup.length?"yes":"no")+", UDS "+(usup.length?"yes ("+usup.length+" DIDs)":"no")+" → using "+bt.std);
+  // SAE J1979-3 protocol detection: classic 01 00 first. Only if nothing answers, ask 22 F810 (protocol ID);
+  // any positive reply means the car speaks OBD on UDS (J1979-2 for engines, J1979-3 ZEVonUDS for EVs).
+  bt.std="classic"; bt.zev=false; bt.ev=false;
+  if(!sup.length){
+    const pid=hexOf(await btSend("22F810",5000));
+    if(pid.indexOf("62F810")>=0){
+      bt.std="uds"; dbg("22 F810 answered: OBD on UDS");
+      for(const base of ["00","20","40","60","80","A0","C0"]){ const bits=udsBits(await btSend("22F4"+base,5000),base); if(!bits) break; sup=sup.concat(bits.filter(p=>!["20","40","60","80","A0","C0","E0"].includes(p))); if(!bits.includes((parseInt(base,16)+0x20).toString(16).toUpperCase().padStart(2,"0"))) break; }
+      const mk=hexOf(await btSend("22F41C",4000)), mi=mk.indexOf("62F41C"), market=mi>=0?parseInt(mk.slice(mi+6,mi+8),16):null;
+      // 0x1B is heavy-duty ZEV in the spec; otherwise a car that reports battery charge but no engine RPM is treated as an EV
+      bt.zev = market===0x1B || (sup.includes("5B") && !sup.includes("0C"));
+    } else dbg("22 F810: no answer either");
+  }
+  bt.ev = sup.includes("5B");
+  bcSet("bcDiag", sup.length===0 ? "No reply to either" : bt.std==="classic" ? "Classic OBD-II (SAE J1979)" : bt.zev ? "ZEVonUDS (SAE J1979-3)" : "OBDonUDS (SAE J1979-2)");
+  dbg("diagnostics: using "+bt.std+(bt.zev?" (ZEV)":"")+", "+sup.length+" items, battery charge "+(bt.ev?"yes":"no"));
+  if(bt.std==="uds"){
+    // ECU names (22 F80A), one per responding module, e.g. "BECM-B+EnergyCtrl"
+    const raw=(await btSend("22F80A",5000)||"").split(/[\r\n]+/).map(l=>l.replace(/^[0-9A-F]:/i,"")).join("").replace(/\s/g,"").toUpperCase();
+    const names=raw.split("62F80A").slice(1).map(h=>{ let t=""; for(let k=0;k+2<=h.length;k+=2){ const c=parseInt(h.slice(k,k+2),16); if(c>=32&&c<127) t+=String.fromCharCode(c); else if(c===0&&t) break; } return t.trim(); }).filter(Boolean);
+    bcSet("bcEcus", names.length? names.join(", ") : "Not reported");
+  } else bcSet("bcEcus", "Only on UDS cars");
+  const evt=$$("phEvTile"); if(evt) evt.hidden=!bt.ev;
   bcSet("bcPidN", sup.length? sup.length+(bt.std==="uds"?" DIDs":" PIDs") : "");
   $$("bcPids").innerHTML = sup.length ? sup.map(p=>`<span class="pchip" title="${bt.std==="uds"?"DID F4"+p:"Mode 01 PID "+p}">${PID_NAMES[p]||("PID "+p)}</span>`).join("") : '<span class="muted">The car didn\'t list its supported data</span>';
   const dp=clean(await btSend("ATDP")), dpn=clean(await btSend("ATDPN"));
   bcSet("bcProto", dp ? dp.replace(/^AUTO,\s*/i,"")+(dpn?" (#"+dpn.replace(/^A/,"")+")":"") : "–");
-  if(sup.includes("1C")){ const k=bt.std==="uds"?"62F41C":"411C", c=hexOf(await btSend(bt.std==="uds"?"22F41C":"011C")), j=c.indexOf(k), i=j<0?-1:j+k.length-4; bcSet("bcStd", i>=0? (OBD_STD[parseInt(c.slice(i+4,i+6),16)]||"Type "+parseInt(c.slice(i+4,i+6),16)) : "–"); } else bcSet("bcStd","Not reported");
+  if(sup.includes("1C")){ const k=bt.std==="uds"?"62F41C":"411C", c=hexOf(await btSend(bt.std==="uds"?"22F41C":"011C")), j=c.indexOf(k), i=j<0?-1:j+k.length-4; bcSet("bcStd", i>=0? (bt.std==="uds"&&parseInt(c.slice(i+4,i+6),16)===0x1B?"Heavy-duty ZEV":OBD_STD[parseInt(c.slice(i+4,i+6),16)]||"Type "+parseInt(c.slice(i+4,i+6),16)) : "–"); } else bcSet("bcStd","Not reported");
   const m9c=hexOf(await btSend(bt.std==="uds"?"22F800":"0900",5000)), m9j=m9c.indexOf(bt.std==="uds"?"62F800":"4900"), m9i=m9j<0?-1:m9j+(bt.std==="uds"?2:0);
   if(m9i>=0){ const n=parseInt(m9c.slice(m9i+4,m9i+12),16)>>>0, l=[]; for(let b=0;b<32;b++) if(n&(1<<(31-b))){ const k=(b+1).toString(16).toUpperCase().padStart(2,"0"); if(M9_NAMES[k]) l.push(M9_NAMES[k]); } bcSet("bcM9", l.join(", ")||"None"); } else bcSet("bcM9","Not reported");
 }
@@ -1110,7 +1141,7 @@ function bcLink(dev,svc,rx,tx,all){
   bcSet("bcWt", tx? (tx.properties.writeWithoutResponse?"Without response (faster)":"With response") : "Without response (faster)");
   bcSet("bcAll", all && all.length ? all.map(shortUuid).join(", ") : "0xFFF0");
 }
-function bcClear(){ ["bcUp","bcRtt","bcId","bcSvc","bcRx","bcTx","bcWt","bcAll","bcDesc","bcStn","bcProto","bcStd","bcDiag","bcM9"].forEach(id=>bcSet(id,"–")); bt.std=null; bcSet("bcTo",0); bcSet("bcPidN",""); $$("bcPids").innerHTML='<span class="muted">Connect the Kē to ask the car what it supports</span>'; bt.since=0; }
+function bcClear(){ ["bcUp","bcRtt","bcId","bcSvc","bcRx","bcTx","bcWt","bcAll","bcDesc","bcStn","bcProto","bcStd","bcDiag","bcEcus","bcM9"].forEach(id=>bcSet(id,"–")); bt.std=null; bcSet("bcTo",0); bcSet("bcPidN",""); $$("bcPids").innerHTML='<span class="muted">Connect the Kē to ask the car what it supports</span>'; bt.since=0; }
 
 // ---------- RPM scale on the phone gauge ----------
 // 240° sweep, 0 to 8,000 rpm, centre (110,100). Ticks every 500, labels every 1,000, redline from 7,000.
