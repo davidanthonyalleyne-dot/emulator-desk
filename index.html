@@ -2,216 +2,295 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Emulator Desk</title>
 <style>
+/* ---- Tokens: Apple semantic colours, dark first, light via prefers-color-scheme ---- */
 :root{
-  --bg:#0e1013; --panel:#171a1f; --panel2:#1e2228; --line:#2a2f37;
-  --text:#eef1f5; --muted:#8b939f; --accent:#ff6a2b; --ok:#3ccf7a; --bad:#ff4d5a;
-  --radius:14px; --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
-  --mono:"SF Mono",Menlo,Consolas,monospace;
+  --bg:#000000; --group:#1c1c1e; --fill:#2c2c2e; --fill2:#3a3a3c; --sep:#38383a;
+  --label:#ffffff; --label2:rgba(235,235,245,.62); --label3:rgba(235,235,245,.32);
+  --accent:#ff9f0a; --accent-text:#ff9f0a; --on-accent:#000;
+  --green:#30d158; --red:#ff453a; --blue:#0a84ff;
+  --red-fill:rgba(255,69,58,.16); --green-fill:rgba(48,209,88,.16);
+  --term:#0d0d0f; --term-text:#e5e5ea;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f2f2f7; --group:#ffffff; --fill:#e9e9ee; --fill2:#d1d1d6; --sep:#c6c6c8;
+    --label:#000000; --label2:rgba(60,60,67,.66); --label3:rgba(60,60,67,.32);
+    --accent:#ff9500; --accent-text:#b25000; --on-accent:#000;
+    --green:#248a3d; --red:#d70015; --blue:#007aff;
+    --red-fill:rgba(215,0,21,.10); --green-fill:rgba(36,138,61,.12);
+    --term:#ffffff; --term-text:#1c1c1e;
+  }
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px}
-.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:800;color:#111;font-size:15px}
-h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.2px}
-.ver{color:var(--muted);font-size:12px;margin-left:2px}
+html,body{margin:0;background:var(--bg);color:var(--label);font-family:var(--font);font-size:15px;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 24px 40px}
+
+/* ---- Toolbar ---- */
+.toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.app-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,#ffb340,#ff8a00);display:grid;place-items:center;flex:none}
+.app-icon svg{width:24px;height:24px}
+.title h1{font-size:26px;font-weight:700;letter-spacing:-.4px;margin:0;line-height:1.1}
+.title .sub{font-size:13px;color:var(--label2);margin-top:2px}
 .spacer{flex:1}
-.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:7px 12px;border-radius:999px}
-.dot{width:8px;height:8px;border-radius:50%;background:#555}
-.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-button{font:inherit;border:0;border-radius:10px;padding:9px 14px;background:var(--panel2);color:var(--text);cursor:pointer;border:1px solid var(--line)}
-button:hover{border-color:#3a414b}
-button.primary{background:var(--accent);color:#111;border-color:var(--accent);font-weight:650}
-button.danger{color:var(--bad)}
-#soundBtn.on{border-color:var(--accent);color:var(--accent)}
-button:disabled{opacity:.45;cursor:default}
-.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
-@media (max-width:820px){.grid{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
-.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600;display:flex;align-items:center;gap:8px}
-.card h2::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pid{display:grid;grid-template-columns:120px 1fr 74px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
-.pid:first-of-type{border-top:0}
-.pid label{font-size:13px}
-.pid label small{display:block;color:var(--muted);font-family:var(--mono);font-size:11px}
-.pid output{font-family:var(--mono);text-align:right;font-size:14px}
-input[type=range]{width:100%;accent-color:var(--accent)}
-input[type=checkbox]{accent-color:var(--accent)}
-input[type=text],select{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
-input[type=text]{font-family:var(--mono)}
-.field{margin-bottom:10px}
-.field > span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.chip{padding:6px 11px;border-radius:999px;font-size:13px}
-.chip.active{background:var(--accent);color:#111;border-color:var(--accent)}
-.console{background:#0a0b0d;border:1px solid var(--line);border-radius:10px;height:220px;overflow:auto;font-family:var(--mono);font-size:12px;padding:10px;line-height:1.55}
-.console .tx{color:#9fc4ff}.console .rx{color:var(--ok)}.console .er{color:var(--bad)}.console .sys{color:var(--muted)}
-.notice{background:#2a1a12;border:1px solid #5a3420;color:#ffc7ad;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
-.info{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px}
-.stack{display:flex;flex-direction:column;gap:14px}
-.phone-wrap{display:flex;justify-content:center;padding:6px 0 4px}
-.phone{position:relative;width:312px;height:640px;border-radius:48px;background:#050608;padding:12px;box-shadow:0 0 0 2px #2f343c,0 0 0 4px #121418,0 20px 50px rgba(0,0,0,.5)}
-.island{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:96px;height:28px;border-radius:20px;background:#000;z-index:3}
-.screen{height:100%;border-radius:37px;background:linear-gradient(180deg,#121519,#0c0e11);overflow-y:auto;overflow-x:hidden;padding:14px 16px 18px;scrollbar-width:none}
+.pill{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--label2);background:var(--group);padding:8px 12px;border-radius:999px;min-height:36px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--label3)}
+.dot.on{background:var(--green)}
+
+/* Engine sound control: icon, label, state word and a real switch */
+.sound{display:flex;align-items:center;gap:10px;background:var(--group);padding:6px 8px 6px 12px;border-radius:999px;min-height:40px;cursor:pointer;border:0}
+.sound .lbl{font-size:14px;font-weight:600}
+.sound .st{font-size:13px;color:var(--label2);min-width:22px}
+#soundIcon{width:20px;height:20px;color:var(--label2)}
+#soundIcon .waves{opacity:0;transition:opacity .2s}
+#soundIcon.on{color:var(--accent-text)} #soundIcon.on .waves{opacity:1}
+#soundIcon.on .mute{opacity:0}
+.switch{width:51px;height:31px;border-radius:16px;background:var(--fill2);position:relative;transition:background .2s;flex:none}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .22s cubic-bezier(.3,.7,.4,1)}
+.switch.on,input:checked + .switch,.sound[aria-checked="true"] .switch{background:var(--green)}
+.switch.on::after,input:checked + .switch::after,.sound[aria-checked="true"] .switch::after{transform:translateX(20px)}
+
+/* ---- Buttons ---- */
+.btn{border:0;border-radius:10px;padding:0 14px;min-height:36px;background:var(--fill);color:var(--label);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:scale(.98)}
+.btn.prominent{background:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.destructive{color:var(--red)}
+.btn.plain{background:none;color:var(--accent-text);padding:0 6px}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* ---- Layout ---- */
+.layout{display:grid;gap:22px;grid-template-columns:minmax(380px,1.25fr) minmax(280px,.85fr) 336px;grid-template-areas:"live side phone" "console console console"}
+.live{grid-area:live}.side{grid-area:side}.phone-col{grid-area:phone}.console{grid-area:console}
+@media (max-width:1180px){ .layout{grid-template-columns:1fr 336px;grid-template-areas:"live live" "side phone" "console console"} }
+@media (max-width:720px){ .layout{grid-template-columns:1fr;grid-template-areas:"live" "side" "phone" "console"} .wrap{padding:16px} }
+
+/* ---- Grouped sections (inset grouped list) ---- */
+.section{margin-bottom:22px}
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:0 6px 7px}
+.sh h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.1px}
+.sh .aux{font-size:13px;color:var(--label2)}
+.group{background:var(--group);border-radius:var(--r);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 14px;position:relative}
+.row + .row::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--sep);transform:scaleY(.5);transform-origin:top}
+.row .k{font-size:15px;flex:1;min-width:0}
+.row .k small{display:block;font-size:12px;color:var(--label2);font-family:var(--mono);margin-top:1px}
+.foot{font-size:13px;color:var(--label2);margin:7px 14px 0;line-height:1.4}
+
+/* Segmented control for presets */
+.seg{display:grid;grid-template-columns:repeat(6,1fr);background:var(--fill);border-radius:9px;padding:2px;gap:2px;margin:10px 14px 4px}
+.seg button{border:0;background:none;border-radius:7px;min-height:30px;font-size:13px;font-weight:500;cursor:pointer;color:var(--label)}
+.seg button.active{background:var(--group);box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);font-weight:600}
+@media (prefers-color-scheme: dark){ .seg button.active{background:#636366} }
+@media (max-width:520px){ .seg{grid-template-columns:repeat(3,1fr)} }
+
+/* Slider rows */
+.pid{display:grid;grid-template-columns:132px 1fr 86px;gap:14px;align-items:center;min-height:48px;padding:6px 14px;position:relative}
+.pid + .pid::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--sep);transform:scaleY(.5)}
+.pid label{font-size:15px}
+.pid label small{display:block;font-size:11.5px;color:var(--label2);font-family:var(--mono)}
+.pid output{font-size:15px;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.pid output span{color:var(--label2);font-weight:400;font-size:13px;margin-left:3px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer;--p:0%}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--p),var(--fill2) var(--p))}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--fill2)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;margin-top:-10px;box-shadow:0 0.5px 4px rgba(0,0,0,.12),0 6px 13px rgba(0,0,0,.12)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:#fff;box-shadow:0 0.5px 4px rgba(0,0,0,.12),0 6px 13px rgba(0,0,0,.12)}
+@media (max-width:520px){ .pid{grid-template-columns:1fr 80px;grid-template-rows:auto auto;gap:2px 10px} .pid input{grid-column:1/-1;grid-row:2} }
+
+/* Toggle rows */
+.tog{cursor:pointer}
+.tog input{position:absolute;opacity:0;pointer-events:none}
+
+/* Fields */
+.field{flex:1;min-width:0;background:var(--fill);border:0;border-radius:8px;min-height:34px;padding:0 10px;font-family:var(--mono);font-size:13.5px;letter-spacing:.3px}
+select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-right:6px}
+.v{color:var(--label2);font-size:14px;text-align:right}
+.mono{font-family:var(--mono);font-size:12.5px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px 12px}
+.codes{display:flex;gap:6px;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:12.5px;padding:4px 9px;border-radius:7px;background:var(--fill)}
+.code.bad{color:var(--red);background:var(--red-fill)}
+
+/* ---- Phone ---- */
+.phone-col .sh{margin-left:10px}
+.phone{position:relative;width:322px;height:660px;border-radius:52px;background:#0b0b0c;padding:11px;box-shadow:0 0 0 1.5px #3a3a3c,0 0 0 3.5px #1a1a1c,0 24px 60px rgba(0,0,0,.35);margin:0 auto}
+.island{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:98px;height:29px;border-radius:20px;background:#000;z-index:3}
+.screen{height:100%;border-radius:42px;background:#000;color:#fff;overflow-y:auto;overflow-x:hidden;padding:14px 16px 20px;scrollbar-width:none;--g:#1c1c1e;--l2:rgba(235,235,245,.6)}
 .screen::-webkit-scrollbar{display:none}
-.sbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;padding:2px 10px 0;height:30px}
-.sicons{display:flex;gap:3px;align-items:flex-end}.sicons i{width:3px;background:var(--text);border-radius:1px}
+.sbar{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600;padding:3px 14px 0;height:32px}
+.sicons{display:flex;gap:3px;align-items:flex-end}.sicons i{width:3px;background:#fff;border-radius:1px}
 .sicons i:nth-child(1){height:5px}.sicons i:nth-child(2){height:8px}.sicons i:nth-child(3){height:11px}
-.sicons b{width:22px;height:11px;border:1.5px solid var(--text);border-radius:3px;margin-left:5px;position:relative}
-.sicons b::after{content:"";position:absolute;inset:1.5px 5px 1.5px 1.5px;background:var(--text);border-radius:1px}
-.app-h{display:flex;justify-content:space-between;align-items:center;margin:14px 0 10px}
-.app-t{font-size:20px;font-weight:700;letter-spacing:-.3px}.app-s{font-size:11.5px;color:var(--muted);margin-top:2px}
-.bt-dot{width:10px;height:10px;border-radius:50%;background:#444}.bt-dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-.verdict{font-size:12px;padding:8px 10px;border-radius:12px;background:var(--panel2);color:var(--muted);text-align:center}
-.verdict.ok{background:#12301f;color:var(--ok)}.verdict.no{background:#3a1418;color:#ff8a92}
-.gauge{position:relative;margin:10px auto 4px;width:230px;height:160px}
+.sicons b{width:24px;height:12px;border:1.5px solid rgba(255,255,255,.5);border-radius:4px;margin-left:6px;position:relative}
+.sicons b::after{content:"";position:absolute;inset:1.5px 6px 1.5px 1.5px;background:#fff;border-radius:1.5px}
+.app-h{display:flex;justify-content:space-between;align-items:flex-end;margin:16px 2px 10px}
+.app-t{font-size:28px;font-weight:700;letter-spacing:-.6px;line-height:1.05}.app-s{font-size:13px;color:var(--l2);margin-top:3px}
+.bt-dot{width:10px;height:10px;border-radius:50%;background:#48484a;margin-bottom:6px}.bt-dot.on{background:#30d158}
+.verdict{font-size:13px;padding:9px 12px;border-radius:12px;background:var(--g);color:var(--l2);text-align:center}
+.verdict.ok{background:rgba(48,209,88,.16);color:#30d158}.verdict.no{background:rgba(255,69,58,.16);color:#ff6961}
+.gauge{position:relative;margin:12px auto 4px;width:236px;height:164px}
 .gauge svg{width:100%;height:100%}
-.g-bg,.g-fg{fill:none;stroke-width:12;stroke-linecap:round}
-.g-bg{stroke:#262a31}.g-fg{stroke:var(--accent);stroke-dasharray:0 999;opacity:0;transition:stroke-dasharray .35s ease}
-.g-c{position:absolute;inset:38px 0 0;text-align:center}
-.g-big{font-size:46px;font-weight:700;letter-spacing:-1.5px;line-height:1}.g-u{font-size:12px;color:var(--muted)}
-.g-rpm{font-family:var(--mono);font-size:13px;margin-top:6px}
+.g-bg,.g-fg{fill:none;stroke-width:13;stroke-linecap:round}
+.g-bg{stroke:#2c2c2e}.g-fg{stroke:#ff9f0a;stroke-dasharray:0 999;opacity:0;transition:stroke-dasharray .35s ease}
+.g-c{position:absolute;inset:40px 0 0;text-align:center}
+.g-big{font-size:50px;font-weight:700;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}.g-u{font-size:13px;color:var(--l2)}
+.g-rpm{font-size:14px;margin-top:6px;font-variant-numeric:tabular-nums}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-.tile{background:var(--panel2);border-radius:14px;padding:9px 11px;position:relative}
-.tile .tl{font-size:11px;color:var(--muted)}.tile .tv{font-size:18px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
-.tile .tv small{font-size:11px;color:var(--muted);font-weight:500;margin-left:2px}
-.mdot{position:absolute;top:10px;right:10px;width:7px;height:7px;border-radius:50%}
-.mdot.ok{background:var(--ok)}.mdot.no{background:var(--bad)}
-.sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 2px 7px;display:flex;justify-content:space-between}
-.dtcs{display:flex;flex-wrap:wrap;gap:6px}
-.dtc{font-family:var(--mono);font-size:12px;padding:5px 9px;border-radius:9px;background:#3a1418;color:#ff8a92}
-.dtcs .ok{font-size:12px;color:var(--ok)}.muted{color:var(--muted);font-size:12px}
-.kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:7px 2px;border-bottom:1px solid #20242a}
-.kv span{color:var(--muted)}.kv b{font-weight:500;font-family:var(--mono);font-size:11.5px;text-align:right;word-break:break-all}
-.ph-btn{width:100%;margin-top:16px;padding:12px;border-radius:14px;background:var(--accent);color:#111;border:0;font-weight:650}
-.ph-btn.on{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-.ph-note{font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
-.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.tile{background:var(--g);border-radius:14px;padding:10px 12px;position:relative}
+.tile .tl{font-size:12px;color:var(--l2)}.tile .tv{font-size:20px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.tile .tv small{font-size:12px;color:var(--l2);font-weight:500;margin-left:2px}
+.mdot{position:absolute;top:11px;right:11px;width:7px;height:7px;border-radius:50%}
+.mdot.ok{background:#30d158}.mdot.no{background:#ff453a}
+.psec{font-size:13px;font-weight:600;color:var(--l2);margin:18px 4px 7px;display:flex;justify-content:space-between}
+.pgroup{background:var(--g);border-radius:14px;overflow:hidden}
+.dtcs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px}
+.dtc{font-family:var(--mono);font-size:12.5px;padding:4px 9px;border-radius:8px;background:rgba(255,69,58,.18);color:#ff6961}
+.dtcs .ok{font-size:13px;color:#30d158}.muted{color:var(--l2);font-size:13px}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:10px 12px;position:relative}
+.kv + .kv::before{content:"";position:absolute;top:0;left:12px;right:0;height:1px;background:#38383a;transform:scaleY(.5)}
+.kv span{color:var(--l2)}.kv b{font-weight:500;font-family:var(--mono);font-size:12px;text-align:right;word-break:break-all}
+.ph-btn{width:100%;margin-top:16px;min-height:50px;border-radius:14px;background:#ff9f0a;color:#000;border:0;font-weight:600;font-size:17px;cursor:pointer}
+.ph-btn.on{background:#1c1c1e;color:#ff453a}
+.ph-note{font-size:12px;color:var(--l2);text-align:center;margin-top:9px;line-height:1.4}
+
+/* ---- Console ---- */
+.term{background:var(--term);color:var(--term-text);border-radius:var(--r);height:200px;overflow:auto;font-family:var(--mono);font-size:12.5px;padding:12px 14px;line-height:1.6}
+@media (prefers-color-scheme: light){ .term{box-shadow:inset 0 0 0 1px var(--sep)} }
+.term .tx{color:var(--blue)}.term .rx{color:var(--green)}.term .er{color:var(--red)}.term .sys{color:var(--label2)}
+.cmd{display:flex;gap:8px;margin-top:8px}
+.notice{background:var(--red-fill);color:var(--red);border-radius:var(--r);padding:12px 14px;font-size:14px;margin-bottom:18px;display:none}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="logo">OB</div>
-    <div><h1>Emulator Desk <span class="ver">v1.4</span></h1></div>
+  <header class="toolbar">
+    <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v1.5</span></div></div>
     <div class="spacer"></div>
-    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
-    <button id="soundBtn" title="Engine sound follows the RPM slider">Sound off</button>
-    <button class="primary" id="connectBtn">Connect emulator</button>
+    <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
+      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
+      <span class="lbl">Engine Sound</span><span class="st" id="soundState">Off</span><span class="switch" aria-hidden="true"></span>
+    </button>
+    <div class="pill" role="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
+    <button class="btn prominent" id="connectBtn">Connect Emulator</button>
   </header>
 
   <div class="notice" id="notice"></div>
 
-  <div class="grid">
-    <div class="stack">
-      <div class="card">
-        <h2>Live data</h2>
-        <div class="chips" id="presets"></div>
-        <div class="row" style="margin-bottom:10px">
-          <label class="toggle"><input type="checkbox" id="autoSend" checked> Send as I drag</label>
-          <label class="toggle"><input type="checkbox" id="driveSim"> Drive loop</label>
-          <div class="spacer"></div>
-          <button id="sendAll">Send all</button>
-        </div>
+  <main class="layout">
+    <section class="live">
+      <div class="sh"><h2>Live Data</h2><span class="aux">What the emulator tells a dongle</span></div>
+      <div class="group">
+        <div class="seg" id="presets" role="radiogroup" aria-label="Driving presets"></div>
+        <label class="row tog"><span class="k">Send as I Drag</span><input type="checkbox" id="autoSend" checked><span class="switch"></span></label>
+        <label class="row tog"><span class="k">Drive Loop<small style="font-family:var(--font)">Pull away, cruise, brake, repeat</small></span><input type="checkbox" id="driveSim"><span class="switch"></span></label>
         <div id="pids"></div>
+        <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="sendAll">Send All Values</button></div>
       </div>
-      <div class="card" id="btCard">
-        <h2>Dongle over Bluetooth</h2>
-        <div class="phone-wrap">
-          <div class="phone">
-            <div class="island"></div>
-            <div class="screen">
-              <div class="sbar"><span id="phClock">9:41</span><span class="sicons"><i></i><i></i><i></i><b></b></span></div>
-              <div class="app-h">
-                <div><div class="app-t">Live from dongle</div><div class="app-s" id="btInfo">Not connected</div></div>
-                <span class="bt-dot" id="btDot"></span>
-              </div>
-              <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
-              <div class="gauge">
-                <svg viewBox="0 0 200 140" aria-hidden="true">
-                  <path d="M25 125 A80 80 0 1 1 175 125" class="g-bg"/>
-                  <path d="M25 125 A80 80 0 1 1 175 125" class="g-fg" id="gArc"/>
-                </svg>
-                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
-              </div>
-              <div class="tiles" id="phTiles"></div>
-              <div class="sec">Trouble codes <span class="sec-n" id="phDtcN"></span></div>
-              <div class="dtcs" id="phDtc"><span class="muted">–</span></div>
-              <div class="sec">Vehicle</div>
-              <div class="kv"><span>VIN</span><b id="phVin">–</b></div>
-              <div class="kv"><span>Protocol</span><b id="phProto">–</b></div>
-              <div class="kv"><span>Adapter</span><b id="phElm">–</b></div>
-              <div class="kv"><span>Adapter voltage</span><b id="phRv">–</b></div>
-              <div class="kv"><span>Requests</span><b id="phReq">0</b></div>
-              <button class="ph-btn" id="btBtn">Connect dongle</button>
-              <div class="ph-note">Bluetooth LE dongles only. Small dots compare each reading with what the emulator serves.</div>
-            </div>
+    </section>
+
+    <section class="side">
+      <div class="section">
+        <div class="sh"><h2>Vehicle</h2></div>
+        <div class="group">
+          <div class="row"><span class="k" style="flex:none">Protocol</span>
+            <select class="field" id="bus">
+              <option value="CAN_11B_500K">CAN 11-bit 500K</option>
+              <option value="CAN_29B_500K">CAN 29-bit 500K</option>
+              <option value="CAN_11B_250K">CAN 11-bit 250K</option>
+              <option value="CAN_29B_250K">CAN 29-bit 250K</option>
+              <option value="KWP2000_FAST">KWP2000 Fast</option>
+              <option value="KWP2000_5KBPS">KWP2000 5 Baud</option>
+              <option value="ISO9141">ISO 9141-2</option>
+            </select>
+            <button class="btn plain" id="setBus">Apply</button>
           </div>
+          <div class="row"><input class="field" id="vin" maxlength="17" value="WP0AA2A71KL100001" aria-label="VIN, 17 characters" spellcheck="false"><button class="btn plain" id="setVin">Set VIN</button></div>
+          <div class="row"><span class="k" style="font-size:13px;color:var(--label2)" id="devInfo">Device: unknown</span></div>
         </div>
-      </div>
-    </div>
-
-    <div class="stack">
-      <div class="card">
-        <h2>Vehicle</h2>
-        <div class="field"><span>Protocol</span>
-          <select id="bus">
-            <option value="CAN_11B_500K">CAN 11-bit 500K (default)</option>
-            <option value="CAN_29B_500K">CAN 29-bit 500K</option>
-            <option value="CAN_11B_250K">CAN 11-bit 250K</option>
-            <option value="CAN_29B_250K">CAN 29-bit 250K</option>
-            <option value="KWP2000_FAST">KWP2000 fast</option>
-            <option value="KWP2000_5KBPS">KWP2000 5 baud</option>
-            <option value="ISO9141">ISO 9141-2</option>
-          </select>
-        </div>
-        <div class="field"><span>VIN (17 characters)</span>
-          <div class="row" style="flex-wrap:nowrap"><input type="text" id="vin" maxlength="17" value="WP0AA2A71KL100001"><button id="setVin">Set</button></div>
-        </div>
-        <div class="row"><button id="setBus">Set protocol</button><button id="getVin">Read VIN</button><button id="reset" class="danger">Reset (ATZ)</button></div>
-        <div class="info" id="devInfo">Device: unknown</div>
+        <div class="btn-row" style="padding:10px 0 0"><button class="btn" id="getVin">Read VIN</button><button class="btn destructive" id="reset">Restart Emulator</button></div>
       </div>
 
-      <div class="card">
-        <h2>Trouble codes</h2>
-        <div class="field"><span>Mode 03 codes, up to 6, comma separated</span>
-          <input type="text" id="dtc" value="P0301,P0420">
+      <div class="section">
+        <div class="sh"><h2>Trouble Codes</h2><span class="aux">Up to 6</span></div>
+        <div class="group">
+          <div class="row"><input class="field" id="dtc" value="P0301,P0420" aria-label="Trouble codes, comma separated" spellcheck="false"></div>
+          <div class="row"><div class="codes" id="dtcChips"></div></div>
         </div>
-        <div class="chips" id="dtcChips"></div>
-        <div class="row"><button id="setDtc" class="primary">Set codes</button><button id="clrDtc">Clear all</button></div>
+        <div class="btn-row" style="padding:10px 0 0"><button class="btn prominent" id="setDtc">Set Codes</button><button class="btn" id="clrDtc">Clear All</button></div>
       </div>
+    </section>
 
-      <div class="card">
-        <h2>Console</h2>
-        <div class="console" id="log"></div>
-        <div class="row" style="margin-top:10px;flex-wrap:nowrap">
-          <input type="text" id="raw" placeholder="Any AT command, e.g. ATGET 010D"><button id="sendRaw">Send</button>
+    <section class="phone-col" id="btCard">
+      <div class="sh"><h2>Dongle over Bluetooth</h2></div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="sbar"><span id="phClock">9:41</span><span class="sicons"><i></i><i></i><i></i><b></b></span></div>
+          <div class="app-h">
+            <div><div class="app-t">Live</div><div class="app-s" id="btInfo">Not connected</div></div>
+            <span class="bt-dot" id="btDot"></span>
+          </div>
+          <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
+          <div class="gauge">
+            <svg viewBox="0 0 200 140" aria-hidden="true">
+              <path d="M25 125 A80 80 0 1 1 175 125" class="g-bg"/>
+              <path d="M25 125 A80 80 0 1 1 175 125" class="g-fg" id="gArc"/>
+            </svg>
+            <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
+          </div>
+          <div class="tiles" id="phTiles"></div>
+          <div class="psec">Trouble Codes <span id="phDtcN"></span></div>
+          <div class="pgroup"><div class="dtcs" id="phDtc"><span class="muted">–</span></div></div>
+          <div class="psec">Vehicle</div>
+          <div class="pgroup">
+            <div class="kv"><span>VIN</span><b id="phVin">–</b></div>
+            <div class="kv"><span>Protocol</span><b id="phProto">–</b></div>
+            <div class="kv"><span>Adapter</span><b id="phElm">–</b></div>
+            <div class="kv"><span>Adapter Voltage</span><b id="phRv">–</b></div>
+            <div class="kv"><span>Requests</span><b id="phReq">0</b></div>
+          </div>
+          <button class="ph-btn" id="btBtn">Connect Dongle</button>
+          <div class="ph-note">Bluetooth LE dongles only. Dots show whether each reading matches the emulator.</div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <section class="console">
+      <div class="sh"><h2>Console</h2><span class="aux">Every command and reply</span></div>
+      <div class="term" id="log" role="log" aria-live="polite"></div>
+      <div class="cmd"><input class="field" id="raw" placeholder="Type an AT command, e.g. ATGET 010D" spellcheck="false" aria-label="AT command"><button class="btn" id="sendRaw">Send</button></div>
+    </section>
+  </main>
 </div>
-
 <script>
-const APP_VERSION = "1.4";
+
+const APP_VERSION = "1.5";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
 const PIDS = [
   {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
   {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
-  {pid:"0104", name:"Engine load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0104", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0105", name:"Coolant temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"010F", name:"Intake air temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
-  {pid:"012F", name:"Fuel level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
-  {pid:"0142", name:"Battery voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
-  {pid:"0110", name:"MAF air flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
-  {pid:"0146", name:"Ambient temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"0105", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010F", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"012F", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0142", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
+  {pid:"0110", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
+  {pid:"0146", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
 ];
 const PRESETS = {
   "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"0142":12.4,"0110":0},
@@ -314,74 +393,126 @@ async function readBack(){
   }
   log(n?`Read ${n} live values from the emulator.`:"This firmware didn't report its live values.");
 }
-function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect":"Connect emulator"; }
+function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect":"Connect Emulator"; $("connectBtn").classList.toggle("prominent",!on); }
 
 // ---------- PID UI ----------
 const pidsEl=$("pids"); const sendTimers={};
 PIDS.forEach(p=>{
   const row=document.createElement("div"); row.className="pid";
-  row.innerHTML=`<label>${p.name}<small>${p.pid}</small></label><input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"><output></output>`;
+  row.innerHTML=`<label for="r${p.pid}">${p.name}<small>${p.pid}</small></label><input id="r${p.pid}" type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"><output></output>`;
   const r=row.querySelector("input"), o=row.querySelector("output");
-  p.el=r; p.out=o; const show=()=>{o.textContent=fmt(p,+r.value)+" "+p.unit}; show();
+  p.el=r; p.out=o; const show=()=>paintPid(p); show();
   r.addEventListener("input",()=>{ show(); if($("autoSend").checked){ clearTimeout(sendTimers[p.pid]); sendTimers[p.pid]=setTimeout(()=>sendPid(p),120); } });
   pidsEl.appendChild(row);
 });
 function fmt(p,x){ return p.step<1 ? x.toFixed(1) : String(Math.round(x)) }
-function setPid(p,x,push=true){ p.el.value=x; p.out.textContent=fmt(p,+p.el.value)+" "+p.unit; if(p.pid==="010C"||p.pid==="0111") engine.update(); if(push) sendPid(p); }
+function paintPid(p){ const v=+p.el.value; p.out.innerHTML=fmt(p,v)+"<span>"+p.unit+"</span>"; p.el.style.setProperty("--p",((v-p.min)/(p.max-p.min)*100)+"%"); }
+function setPid(p,x,push=true){ p.el.value=x; paintPid(p); if(p.pid==="010C"||p.pid==="0111") engine.update(); if(push) sendPid(p); }
 PIDS.forEach(p=>{ if(p.pid==="010C"||p.pid==="0111") p.el.addEventListener("input",()=>engine.update()); });
 
-// ---------- Engine sound (Web Audio, flat-six firing order: 3 pulses per revolution) ----------
+// ---------- Engine sound: firing-pulse model of a flat-six, run in an AudioWorklet ----------
+// Each cylinder fires once every two crank turns. A firing is a short, decaying pressure pulse
+// (a low thump plus combustion noise). Pulses run through an exhaust pipe resonator (a feedback
+// comb), a muffler (low-pass) and a soft clipper. Throttle changes how hard each pulse hits and
+// how bright the exhaust sounds; lifting off at high revs gives the odd overrun crackle.
+const ENGINE_WORKLET = `
+class FlatSix extends AudioWorkletProcessor{
+  static get parameterDescriptors(){ return [
+    {name:"rpm",defaultValue:850,minValue:0,maxValue:9000,automationRate:"k-rate"},
+    {name:"throttle",defaultValue:0.1,minValue:0,maxValue:1,automationRate:"k-rate"} ]; }
+  constructor(){
+    super();
+    this.rpm=0; this.thr=0; this.phase=0; this.lastSlot=-1;
+    this.age=new Float32Array(6).fill(1e9); this.amp=new Float32Array(6);
+    this.trim=[1.0,0.92,1.06,0.96,1.03,0.9];            // small cylinder-to-cylinder differences
+    this.pipe=new Float32Array(8192); this.pi=0;          // exhaust resonator
+    this.pipe2=new Float32Array(8192); this.pi2=0;        // second, longer pipe
+    this.lp1=0; this.lp2=0; this.hp=0; this.hpx=0;
+    this.pop=0; this.popAge=1e9; this.seed=12345;
+  }
+  rnd(){ this.seed=(this.seed*1664525+1013904223)>>>0; return this.seed/4294967296*2-1; }
+  process(inputs,outputs,params){
+    const out=outputs[0][0], sr=sampleRate, n=out.length;
+    const tRpm=params.rpm[0], tThr=params.throttle[0];
+    for(let i=0;i<n;i++){
+      this.rpm += (tRpm-this.rpm)*0.00035;               // flywheel inertia
+      this.thr += (tThr-this.thr)*0.002;
+      const rpm=this.rpm, thr=this.thr, running=rpm>250;
+      // 4-stroke: one full cycle per 2 revolutions, six evenly spaced firings per cycle
+      this.phase += (rpm/120)/sr; if(this.phase>=1) this.phase-=1;
+      const slot=Math.floor(this.phase*6);
+      if(running && slot!==this.lastSlot){
+        this.age[slot]=0;
+        const rough = rpm<1200 ? 0.22 : 0.08;                 // idle is lumpier
+        this.amp[slot]=this.trim[slot]*(0.35+thr*0.95)*(0.8+rpm/9000*0.6)*(1+this.rnd()*rough);
+        this.lastSlot=slot;
+      }
+      let s=0;
+      const decay = 140 + rpm*0.05, body = 70 + rpm*0.012;
+      for(let c=0;c<6;c++){
+        const a=this.age[c]; if(a>0.04*sr) continue;
+        const t=a/sr, env=Math.exp(-t*decay);
+        s += this.amp[c]*env*( Math.sin(6.2832*body*t)*0.85 + this.rnd()*(0.1+thr*0.18) );
+        this.age[c]=a+1;
+      }
+      // overrun crackle: throttle closed at high revs
+      if(running && thr<0.06 && rpm>2600 && this.popAge>0.08*sr && Math.random()<0.00009){ this.popAge=0; this.pop=0.9+Math.random()*0.8; }
+      if(this.popAge<0.02*sr){ const t=this.popAge/sr; s += this.pop*Math.exp(-t*260)*this.rnd(); }
+      this.popAge++;
+      // exhaust: two pipe resonances (~4.2 ms and ~7.4 ms)
+      const L1=Math.floor(sr*0.0042), L2=Math.floor(sr*0.0074);
+      const y1 = s + 0.62*this.pipe[(this.pi-L1+8192)&8191]; this.pipe[this.pi]=y1; this.pi=(this.pi+1)&8191;
+      const y2 = y1 + 0.45*this.pipe2[(this.pi2-L2+8192)&8191]; this.pipe2[this.pi2]=y2*0.6; this.pi2=(this.pi2+1)&8191;
+      // muffler: two one-pole low-passes, brighter with throttle and revs
+      const fc = Math.min(0.22, 0.03 + thr*0.07 + rpm/9000*0.1);
+      this.lp1 += (y2-this.lp1)*fc; this.lp2 += (this.lp1-this.lp2)*fc;
+      // remove DC rumble below ~20 Hz
+      const hpOut = this.lp2 - this.hpx + 0.997*this.hp; this.hpx=this.lp2; this.hp=hpOut;
+      out[i] = Math.tanh(hpOut*1.8)*0.55;
+    }
+    return true;
+  }
+}
+registerProcessor("flat-six", FlatSix);`;
+
 const engine = (()=>{
-  let ctx=null, on=false, nodes=null, jitterT=null;
+  let ctx=null, node=null, master=null, on=false, ready=null;
   const val = pid => +PIDS.find(p=>p.pid===pid).el.value;
-  function build(){
+  async function build(){
     ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const master=ctx.createGain(); master.gain.value=0;
-    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=4;
-    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.Q.value=4;
-    const shaper=ctx.createWaveShaper(); const c=new Float32Array(1024);
-    for(let i=0;i<1024;i++){ const x=i/512-1; c[i]=Math.tanh(x*2.2); } shaper.curve=c;
-    const mix=ctx.createGain(); mix.gain.value=.5;
-    const mk=(type,g)=>{ const o=ctx.createOscillator(); o.type=type; const gn=ctx.createGain(); gn.gain.value=g; o.connect(gn).connect(mix); o.start(); return o; };
-    const fire=mk("sawtooth",.55), sub=mk("square",.35), harm=mk("sawtooth",.18);
-    // intake / exhaust roar: filtered noise
-    const nb=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate), d=nb.getChannelData(0);
-    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-    const noise=ctx.createBufferSource(); noise.buffer=nb; noise.loop=true;
-    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=1.2;
-    const ng=ctx.createGain(); ng.gain.value=0; noise.connect(bp).connect(ng).connect(mix); noise.start();
-    // firing-pulse wobble so it chugs at idle
-    const lfo=ctx.createOscillator(), lfoG=ctx.createGain(); lfoG.gain.value=.25; lfo.connect(lfoG).connect(mix.gain); lfo.start();
-    mix.connect(shaper).connect(lp).connect(comp).connect(master).connect(ctx.destination);
-    nodes={master,lp,fire,sub,harm,bp,ng,lfo,lfoG};
+    const url = URL.createObjectURL(new Blob([ENGINE_WORKLET],{type:"application/javascript"}));
+    await ctx.audioWorklet.addModule(url);
+    node = new AudioWorkletNode(ctx,"flat-six",{outputChannelCount:[1]});
+    // cabin-ish voicing: lift the low thump, tame harshness, glue it with a compressor
+    const low=ctx.createBiquadFilter(); low.type="lowshelf"; low.frequency.value=140; low.gain.value=5;
+    const mid=ctx.createBiquadFilter(); mid.type="peaking"; mid.frequency.value=2400; mid.Q.value=0.8; mid.gain.value=-6;
+    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-20; comp.ratio.value=3; comp.attack.value=0.01; comp.release.value=0.2;
+    master=ctx.createGain(); master.gain.value=0;
+    node.connect(low).connect(mid).connect(comp).connect(master).connect(ctx.destination);
   }
   function update(){
-    if(!on||!nodes) return;
-    const rpm=val("010C"), thr=val("0111")/100, t=ctx.currentTime, k=.06;
-    const f=rpm/60*3, running=rpm>200;
-    nodes.fire.frequency.setTargetAtTime(Math.max(f,1),t,k);
-    nodes.sub.frequency.setTargetAtTime(Math.max(f/2,1),t,k);
-    nodes.harm.frequency.setTargetAtTime(Math.max(f*2.01,1),t,k);
-    nodes.lfo.frequency.setTargetAtTime(Math.max(f/3,1),t,k);
-    nodes.lfoG.gain.setTargetAtTime(rpm<1500?.3:.08,t,.2);
-    nodes.lp.frequency.setTargetAtTime(250+rpm*.45+thr*1400,t,k);
-    nodes.bp.frequency.setTargetAtTime(400+rpm*.5,t,k);
-    nodes.ng.gain.setTargetAtTime(.04+thr*.22,t,k);
-    nodes.master.gain.setTargetAtTime(running? .16+thr*.18+rpm/8000*.16 : 0, t, running?.05:.35);
+    if(!on||!node) return;
+    const rpm=val("010C"), thr=val("0111")/100, t=ctx.currentTime;
+    node.parameters.get("rpm").setValueAtTime(rpm,t);
+    node.parameters.get("throttle").setValueAtTime(thr,t);
+    master.gain.setTargetAtTime(rpm>250 ? 0.5+thr*0.3+rpm/8000*0.25 : 0, t, rpm>250?0.08:0.4);
+  }
+  function paint(){
+    const sw=$("soundSw"); sw.setAttribute("aria-checked",on); sw.classList.toggle("on",on);
+    $("soundState").textContent = on ? "On" : "Off";
+    $("soundIcon").classList.toggle("on",on);
   }
   async function toggle(){
-    if(!ctx) build();
-    on=!on;
-    if(on){ await ctx.resume(); update(); jitterT=setInterval(()=>{ // small misfire-free unevenness
-      if(!nodes) return; const r=val("010C"); if(r<200) return;
-      const f=r/60*3*(1+(Math.random()-.5)*.012); nodes.fire.frequency.setTargetAtTime(f,ctx.currentTime,.03); },70); }
-    else { clearInterval(jitterT); nodes.master.gain.setTargetAtTime(0,ctx.currentTime,.08); }
-    $("soundBtn").textContent = on?"Sound on":"Sound off";
-    $("soundBtn").classList.toggle("on",on);
+    on=!on; paint();
+    try{
+      if(!ctx){ ready = ready || build(); await ready; }
+      if(on){ await ctx.resume(); update(); }
+      else master.gain.setTargetAtTime(0,ctx.currentTime,0.08);
+    }catch(e){ on=false; paint(); log("Engine sound isn't available in this browser: "+e.message,"er"); }
   }
   return {update,toggle};
 })();
-$("soundBtn").onclick=()=>engine.toggle();
+$("soundSw").onclick=()=>engine.toggle();
 
 // ---------- Bluetooth LE OBD dongle (ELM327-style), shown as a phone app ----------
 const BT_SERVICES=[0xFFE0,0xFFF0,0x18F0,"e7810a71-73ae-499d-8c15-faa9aef0c3f2"];
@@ -497,7 +628,7 @@ function btStartPoll(){
     bt.busy=false;
   },700);
 }
-function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); btSetInfo("Not connected"); verdict("","Connect a dongle to see what it reads"); }
+function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); btSetInfo("Not connected"); verdict("","Connect a dongle to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
@@ -514,8 +645,8 @@ $("sendAll").onclick=()=>PIDS.forEach(p=>sendPid(p));
 
 const presetsEl=$("presets");
 Object.keys(PRESETS).forEach(name=>{
-  const b=document.createElement("button"); b.className="chip"; b.textContent=name;
-  b.onclick=()=>{ document.querySelectorAll("#presets .chip").forEach(c=>c.classList.remove("active")); b.classList.add("active");
+  const b=document.createElement("button"); b.setAttribute("role","radio"); b.setAttribute("aria-checked","false"); b.textContent=name;
+  b.onclick=()=>{ document.querySelectorAll("#presets button").forEach(c=>{c.classList.remove("active");c.setAttribute("aria-checked","false")}); b.classList.add("active"); b.setAttribute("aria-checked","true");
     stopSim(); $("driveSim").checked=false;
     PIDS.forEach(p=>{ if(name in PRESETS && p.pid in PRESETS[name]) setPid(p,PRESETS[name][p.pid]); }); };
   presetsEl.appendChild(b);
@@ -526,7 +657,7 @@ let simT=null, simPhase=0;
 function stopSim(){ clearInterval(simT); simT=null; }
 $("driveSim").onchange=e=>{
   if(!e.target.checked){ stopSim(); return; }
-  document.querySelectorAll("#presets .chip").forEach(c=>c.classList.remove("active"));
+  document.querySelectorAll("#presets button").forEach(c=>{c.classList.remove("active");c.setAttribute("aria-checked","false")});
   simPhase=0;
   simT=setInterval(()=>{
     simPhase=(simPhase+1)%100;
@@ -545,7 +676,7 @@ $("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if
 $("reset").onclick=async()=>{ log("Restarting the emulator. This takes a few seconds and sets every value to zero.","sys");
   await send("ATZ",{single:true,timeout:12000,until:/EMULATOR|OBD/i}); await send("ATE0"); await readBack(); };
 function dtcList(){ return $("dtc").value.toUpperCase().split(/[\s,]+/).filter(Boolean); }
-function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; dtcList().forEach(c=>{const s=document.createElement("span"); s.className="chip"; s.style.border="1px solid var(--line)"; s.style.color=/^[PCBU][0-3][0-9A-F]{3}$/.test(c)?"var(--text)":"var(--bad)"; s.textContent=c; el.appendChild(s);}); }
+function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; dtcList().forEach(c=>{const s=document.createElement("span"); s.className="code"+(/^[PCBU][0-3][0-9A-F]{3}$/.test(c)?"":" bad"); s.textContent=c; el.appendChild(s);}); }
 $("dtc").oninput=renderDtc; renderDtc();
 $("setDtc").onclick=()=>{ const l=dtcList(); if(l.length>6){log("The emulator holds up to 6 codes","er");return;} if(l.some(c=>!/^[PCBU][0-3][0-9A-F]{3}$/.test(c))){log("Codes look like P0301 or U0100","er");return;} send("ATSET DTC="+l.join(",")); };
 $("clrDtc").onclick=()=>send("ATCLR DTC");
