@@ -232,14 +232,14 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.1</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.2</span></div></div>
     <div class="spacer"></div>
     <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
       <span class="lbl">Engine Sound</span><span class="st" id="soundState">Off</span><span class="switch" aria-hidden="true"></span>
     </button>
-    <div class="pill" role="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
-    <button class="btn prominent" id="connectBtn">Connect Emulator</button>
+    <div class="pill" role="status"><span class="dot" id="dot"></span><span id="statusText">Emulator not connected</span></div>
+    <button class="btn prominent" id="connectBtn" title="Connects to the Freematics emulator over its USB cable. Dongles connect from the phone's Bluetooth tab.">Connect Emulator (USB)</button>
   </header>
 
   <div class="notice" id="notice"></div>
@@ -421,7 +421,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 </div>
 <script>
 
-const APP_VERSION = "2.1";
+const APP_VERSION = "2.2";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
@@ -503,18 +503,19 @@ function send(cmd, {timeout=1200, single=false, quiet=false, until=null}={}){
 
 async function connect(){
   if(connected){ return disconnect(); }
-  if(DEMO){ connected=true; setStatus(true,"Connected · demo"); $("devInfo").textContent="Device: EMULATOR-OBDII V3 (demo)"; await hello(); return; }
+  if(DEMO){ connected=true; setStatus(true,"Emulator connected · demo"); $("devInfo").textContent="Device: EMULATOR-OBDII V3 (demo)"; await hello(); return; }
   try{
-    port = await navigator.serial.requestPort();
+    port = await navigator.serial.requestPort({filters:[{usbVendorId:0x10C4},{usbVendorId:0x1A86}]}); // Freematics USB chips only (CP2102, CH340), so a paired dongle can't be picked
+    if(!port.getInfo().usbVendorId){ log("That port isn't the emulator's USB cable. Pick the CP2102 or CH340 entry.","er"); port=null; setStatus(false,"Emulator not connected"); return; }
     await port.open({baudRate:38400, dataBits:8, stopBits:1, parity:"none"});
     writer = port.writable.getWriter(); connected=true;
     const info=port.getInfo();
-    setStatus(true, "Connected"+(info.usbVendorId?` · ${chip(info.usbVendorId)}`:""));
+    setStatus(true, "Emulator connected · "+chip(info.usbVendorId));
     $("devInfo").textContent="Device: Freematics emulator on "+(info.usbVendorId?chip(info.usbVendorId):"USB serial");
     readLoop();
     await new Promise(r=>setTimeout(r,300));
     await hello();
-  }catch(e){ log("Could not connect: "+e.message,"er"); setStatus(false,"Not connected"); }
+  }catch(e){ log("Could not connect: "+e.message,"er"); setStatus(false,"Emulator not connected"); }
 }
 function chip(v){ return v===0x10C4?"CP2102":v===0x1A86?"CH340":"USB 0x"+v.toString(16) }
 async function disconnect(){
@@ -522,7 +523,7 @@ async function disconnect(){
   try{ reader && await reader.cancel(); }catch{}
   try{ writer && writer.releaseLock(); }catch{}
   try{ port && await port.close(); }catch{}
-  port=null; setStatus(false,"Not connected"); log("Disconnected");
+  port=null; setStatus(false,"Emulator not connected"); log("Disconnected");
 }
 async function hello(){
   await send("ATE0");
@@ -538,7 +539,7 @@ async function readBack(){
   }
   log(n?`Read ${n} live values from the emulator.`:"This firmware didn't report its live values.");
 }
-function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect":"Connect Emulator"; $("connectBtn").classList.toggle("prominent",!on); }
+function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect Emulator":"Connect Emulator (USB)"; $("connectBtn").classList.toggle("prominent",!on); }
 
 // ---------- PID UI ----------
 const pidsEl=$("pids"); const sendTimers={};

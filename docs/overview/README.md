@@ -1,4 +1,4 @@
 # Emulator Desk overview
 
 Regenerate: `node shoot.js` (demo-mode screenshots), then `node pdf.js` (prints overview.pdf).
-Current copy is also kept in Google Drive > App Overviews as "Emulator Desk Overview - App 2.1 - Doc 2.1.pdf".
+Current copy is also kept in Google Drive > App Overviews as "Emulator Desk Overview - App 2.2 - Doc 2.2.pdf".
