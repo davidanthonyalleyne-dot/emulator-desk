@@ -45,13 +45,13 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v1.5</b><br>Document <b>v1.5</b></div>
+    <div class="vers">App <b>v1.6</b><br>Document <b>v1.6</b></div>
   </div>
   <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install, and follows Apple's Human Interface Guidelines in light and dark mode.</p>
   <div class="shots">
     <div class="shot"><img src="shots/2-live.png"><b>Live data</b><p>Ten sliders for the common Mode 01 values, with presets from Parked to Overheat. Values go out as you drag.</p></div>
     <div class="shot"><img src="shots/3-vehicle.png"><b>Vehicle and codes</b><p>A compact panel for protocol, VIN and up to six trouble codes, set or cleared in one tap.</p></div>
-    <div class="shot"><img src="shots/7-phone.png" style="object-fit:contain;background:var(--bg)"><b>Dongle phone view</b><p>A phone-style screen showing everything a Bluetooth dongle reads: gauge, ten values, codes, VIN and protocol.</p></div>
+    <div class="shot"><img src="shots/7-phone.png" style="object-fit:contain;background:var(--bg)"><b>Dongle phone view</b><p>A phone screen with a tab bar: Live for the gauge and ten values, Vehicle for codes and VIN, Bluetooth for the connection.</p></div>
   </div>
   <div class="glance">
     <div class="g"><div class="n">10</div><div class="l">live PIDs with sliders</div></div>
@@ -64,7 +64,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
       <h2>Live data</h2>
       <p>Ten common values sent as raw OBD-II bytes. Drive Loop cycles pulling away, cruising and braking.</p>
       <h2>Dongle over Bluetooth</h2>
-      <p>Connect a Bluetooth LE ELM327 dongle and a phone-style screen shows everything it reads. Dots show whether each value matches the emulator.</p>
+      <p>Connect a Bluetooth LE ELM327 dongle from the Bluetooth tab. Dots show whether each value matches, and Vehicle gets a red badge for stored codes.</p>
     </div>
     <div>
       <h2>Good to know</h2>
@@ -78,12 +78,12 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v1.5</b><br>Document <b>v1.5</b></div></div>
+  <div class="vers">App <b>v1.6</b><br>Document <b>v1.6</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
     <tr><th>Piece</th><th>Version</th><th>What it does</th><th>Loaded from</th><th>Licence</th></tr>
-    <tr><td>Emulator Desk</td><td>1.5</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check</td><td><code>index.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
+    <tr><td>Emulator Desk</td><td>1.6</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check</td><td><code>index.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
     <tr><td>Freematics AT command set</td><td>EMULATOR-OBDII V3 (tested)</td><td>Commands the app sends: <code>ATE0</code>, <code>ATZ</code>, <code>ATSET</code>, <code>ATGET</code> (PIDs), <code>ATCLR DTC</code></td><td>Built into the emulator</td><td>Freematics</td></tr>
     <tr><td>OBD-II PID formulas</td><td>SAE J1979</td><td>Byte encodings for each slider (e.g. RPM × 4 as two bytes, temperature + 40)</td><td>Hard-coded in the app</td><td>Public standard</td></tr>
     <tr><td>System fonts</td><td>n/a</td><td>SF Pro and SF Mono on Mac, Arial and Consolas elsewhere</td><td>The operating system</td><td>OS fonts</td></tr>

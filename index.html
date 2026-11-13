@@ -162,6 +162,28 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .ph-btn.on{background:#1c1c1e;color:#ff453a}
 .ph-note{font-size:12px;color:var(--l2);text-align:center;margin-top:9px;line-height:1.4}
 
+
+/* phone: tabs */
+.screen{display:flex;flex-direction:column;padding:0;overflow:hidden;position:relative}
+.screen .sbar{padding:17px 30px 0;height:50px;flex:none}
+.pane-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 12px;scrollbar-width:none}
+.pane-wrap::-webkit-scrollbar{display:none}
+.pane[hidden]{display:none}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(3,1fr);padding:7px 10px 22px;background:rgba(22,22,24,.86);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);border-top:.5px solid rgba(84,84,88,.6)}
+.tabbar button{position:relative;border:0;background:none;color:#8e8e93;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px;cursor:pointer;font-size:10.5px;font-weight:500;border-radius:10px}
+.tabbar button svg{width:26px;height:26px}
+.tabbar button[aria-selected="true"]{color:#ff9f0a}
+.tb-badge{position:absolute;top:0;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ff453a;color:#fff;font-size:12px;font-weight:600;line-height:18px;text-align:center}
+.home-ind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:rgba(255,255,255,.85)}
+.bt-hero{text-align:center;padding:14px 0 18px}
+.bt-ring{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:#1c1c1e;color:#8e8e93;transition:background .25s,color .25s}
+.bt-ring svg{width:40px;height:40px}
+.bt-ring.on{background:#0a84ff;color:#fff}
+.bt-name{font-size:20px;font-weight:600}
+.bt-state{display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;color:var(--l2);margin-top:4px}
+.bt-state .bt-dot{margin:0;width:8px;height:8px}
+@media (prefers-reduced-transparency: reduce){ .tabbar{background:#161618;backdrop-filter:none;-webkit-backdrop-filter:none} }
+
 /* ---- Console ---- */
 .term{background:var(--term);color:var(--term-text);border-radius:var(--r);height:200px;overflow:auto;font-family:var(--mono);font-size:12.5px;padding:12px 14px;line-height:1.6}
 @media (prefers-color-scheme: light){ .term{box-shadow:inset 0 0 0 1px var(--sep)} }
@@ -176,7 +198,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v1.5</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v1.6</span></div></div>
     <div class="spacer"></div>
     <button class="sound" id="soundSw" role="switch" aria-checked="false" aria-label="Engine sound" title="Plays an engine that follows the RPM and throttle sliders">
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg>
@@ -238,31 +260,61 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
         <div class="island"></div>
         <div class="screen">
           <div class="sbar"><span id="phClock">9:41</span><span class="sicons"><i></i><i></i><i></i><b></b></span></div>
-          <div class="app-h">
-            <div><div class="app-t">Live</div><div class="app-s" id="btInfo">Not connected</div></div>
-            <span class="bt-dot" id="btDot"></span>
+          <div class="pane-wrap">
+            <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
+              <div class="app-h"><div class="app-t">Live</div></div>
+              <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
+              <div class="gauge">
+                <svg viewBox="0 0 200 140" aria-hidden="true">
+                  <path d="M25 125 A80 80 0 1 1 175 125" class="g-bg"/>
+                  <path d="M25 125 A80 80 0 1 1 175 125" class="g-fg" id="gArc"/>
+                </svg>
+                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
+              </div>
+              <div class="tiles" id="phTiles"></div>
+            </div>
+
+            <div class="pane" id="paneVehicle" role="tabpanel" aria-labelledby="tabVehicle" hidden>
+              <div class="app-h"><div class="app-t">Vehicle</div></div>
+              <div class="psec">Trouble Codes <span id="phDtcN"></span></div>
+              <div class="pgroup"><div class="dtcs" id="phDtc"><span class="muted">Connect a dongle to read codes</span></div></div>
+              <div class="psec">Identity</div>
+              <div class="pgroup">
+                <div class="kv"><span>VIN</span><b id="phVin">–</b></div>
+                <div class="kv"><span>Protocol</span><b id="phProto">–</b></div>
+              </div>
+              <div class="ph-note" style="text-align:left;margin:10px 4px 0">Codes, VIN and protocol refresh every few seconds while the dongle is connected.</div>
+            </div>
+
+            <div class="pane" id="paneBt" role="tabpanel" aria-labelledby="tabBt" hidden>
+              <div class="app-h"><div class="app-t">Bluetooth</div></div>
+              <div class="bt-hero">
+                <div class="bt-ring" id="btRing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="bt-name" id="btName">No Dongle</div>
+                <div class="bt-state"><span class="bt-dot" id="btDot"></span><span id="btInfo">Not connected</span></div>
+              </div>
+              <div class="pgroup">
+                <div class="kv"><span>Adapter</span><b id="phElm">–</b></div>
+                <div class="kv"><span>Adapter Voltage</span><b id="phRv">–</b></div>
+                <div class="kv"><span>Requests</span><b id="phReq">0</b></div>
+              </div>
+              <button class="ph-btn" id="btBtn">Connect Dongle</button>
+              <div class="ph-note">Bluetooth LE dongles only. Chrome asks you to pick the dongle each time the page loads.</div>
+            </div>
           </div>
-          <div class="verdict" id="btVerdict">Connect a dongle to see what it reads</div>
-          <div class="gauge">
-            <svg viewBox="0 0 200 140" aria-hidden="true">
-              <path d="M25 125 A80 80 0 1 1 175 125" class="g-bg"/>
-              <path d="M25 125 A80 80 0 1 1 175 125" class="g-fg" id="gArc"/>
-            </svg>
-            <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
-          </div>
-          <div class="tiles" id="phTiles"></div>
-          <div class="psec">Trouble Codes <span id="phDtcN"></span></div>
-          <div class="pgroup"><div class="dtcs" id="phDtc"><span class="muted">–</span></div></div>
-          <div class="psec">Vehicle</div>
-          <div class="pgroup">
-            <div class="kv"><span>VIN</span><b id="phVin">–</b></div>
-            <div class="kv"><span>Protocol</span><b id="phProto">–</b></div>
-            <div class="kv"><span>Adapter</span><b id="phElm">–</b></div>
-            <div class="kv"><span>Adapter Voltage</span><b id="phRv">–</b></div>
-            <div class="kv"><span>Requests</span><b id="phReq">0</b></div>
-          </div>
-          <button class="ph-btn" id="btBtn">Connect Dongle</button>
-          <div class="ph-note">Bluetooth LE dongles only. Dots show whether each reading matches the emulator.</div>
+          <nav class="tabbar" role="tablist" aria-label="Phone sections">
+            <button role="tab" id="tabLive" aria-controls="paneLive" aria-selected="false" data-pane="paneLive">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a9 9 0 0 0-9 9 9 9 0 0 0 2.2 5.9h13.6A9 9 0 0 0 21 13a9 9 0 0 0-9-9zm4.6 4.6l-3.3 4.9a1.6 1.6 0 1 1-2.2-1.6z" fill="currentColor"/></svg>
+              <span>Live</span></button>
+            <button role="tab" id="tabVehicle" aria-controls="paneVehicle" aria-selected="false" data-pane="paneVehicle">
+              <span class="tb-badge" id="tbBadge" hidden></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.2C6 5.9 7 5 8.4 5h7.2c1.4 0 2.4.9 2.9 2.2L19.7 11c.8.3 1.3 1.1 1.3 2v3.5c0 .6-.4 1-1 1h-.6v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H8v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H4c-.6 0-1-.4-1-1V13c0-.9.5-1.7 1.3-2zM7.3 10.5h9.4l-.9-2.7c-.2-.5-.6-.8-1.1-.8H9.3c-.5 0-.9.3-1.1.8zM7 15.3a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z" fill="currentColor"/></svg>
+              <span>Vehicle</span></button>
+            <button role="tab" id="tabBt" aria-controls="paneBt" aria-selected="true" data-pane="paneBt">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Bluetooth</span></button>
+          </nav>
+          <div class="home-ind"></div>
         </div>
       </div>
     </section>
@@ -276,7 +328,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 </div>
 <script>
 
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
@@ -528,6 +580,7 @@ PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
 function phClock(){ const d=new Date(); $$("phClock").textContent=d.getHours()%12||12; $$("phClock").textContent+=":"+String(d.getMinutes()).padStart(2,"0"); }
 phClock(); setInterval(phClock,20000);
 function btSetInfo(t){ $$("btInfo").textContent=t; }
+function btSetName(t){ $$("btName").textContent=t; }
 function verdict(cls,t){ const v=$$("btVerdict"); v.className="verdict "+cls; v.textContent=t; }
 function btOnData(e){
   bt.buf+=new TextDecoder().decode(e.target.value);
@@ -543,7 +596,7 @@ function btSend(cmd,timeout=3000){
     catch(e){ if(bt.wait){ clearTimeout(bt.wait.t); bt.wait=null; } res(null); }
   });
 }
-function btConnectedUI(name){ $$("btBtn").textContent="Disconnect"; $$("btBtn").classList.add("on"); $$("btDot").classList.add("on"); }
+function btConnectedUI(name){ $$("btBtn").textContent="Disconnect"; $$("btBtn").classList.add("on"); $$("btDot").classList.add("on"); $$("btRing").classList.add("on"); }
 async function btInit(){
   const raw=await btSend("ATZ",5000);
   if(raw===null) return false;
@@ -553,11 +606,11 @@ async function btInit(){
 }
 async function btConnect(){
   if(bt.dev||bt.demo) return btDisconnect();
-  if(DEMO){ bt.demo=true; btConnectedUI(); btSetInfo("Demo dongle"); await btInit(); btStartPoll(); return; }
+  if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo Dongle"); btSetInfo("Connected"); await btInit(); btStartPoll(); phTab("paneLive"); return; }
   if(!navigator.bluetooth){ btSetInfo("No Bluetooth in this browser. Use Chrome."); return; }
   try{
     const dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BT_SERVICES});
-    btSetInfo("Connecting to "+(dev.name||"dongle")+"…");
+    btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connecting…");
     const srv=await dev.gatt.connect();
     let tx=null,rx=null; const seen=[];
     for(const s of await srv.getPrimaryServices()){ seen.push(s.uuid);
@@ -572,11 +625,11 @@ async function btConnect(){
     bt.dev=dev; bt.tx=tx; bt.rx=rx;
     dev.addEventListener("gattserverdisconnected",()=>{ log("BT dongle disconnected","sys"); btCleanup(); });
     await rx.startNotifications(); rx.addEventListener("characteristicvaluechanged",btOnData);
-    btConnectedUI(); btSetInfo(dev.name||"Unnamed dongle");
-    if(!await btInit()){ verdict("no","Connected, but it doesn't answer OBD commands");
+    btConnectedUI(); btSetName(dev.name||"Unnamed Dongle"); btSetInfo("Connected");
+    if(!await btInit()){ verdict("no","Connected, but it doesn't answer OBD commands"); btSetInfo("Connected, but it doesn't answer OBD commands");
       log("The dongle connected but didn't answer ELM327 commands. Some dongles, including Automatic adapters, use a locked protocol of their own.","er"); return; }
     log("BT dongle connected: "+(dev.name||"unnamed"),"sys");
-    btStartPoll();
+    btStartPoll(); phTab("paneLive");
   }catch(e){ btSetInfo(e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+e.message); }
 }
 function hexOf(r){ return (r||"").replace(/\s|\r|\n/g,"").toUpperCase(); }
@@ -616,7 +669,7 @@ function btStartPoll(){
       if(p.pid==="010C"&&v!==null){ const L=$$("gArc").getTotalLength(), f=Math.max(0,Math.min(1,v/8000)); $$("gArc").style.strokeDasharray=(L*f)+" 999"; $$("gArc").style.opacity=f>0?1:0; } }
     if(bt.round%4===0){
       const d=parseDtc(await btSend("03",4000));
-      if(d){ $$("phDtcN").textContent=d.length?d.length:""; $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
+      if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
       const vin=parseVin(await btSend("0902",4000)); if(vin) $$("phVin").textContent=vin;
       const rv=await btSend("ATRV"); if(rv) $$("phRv").textContent=rv.replace(/\s/g,"");
       const dp=await btSend("ATDP"); if(dp) $$("phProto").textContent=dp.replace(/^AUTO,\s*/i,"").trim();
@@ -628,7 +681,7 @@ function btStartPoll(){
     bt.busy=false;
   },700);
 }
-function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); btSetInfo("Not connected"); verdict("","Connect a dongle to see what it reads"); }
+function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Dongle"); phBadge(0); verdict("","Connect a dongle to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 function demoElm(cmd){
   const p=PIDS.find(q=>q.pid===cmd);
@@ -639,6 +692,19 @@ function demoElm(cmd){
   return "OK";
 }
 $$("btBtn").onclick=btConnect;
+
+// ---------- Phone tab bar ----------
+function phTab(id){
+  document.querySelectorAll(".tabbar [role=tab]").forEach(t=>{ const on=t.dataset.pane===id; t.setAttribute("aria-selected",on); t.tabIndex=on?0:-1; $(t.dataset.pane).hidden=!on; });
+  document.querySelector(".pane-wrap").scrollTop=0;
+}
+document.querySelectorAll(".tabbar [role=tab]").forEach((t,i,all)=>{
+  t.onclick=()=>phTab(t.dataset.pane);
+  t.onkeydown=e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=all[(i+(e.key==="ArrowRight"?1:all.length-1))%all.length]; phTab(n.dataset.pane); n.focus(); } };
+});
+phTab("paneBt");
+function phBadge(n){ const b=$("tbBadge"); b.hidden=!n; b.textContent=n||""; }
+
 
 function sendPid(p,quiet=false){ return send(`ATSET ${p.pid}=`+p.enc(+p.el.value).map(hex).join(","),{quiet}); }
 $("sendAll").onclick=()=>PIDS.forEach(p=>sendPid(p));
