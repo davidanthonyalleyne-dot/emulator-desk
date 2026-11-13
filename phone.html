@@ -248,6 +248,29 @@ html,body{background:#f2f2f7;color:#000}
 .scan-alt{margin:6px 16px 18px;min-height:50px;border-radius:14px;background:#1c1c1e;color:#ff9f0a;border:0;font-weight:600;font-size:17px;cursor:pointer}
 .scan-still{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:24px;text-align:center;color:rgba(235,235,245,.6);font-size:15px}
 .scan-still svg{width:52px;height:52px;color:#ff9f0a}
+
+/* Live fits on one screen: compact car grid, a gauge that shrinks to the space left, 3-across tiles without the VSS line */
+#paneLive{display:flex;flex-direction:column;gap:8px}
+#paneLive .app-h{margin:6px 2px 0}
+#paneLive .phcar{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:9px 14px;margin:0}
+#paneLive .phcar[hidden]{display:none}
+#paneLive .cg span{display:block;font-size:11.5px;color:var(--l2);line-height:1.2}
+#paneLive .cg b{display:block;font-size:15px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#paneLive .verdict{font-size:12px;padding:5px 10px;border-radius:10px}
+#paneLive .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+#paneLive .tile{padding:7px 9px;border-radius:12px}
+#paneLive .tile .tl{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#paneLive .tile .tv{font-size:19px;margin-top:1px;white-space:nowrap}
+#paneLive .tile .tv small{font-size:11px}
+#paneLive .tvss{display:none}
+#paneLive .tile[hidden]{display:none}
+#paneLive{min-height:100%}
+#paneLive .app-t{font-size:30px}
+#paneLive .gauge{flex:1 1 0;min-height:118px;max-height:230px;width:auto;height:auto;aspect-ratio:220/156;margin:0 auto;max-width:100%}
+#paneLive .g-big{font-size:clamp(30px,6.2vh,52px)}
+#paneLive .g-rpm{margin-top:2px}
+@media (max-height:620px){#paneLive .g-x{display:none}}
+#paneLive .g-rpm[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -255,7 +278,7 @@ html,body{background:#f2f2f7;color:#000}
 <div class="pane-wrap">
             <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
               <div class="app-h"><div class="app-t">Live</div><button class="kdot" id="liveConnect" aria-label="Kē not connected. Tap to connect." title="Kē not connected. Tap to connect."><i></i></button></div>
-              <div class="pgroup phcar" id="phCar" hidden aria-label="Connected car"></div>
+              <div class="pgroup phcar" id="phCar" hidden role="group" aria-label="Connected car"></div>
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
@@ -434,8 +457,8 @@ const PH_LEN={"010C":2,"0142":2,"0110":2};
 const $$=id=>document.getElementById(id);
 // tiles for every PID except speed and RPM (those are in the gauge)
 PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
-  const t=document.createElement("div"); t.className="tile";
-  t.innerHTML=`<div class="tl">${p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
+  const t=document.createElement("div"); t.className="tile"; t.title=`${p.name}: ${p.vss} · PID ${p.pid}`;
+  t.innerHTML=`<div class="tl">${({"0105":"Coolant","010F":"Intake Air","0142":"Battery","0110":"Air Flow","0146":"Ambient"})[p.pid]||p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
 });
 // high-voltage battery charge (PID 5B / DID F45B, A×100/255), shown only when the car reports it
@@ -623,7 +646,7 @@ async function btPollOnce(){ {
     for(const p of PIDS){ if(bt.std==="uds" && bt.sup && bt.sup.length && !bt.sup.includes(p.pid.slice(2))){ show(p.pid,null); none++; continue; } const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
     if(bt.ev){ const c=hexOf(await btSend(bt.std==="uds"?"22F45B":"015B")), k=bt.std==="uds"?"62F45B":"415B", i=c.indexOf(k);
-      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else $$("phEv").textContent="–"; }
+      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else $$("phEv").textContent="–"; }
     if(bt.round%4===0){
       const d=await readDtcs();
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
@@ -638,7 +661,7 @@ async function btPollOnce(){ {
   }
   if((bt.round||0)===1) dbg("first live round finished");
 }
-function btCleanup(){ bt.carVin=""; if($$("phCar")) $$("phCar").hidden=true; wake(false); liveCard("idle"); clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
+function btCleanup(){ bt.carVin=""; document.querySelectorAll("#phTiles .tile").forEach(t=>{ if(t.id!=="phEvTile") t.hidden=false; }); { const g=document.querySelector(".g-rpm"); if(g) g.hidden=false; } if($$("phCar")) $$("phCar").hidden=true; wake(false); liveCard("idle"); clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
 function btDisconnect(){ bt.userDisc=true; try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 const DEMO_MODE=new URLSearchParams(location.search).get("demo"), DEMO_UDS=DEMO_MODE==="uds"||DEMO_MODE==="zev", DEMO_ZEV=DEMO_MODE==="zev";
 function demoElm(cmd){
@@ -722,6 +745,9 @@ async function btCapabilities(){
     } else dbg("22 F810: no answer either");
   }
   bt.ev = sup.includes("5B"); bt.sup = sup;
+  // hide tiles for values a UDS car says it doesn't have (an EV has no coolant or throttle), and the rpm line if there's no RPM
+  PIDS.forEach(p=>{ const e=$$("ph"+p.pid), t=e&&e.closest(".tile"); if(t) t.hidden = bt.std==="uds" && sup.length>0 && !sup.includes(p.pid.slice(2)); });
+  { const g=document.querySelector(".g-rpm"); if(g) g.hidden = bt.std==="uds" && sup.length>0 && !sup.includes("0C"); }
   bcSet("bcDiag", sup.length===0 ? "No reply to either" : bt.std==="classic" ? "Classic OBD-II (SAE J1979)" : bt.zev ? "ZEVonUDS (SAE J1979-3)" : "OBDonUDS (SAE J1979-2)");
   dbg("diagnostics: using "+bt.std+(bt.zev?" (ZEV)":"")+", "+sup.length+" items, battery charge "+(bt.ev?"yes":"no"));
   if(bt.std==="uds"){
@@ -730,7 +756,7 @@ async function btCapabilities(){
     const names=raw.split("62F80A").slice(1).map(h=>{ let t=""; for(let k=0;k+2<=h.length;k+=2){ const c=parseInt(h.slice(k,k+2),16); if(c>=32&&c<127) t+=String.fromCharCode(c); else if(c===0&&t) break; } return t.trim(); }).filter(Boolean);
     bcSet("bcEcus", names.length? names.join(", ") : "Not reported");
   } else bcSet("bcEcus", "Only on UDS cars");
-  const evt=$$("phEvTile"); if(evt) evt.hidden=!bt.ev;
+  const evt=$$("phEvTile"); if(evt) evt.hidden=!(bt.ev && bt.zev);
   bcSet("bcPidN", sup.length? sup.length+(bt.std==="uds"?" DIDs":" PIDs") : "");
   $$("bcPids").innerHTML = sup.length ? sup.map(p=>`<span class="pchip" title="${bt.std==="uds"?"DID F4"+p:"Mode 01 PID "+p}">${PID_NAMES[p]||("PID "+p)}</span>`).join("") : '<span class="muted">The car didn\'t list its supported data</span>';
   const dp=clean(await btSend("ATDP")), dpn=clean(await btSend("ATDPN"));
@@ -807,7 +833,7 @@ function phCarShow(v,L,x){
     const nice=t=>t?String(t).toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\bBmw\b/,"BMW"):"";
     const make=x ? nice(x.Make) : (L.maker||"").replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"");
     const rows=[["Make",make||"–"],["Model",x?(x.Model||"–"):"…"],["Trim",x?(x.Trim||x.Series||"–"):"…"],["Model Year",(x&&x.ModelYear)||L.year||"–"]];
-    pc.innerHTML=rows.map(([k,t])=>`<div class="kv"><span>${k}</span><b>${esc(t)}</b></div>`).join(""); }
+    pc.innerHTML=rows.map(([k,t])=>`<div class="cg"><span>${k}</span><b>${esc(t)}</b></div>`).join(""); }
   $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
 }
 
