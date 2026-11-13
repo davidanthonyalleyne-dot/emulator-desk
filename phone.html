@@ -271,6 +271,7 @@ html,body{background:#f2f2f7;color:#000}
 #paneLive .g-rpm{margin-top:2px}
 @media (max-height:620px){#paneLive .g-x{display:none}}
 #paneLive .g-rpm[hidden]{display:none}
+#paneLive .phcar{display:block;background:none;padding:0 2px;margin:-4px 0 0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:0}
 </style>
 </head>
 <body>
@@ -833,7 +834,9 @@ function phCarShow(v,L,x){
     const nice=t=>t?String(t).toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\bBmw\b/,"BMW"):"";
     const make=x ? nice(x.Make) : (L.maker||"").replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"");
     const rows=[["Make",make||"–"],["Model",x?(x.Model||"–"):"…"],["Trim",x?(x.Trim||x.Series||"–"):"…"],["Model Year",(x&&x.ModelYear)||L.year||"–"]];
-    pc.innerHTML=rows.map(([k,t])=>`<div class="cg"><span>${k}</span><b>${esc(t)}</b></div>`).join(""); }
+    // one line, e.g. "2026 Porsche 911 Targa 4S"
+    const line=[rows[3][1],rows[0][1],rows[1][1],rows[2][1]].filter(t=>t&&t!=="–"&&t!=="…").join(" ");
+    pc.textContent=line||"Unknown car"; pc.title=line; }
   $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
 }
 

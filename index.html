@@ -397,13 +397,14 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 #paneLive .gauge{width:206px;height:146px;margin:0 auto}#paneLive .g-c{inset:44px 0 0}#paneLive .g-big{font-size:36px}#paneLive .tile{padding:6px 7px}#paneLive .tile .tl{font-size:10.5px;padding-right:7px}#paneLive .mdot{width:6px;height:6px;top:6px;right:6px}#paneLive{gap:7px}
 @media (max-height:620px){#paneLive .g-x{display:none}}
 #paneLive .g-rpm[hidden]{display:none}
+#paneLive .phcar{display:block;background:none;padding:0 2px;margin:-4px 0 0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:0}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.13</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.14</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -1238,7 +1239,9 @@ function phCarShow(v,L,x){
     const nice=t=>t?String(t).toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\bBmw\b/,"BMW"):"";
     const make=x ? nice(x.Make) : (L.maker||"").replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"");
     const rows=[["Make",make||"–"],["Model",x?(x.Model||"–"):"…"],["Trim",x?(x.Trim||x.Series||"–"):"…"],["Model Year",(x&&x.ModelYear)||L.year||"–"]];
-    pc.innerHTML=rows.map(([k,t])=>`<div class="cg"><span>${k}</span><b>${esc(t)}</b></div>`).join(""); }
+    // one line, e.g. "2026 Porsche 911 Targa 4S"
+    const line=[rows[3][1],rows[0][1],rows[1][1],rows[2][1]].filter(t=>t&&t!=="–"&&t!=="…").join(" ");
+    pc.textContent=line||"Unknown car"; pc.title=line; }
   $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
 }
 
