@@ -226,6 +226,23 @@ html,body{background:#f2f2f7;color:#000}
 :root .nobt a{color:#c35a00}
 :root .lt{box-shadow:inset 0 0 0 1px rgba(60,60,67,.18)}
 }
+.vd-search .vd-scan{background:var(--g);color:#ff9f0a;padding:0 11px;display:flex;align-items:center;justify-content:center}
+.vd-search .vd-scan svg{width:22px;height:22px}
+.scan{position:absolute;inset:0;z-index:40;background:#000;display:flex;flex-direction:column;color:#fff}
+.scan[hidden],.scan [hidden]{display:none!important}
+.scan-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px}
+.scan-top b{font-size:17px;font-weight:600}
+.scan-top button{background:none;border:0;color:#ff9f0a;font-size:17px;cursor:pointer;min-height:44px;padding:0 4px}
+.scan-view{position:relative;flex:1;overflow:hidden;background:#111}
+.scan-view video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame{position:absolute;left:8%;right:8%;top:38%;height:22%;border:2px solid #ff9f0a;border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.scan-frame.hit{border-color:#30d158}
+.scan-line{position:absolute;left:10px;right:10px;top:50%;height:2px;background:rgba(255,159,10,.8)}
+@media (prefers-reduced-motion:no-preference){.scan-line{animation:scanl 1.6s ease-in-out infinite alternate}@keyframes scanl{from{top:15%}to{top:85%}}}
+.scan-msg{padding:14px 18px 6px;font-size:15px;line-height:1.35;text-align:center;min-height:44px}
+.scan-alt{margin:6px 16px 18px;min-height:50px;border-radius:14px;background:#1c1c1e;color:#ff9f0a;border:0;font-weight:600;font-size:17px;cursor:pointer}
+.scan-still{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:24px;text-align:center;color:rgba(235,235,245,.6);font-size:15px}
+.scan-still svg{width:52px;height:52px;color:#ff9f0a}
 </style>
 </head>
 <body>
@@ -253,7 +270,7 @@ html,body{background:#f2f2f7;color:#000}
                 <div class="vdhead" id="vdHead" hidden></div>
                 <div class="vd-vin" id="vdVin"><span class="muted">No VIN yet</span></div>
                 <div class="vd-legend"><span class="s-wmi">Maker</span><span class="s-vds">Model</span><span class="s-chk">Check</span><span class="s-yr">Year</span><span class="s-pl">Plant</span><span class="s-sn">Serial</span></div>
-                <div class="vd-src" id="vdSrc">Connect the Kē, or decode any VIN below</div>
+                <div class="vd-src" id="vdSrc">Connect the Kē, or scan or type a VIN below</div>
               </div>
               <div class="psec">Vehicle</div>
               <div class="pgroup">
@@ -285,7 +302,7 @@ html,body{background:#f2f2f7;color:#000}
                 <div class="kv"><span>Protocol</span><b id="phProto">–</b></div>
               </div>
               <div class="psec">Decode Any VIN</div>
-              <div class="vd-search"><input id="vdIn" maxlength="17" placeholder="17-character VIN" spellcheck="false" autocapitalize="characters" aria-label="VIN to decode"><button id="vdGo">Decode</button></div>
+              <div class="vd-search"><input id="vdIn" maxlength="17" placeholder="17-character VIN" spellcheck="false" autocapitalize="characters" aria-label="VIN to decode"><button id="vdGo">Decode</button><button class="vd-scan" id="vdScan" aria-label="Scan VIN barcode with the camera" title="Scan VIN barcode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3M7 8v8M10 8v8M13 8v8M15.5 8v8M17.5 8v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
               <div class="ph-note" style="text-align:left;margin:8px 4px 0">The VIN is sent to NHTSA's public vPIC service to look up model details.</div>
             </div>
 
@@ -335,6 +352,17 @@ html,body{background:#f2f2f7;color:#000}
 
               <div class="ph-note">The Kē talks to one device at a time. If it's connected on the Mac, disconnect it there first.</div>
             </div>
+          </div>
+          <div class="scan" id="scanSheet" hidden role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+            <div class="scan-top"><b id="scanTitle">Scan VIN</b><button id="scanCancel">Cancel</button></div>
+            <div class="scan-view">
+              <video id="scanVideo" playsinline muted autoplay></video>
+              <div class="scan-still" id="scanStill" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span id="scanStillText">Take a photo of the VIN barcode on the driver's door jamb or at the bottom of the windshield.</span></div>
+              <div class="scan-frame" id="scanFrame"><div class="scan-line"></div></div>
+            </div>
+            <div class="scan-msg" id="scanMsg" aria-live="polite">Line up the VIN barcode inside the box.</div>
+            <button class="scan-alt" id="scanPhoto">Take a Photo Instead</button>
+            <input type="file" id="scanFile" accept="image/*" capture="environment" hidden>
           </div>
           <nav class="tabbar" role="tablist" aria-label="Phone sections">
             <button role="tab" id="tabLive" aria-controls="paneLive" aria-selected="false" data-pane="paneLive">
@@ -716,7 +744,7 @@ async function vinDecode(v, src){
   const L=vinDecodeLocal(v);
   phCarShow(v,L,null);
   $$("vdVin").innerHTML=`<span class="s-wmi">${v.slice(0,3)}</span><span class="s-vds">${v.slice(3,8)}</span><span class="s-chk">${v[8]}</span><span class="s-yr">${v[9]}</span><span class="s-pl">${v[10]}</span><span class="s-sn">${v.slice(11)}</span>`;
-  $$("vdSrc").textContent = src==="dongle" ? "Read from the car by the Kē" : "Typed on the phone";
+  $$("vdSrc").textContent = src==="dongle" ? "Read from the car by the Kē" : src==="scanned" ? "Scanned from the VIN barcode" : "Typed on the phone";
   const set=(id,t)=>{ $$(id).textContent=t||"–"; };
   set("vdMaker",L.maker); set("vdCountry",L.country!=="Unknown"?L.country:L.region); set("vdYear",L.year?String(L.year):"Unknown");
   set("vdPlant",L.plant); set("vdSerial",L.serial);
@@ -745,6 +773,101 @@ async function vinDecode(v, src){
 $$("vdGo").onclick=()=>vinDecode($$("vdIn").value,"typed");
 $$("vdIn").addEventListener("keydown",e=>{ if(e.key==="Enter") vinDecode($$("vdIn").value,"typed"); });
 $$("vdIn").addEventListener("input",()=>{ $$("vdIn").value=$$("vdIn").value.toUpperCase(); });
+
+// ---------- VIN barcode scanner ----------
+// Door-jamb labels use Code 39 (often with a leading I), windshield and registration labels use Code 128, Data Matrix, QR or PDF417.
+const SCAN_FORMATS=["code_39","code_128","data_matrix","qr_code","pdf417"];
+const SCAN_LIB="https://cdn.jsdelivr.net/npm/barcode-detector@3.2.3/dist/es/ponyfill.js";
+const scan={det:null, stream:null, timer:0, busy:false};
+function scanVinFrom(text){
+  const raw=(text||"").toUpperCase().replace(/[^A-Z0-9]/g," ");
+  const cands=[];
+  for(const tok of raw.split(/\s+/)){
+    for(let i=0;i+17<=tok.length;i++){ const c=tok.slice(i,i+17); if(/^[A-HJ-NPR-Z0-9]{17}$/.test(c)) cands.push(c); }
+  }
+  return cands.find(c=>vinCheck(c)===c[8]) || cands.find(c=>/^[A-HJ-NPR-Z0-9]{17}$/.test(c)) || null;
+}
+async function scanDetector(){
+  if(scan.det) return scan.det;
+  try{
+    if("BarcodeDetector" in window){
+      const have=await BarcodeDetector.getSupportedFormats();
+      if(have.includes("code_39")) return scan.det=new BarcodeDetector({formats:SCAN_FORMATS.filter(f=>have.includes(f))});
+    }
+  }catch(e){}
+  const m=await import(SCAN_LIB), have=await m.BarcodeDetector.getSupportedFormats();
+  return scan.det=new m.BarcodeDetector({formats:SCAN_FORMATS.filter(f=>have.includes(f))});
+}
+function scanSay(t){ $$("scanMsg").textContent=t; }
+function scanStop(){
+  clearTimeout(scan.timer); scan.timer=0;
+  if(scan.stream){ scan.stream.getTracks().forEach(t=>t.stop()); scan.stream=null; }
+  $$("scanVideo").srcObject=null;
+}
+function scanClose(){ scanStop(); $$("scanSheet").hidden=true; $$("scanFrame").classList.remove("hit"); $$("vdScan").focus(); }
+function scanFound(vin){
+  $$("scanFrame").classList.add("hit"); scanSay("Found "+vin);
+  try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
+  scanStop();
+  setTimeout(()=>{ scanClose(); $$("vdIn").value=vin; vinDecode(vin,"scanned"); },450);
+}
+async function scanLook(src){
+  const codes=await scan.det.detect(src);
+  for(const c of codes){ const v=scanVinFrom(c.rawValue); if(v) return v; }
+  return codes.length ? "" : null;   // "" means a barcode was seen but it isn't a VIN
+}
+async function scanLoop(){
+  if(!scan.stream) return;
+  const v=$$("scanVideo");
+  if(v.readyState>=2 && !scan.busy){
+    scan.busy=true;
+    try{ const r=await scanLook(v); if(r){ scan.busy=false; return scanFound(r); } if(r==="") scanSay("That barcode isn't a VIN. Look for the one printed beside the 17-character VIN."); }catch(e){}
+    scan.busy=false;
+  }
+  scan.timer=setTimeout(scanLoop,180);
+}
+function scanStillMode(text){
+  $$("scanVideo").hidden=true; $$("scanFrame").hidden=true; $$("scanStill").hidden=false;
+  if(text) $$("scanStillText").textContent=text;
+  $$("scanPhoto").textContent="Take Photo";
+}
+async function scanOpen(){
+  $$("scanSheet").hidden=false; $$("scanVideo").hidden=false; $$("scanFrame").hidden=false; $$("scanStill").hidden=true;
+  $$("scanPhoto").textContent="Take a Photo Instead"; $$("scanCancel").focus();
+  scanSay("Getting the scanner ready…");
+  try{ await scanDetector(); }
+  catch(e){ scanStillMode(); scanSay("The scanner needs an internet connection the first time. Type the VIN instead."); return; }
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    scanStillMode("This browser can't show a live camera here, so take a photo of the VIN barcode instead.");
+    scanSay("Door jamb or bottom of the windshield."); return;
+  }
+  try{
+    scan.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    if($$("scanSheet").hidden){ scanStop(); return; }
+    const v=$$("scanVideo"); v.srcObject=scan.stream; await v.play().catch(()=>{});
+    scanSay("Line up the VIN barcode inside the box. Door jamb or bottom of the windshield.");
+    scanLoop();
+  }catch(e){
+    scanStillMode(e && e.name==="NotAllowedError" ? "Camera access is off for this page. Take a photo of the VIN barcode instead, or allow the camera in Settings." : "No camera is available here. Take or choose a photo of the VIN barcode instead.");
+    scanSay("");
+  }
+}
+async function scanPhoto(file){
+  if(!file) return;
+  scanSay("Reading the photo…");
+  try{
+    await scanDetector();
+    const img=await createImageBitmap(file);
+    const r=await scanLook(img);
+    if(r) return scanFound(r);
+    scanSay(r==="" ? "That barcode isn't a VIN. Look for the one printed beside the 17-character VIN." : "No barcode found. Get closer, hold steady, and keep the whole barcode in the photo.");
+  }catch(e){ scanSay("Couldn't read that photo. Try another one."); }
+}
+$$("vdScan").onclick=scanOpen;
+$$("scanCancel").onclick=scanClose;
+$$("scanPhoto").onclick=()=>{ scanStop(); $$("scanFile").value=""; $$("scanFile").click(); };
+$$("scanFile").onchange=e=>scanPhoto(e.target.files[0]);
+$$("scanSheet").addEventListener("keydown",e=>{ if(e.key==="Escape") scanClose(); });
 
 // ---------- Phone tab bar ----------
 function phTab(id){

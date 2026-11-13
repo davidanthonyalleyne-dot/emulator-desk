@@ -3,6 +3,7 @@ const path = require('path');
 const http = require('http'); const fs = require('fs');
 const root = path.resolve(__dirname, '../..');
 const srv = http.createServer((q, s) => { const f = path.join(root, decodeURIComponent(q.url.split('?')[0]) === '/' ? 'index.html' : q.url.split('?')[0]); fs.readFile(f, (e, d) => { if (e) { s.writeHead(404); s.end(); } else { s.writeHead(200, {'Content-Type': f.endsWith('.html') ? 'text/html' : 'application/octet-stream'}); s.end(d); } }); }).listen(5791);
+require('child_process').execFileSync('python3', ['make-label.py'], { cwd: path.join(__dirname, 'fixtures') });
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
@@ -27,6 +28,26 @@ const srv = http.createServer((q, s) => { const f = path.join(root, decodeURICom
   await p.setViewportSize({ width: 1200, height: 860 }); await p.evaluate(()=>scrollTo(0,0));
   await p.check('#driveSim',{force:true}); await p.waitForTimeout(3000);
   await p.screenshot({ path: out('6-desktop') });
+  // Light mode desktop with a sample make loaded (v2.6)
+  await p.evaluate(()=>{ document.querySelector('#appear [data-t="light"]').click(); });
+  await p.evaluate(()=>{ const m=[...document.querySelectorAll('#makes button')].find(x=>/porsche/i.test(x.textContent+x.title+(x.getAttribute('aria-label')||''))); (m||document.querySelector('#makes button')).click(); });
+  await p.waitForTimeout(2500); await p.evaluate(()=>scrollTo(0,0));
+  await p.screenshot({ path: out('10-light') });
   console.log('errors:', errs);
-  await b.close(); srv.close();
+  await b.close();
+
+  // Kē phone: VIN barcode scanner, using a sample door-jamb label as the camera (v2.7)
+  const c = await chromium.launch({ args: ['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream','--use-file-for-fake-video-capture=' + path.join(__dirname, 'fixtures', 'label.y4m')] });
+  const q = await c.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  q.on('pageerror', e => errs.push(e.message));
+  await q.emulateMedia({ colorScheme: 'dark' });
+  await q.goto('http://localhost:5791/phone.html?demo'); await q.waitForTimeout(400);
+  await q.evaluate(() => { phTab('paneVehicle'); window.__found = scanFound; window.scanFound = v => { window.__v = v; }; });
+  await q.click('#vdScan'); await q.waitForFunction(() => window.__v, null, { timeout: 15000 });
+  await q.evaluate(() => { document.getElementById('scanFrame').classList.add('hit'); document.getElementById('scanFrame').style.cssText='top:33%;height:34%;left:4%;right:4%'; document.getElementById('scanVideo').style.objectFit='contain'; document.querySelector('.scan-line').style.display='none'; document.getElementById('scanMsg').textContent = 'Found ' + window.__v; });
+  await q.waitForTimeout(300); await q.screenshot({ path: out('8-scan') });
+  await q.evaluate(() => { window.scanFound = window.__found; scanFound(window.__v); });
+  await q.waitForTimeout(4000); await q.evaluate(() => { document.querySelector('.pane-wrap').scrollTop = 0; }); await q.waitForTimeout(200); await q.screenshot({ path: out('9-vehicle') });
+  console.log('errors:', errs);
+  await c.close(); srv.close();
 })();
