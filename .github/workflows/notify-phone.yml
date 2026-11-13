@@ -22,4 +22,7 @@ jobs:
           VER=$(grep -o 'const APP_VER="[^"]*"' phone.html | cut -d'"' -f2)
           URL="https://davidanthonyalleyne-dot.github.io/emulator-desk/phone.html?v=$VER"
           BODY=$(printf '%s' "$MSG" | head -n1 | cut -c1-180)
-          curl -fsS -H "Title: Kē v$VER is live" -H "Click: $URL" -H "Tags: car" -d "$BODY" "https://ntfy.sh/$NTFY_TOPIC"
+          # JSON publish so the "ē" in the title survives (headers must be plain ASCII)
+          jq -n --arg t "$NTFY_TOPIC" --arg title "Kē v$VER is live" --arg m "$BODY" --arg c "$URL" \
+            '{topic:$t,title:$title,message:$m,click:$c,tags:["car"]}' \
+          | curl -fsS -H "Content-Type: application/json" -d @- https://ntfy.sh/
