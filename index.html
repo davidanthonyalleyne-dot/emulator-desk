@@ -60,7 +60,7 @@ input[type=text]{font-family:var(--mono)}
 <div class="wrap">
   <header>
     <div class="logo">OB</div>
-    <div><h1>Emulator Desk <span class="ver">v1.1</span></h1></div>
+    <div><h1>Emulator Desk <span class="ver">v1.2</span></h1></div>
     <div class="spacer"></div>
     <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
     <button id="soundBtn" title="Engine sound follows the RPM slider">Sound off</button>
@@ -126,21 +126,21 @@ input[type=text]{font-family:var(--mono)}
 </div>
 
 <script>
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
 const DEMO = new URLSearchParams(location.search).has("demo");
 
 // PID definitions. enc returns raw bytes (firmware decimal ATSET truncates, so we send bytes).
 const PIDS = [
-  {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4))},
-  {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x]},
-  {pid:"0104", name:"Engine load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)]},
-  {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)]},
-  {pid:"0105", name:"Coolant temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40]},
-  {pid:"010F", name:"Intake air temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40]},
-  {pid:"012F", name:"Fuel level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)]},
-  {pid:"0142", name:"Battery voltage", unit:"V", min:9, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000))},
-  {pid:"0110", name:"MAF air flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100))},
-  {pid:"0146", name:"Ambient temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40]},
+  {pid:"010C", name:"Engine RPM", unit:"rpm", min:0, max:8000, step:50, v:850, enc:x=>u16(Math.round(x*4)), dec:b=>(b[0]*256+b[1])/4},
+  {pid:"010D", name:"Speed", unit:"km/h", min:0, max:255, step:1, v:0, enc:x=>[x], dec:b=>b[0]},
+  {pid:"0104", name:"Engine load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0111", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0105", name:"Coolant temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"010F", name:"Intake air temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"012F", name:"Fuel level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
+  {pid:"0142", name:"Battery voltage", unit:"V", min:9, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
+  {pid:"0110", name:"MAF air flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
+  {pid:"0146", name:"Ambient temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
 ];
 const PRESETS = {
   "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"0142":12.4,"0110":0},
@@ -167,7 +167,10 @@ let port=null, writer=null, reader=null, connected=false;
 let rxBuf="", waiter=null, queue=Promise.resolve();
 
 function onLine(line){
-  line=line.trim(); if(!line) return;
+  line=line.trim().replace(/^>+/,""); if(!line) return;
+  if(/^EMULATOR/i.test(line)){ $("devInfo").textContent="Device: "+line; }
+  if(waiter && waiter.cmd && line.toUpperCase()===waiter.cmd.toUpperCase()) return; // echo
+  if(waiter && waiter.until && !waiter.until.test(line)){ log("← "+line,"rx"); return; }
   if(waiter){ waiter.lines.push(line); if(/^(OK|ERROR|\?)$/i.test(line) || waiter.single){ const w=waiter; waiter=null; clearTimeout(w.t); w.resolve(w.lines); } }
   else log("← "+line,"rx");
 }
@@ -186,11 +189,11 @@ async function readLoop(){
     finally{ reader.releaseLock(); }
   }
 }
-function send(cmd, {timeout=1200, single=false, quiet=false}={}){
+function send(cmd, {timeout=1200, single=false, quiet=false, until=null}={}){
   const run = async ()=>{
     if(!connected) { log("Not connected: "+cmd,"er"); return ["ERROR"]; }
     if(!quiet) log("→ "+cmd,"tx");
-    const p=new Promise(res=>{ waiter={lines:[],single,resolve:res,t:setTimeout(()=>{const w=waiter;waiter=null;res(w?w.lines:[])},timeout)}; });
+    const p=new Promise(res=>{ waiter={lines:[],single,until,cmd,resolve:res,t:setTimeout(()=>{const w=waiter;waiter=null;res(w?w.lines:[])},timeout)}; });
     if(DEMO) demoReply(cmd); else await writer.write(new TextEncoder().encode(cmd+"\r"));
     const lines=await p;
     if(!quiet || lines.some(l=>/ERROR/i.test(l))){
@@ -205,13 +208,14 @@ function send(cmd, {timeout=1200, single=false, quiet=false}={}){
 
 async function connect(){
   if(connected){ return disconnect(); }
-  if(DEMO){ connected=true; setStatus(true,"Connected · demo"); await hello(); return; }
+  if(DEMO){ connected=true; setStatus(true,"Connected · demo"); $("devInfo").textContent="Device: EMULATOR-OBDII V3 (demo)"; await hello(); return; }
   try{
     port = await navigator.serial.requestPort();
     await port.open({baudRate:38400, dataBits:8, stopBits:1, parity:"none"});
     writer = port.writable.getWriter(); connected=true;
     const info=port.getInfo();
     setStatus(true, "Connected"+(info.usbVendorId?` · ${chip(info.usbVendorId)}`:""));
+    $("devInfo").textContent="Device: Freematics emulator on "+(info.usbVendorId?chip(info.usbVendorId):"USB serial");
     readLoop();
     await new Promise(r=>setTimeout(r,300));
     await hello();
@@ -227,11 +231,17 @@ async function disconnect(){
 }
 async function hello(){
   await send("ATE0");
-  const id = await send("ATI",{single:true,timeout:800});
-  if(id[0] && !/ERROR/i.test(id[0])) $("devInfo").textContent="Device: "+id[0];
-  const v = await send("ATGET VIN",{single:true});
-  if(v[0] && /^[A-HJ-NPR-Z0-9]{16,17}$/i.test(v[0])) $("vin").value=v[0];
-  if(!DEMO) log("Ready. Live values are not read back on connect; press Send all to push what you see.");
+  await readBack();
+  log("Ready. Sliders now show what the emulator is serving.");
+}
+async function readBack(){
+  let n=0;
+  for(const p of PIDS){
+    const r=await send("ATGET "+p.pid,{single:true,quiet:true});
+    const m=(r[0]||"").match(/=\s*([0-9A-F ]+)$/i);
+    if(m){ const b=m[1].trim().split(/\s+/).map(h=>parseInt(h,16)); if(b.every(x=>!isNaN(x))){ setPid(p,p.dec(b),false); n++; } }
+  }
+  log(n?`Read ${n} live values from the emulator.`:"This firmware didn't report its live values.");
 }
 function setStatus(on,text){ $("dot").classList.toggle("on",on); $("statusText").textContent=text; $("connectBtn").textContent=on?"Disconnect":"Connect emulator"; }
 
@@ -333,8 +343,9 @@ $("driveSim").onchange=e=>{
 $("connectBtn").onclick=connect;
 $("setBus").onclick=()=>send("ATSET BUS "+$("bus").value);
 $("setVin").onclick=()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ log("VIN must be 17 letters/digits, no I, O or Q","er"); return;} send("ATSET VIN="+v); };
-$("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if(v[0]&&!/ERROR/i.test(v[0])) $("vin").value=v[0]; };
-$("reset").onclick=()=>{ send("ATZ",{single:true,timeout:2000}).then(()=>send("ATE0")); log("Note: ATZ sets every PID back to zero.","sys"); };
+$("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if(v[0]&&!/ERROR/i.test(v[0])) $("vin").value=v[0]; else log("This firmware can't read the VIN back. Setting it still works.","sys"); };
+$("reset").onclick=async()=>{ log("Restarting the emulator. This takes a few seconds and sets every value to zero.","sys");
+  await send("ATZ",{single:true,timeout:12000,until:/EMULATOR|OBD/i}); await send("ATE0"); await readBack(); };
 function dtcList(){ return $("dtc").value.toUpperCase().split(/[\s,]+/).filter(Boolean); }
 function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; dtcList().forEach(c=>{const s=document.createElement("span"); s.className="chip"; s.style.border="1px solid var(--line)"; s.style.color=/^[PCBU][0-3][0-9A-F]{3}$/.test(c)?"var(--text)":"var(--bad)"; s.textContent=c; el.appendChild(s);}); }
 $("dtc").oninput=renderDtc; renderDtc();
@@ -358,8 +369,9 @@ let demoVin="WP0AA2A71KL100001";
 function demoReply(cmd){
   setTimeout(()=>{
     let out=["OK"];
-    if(cmd==="ATI"||cmd==="ATZ") out=["Freematics OBD-II Emulator MK2 V1.3"];
-    else if(cmd==="ATGET VIN") out=[demoVin];
+    if(cmd==="ATZ") out=[">>>EMULATOR-OBDII V3"];
+    else if(cmd==="ATGET VIN") out=["ERROR"];
+    else if(/^ATGET 01/.test(cmd)){ const p=PIDS.find(q=>q.pid===cmd.slice(6)); out=[p.pid+"="+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join(" ")]; }
     else if(cmd.startsWith("ATSET VIN=")) demoVin=cmd.slice(10);
     else if(!/^AT/.test(cmd)) out=["ERROR"];
     out.forEach(onLine);
