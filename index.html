@@ -712,7 +712,9 @@ async function btWrite(data){
 }
 function btSend(cmd,timeout=3000){
   bt.req++; $$("phReq").textContent=bt.req; const t0=performance.now();
-  const track=r=>{ if(r===null) bt.to++; else { bt.rtt.push(performance.now()-t0); if(bt.rtt.length>50) bt.rtt.shift(); } return r; };
+  const track=r=>{ if(r===null) bt.to++; else { bt.rtt.push(performance.now()-t0); if(bt.rtt.length>50) bt.rtt.shift(); }
+    if((bt.dbgN=(bt.dbgN||0)+1)<=80) dbg("→ "+cmd+"  ← "+(r===null?"(no reply)":JSON.stringify(r.replace(/\s+/g," ").trim().slice(0,48)))+"  "+Math.round(performance.now()-t0)+" ms");
+    return r; };
   if(bt.demo) return new Promise(r=>setTimeout(()=>r(demoElm(cmd)),30+Math.random()*40)).then(track);
   return new Promise(async res0=>{ const res=r=>res0(track(r));
     bt.wait={res,t:setTimeout(()=>{ bt.wait=null; bt.buf=""; res(null); },timeout)};
@@ -741,16 +743,18 @@ async function btConnect(){
     let svcs=[];
     try{ svcs=await srv.getPrimaryServices(); }catch(e){ dbg("getPrimaryServices failed: "+e.message+", trying known services"); }
     if(!svcs.length){ for(const u of BT_SVC_FULL){ try{ svcs.push(await srv.getPrimaryService(u)); }catch(e){} } }
+    const isSerial=u=>/fff0|ffe0|18f0|e7810a71/i.test(u||"");
+    svcs.sort((a,b)=>(isSerial(b.uuid)?1:0)-(isSerial(a.uuid)?1:0));
     dbg("services: "+svcs.map(x=>x.uuid).join(", "));
     for(const s of svcs){ seen.push(s.uuid);
       if(tx&&rx) continue;
       let t=null,r=null;
       try{ for(const c of await s.getCharacteristics()){
-        const pp=c.properties||{}; dbg("char "+c.uuid.slice(4,8)+" "+Object.keys(pp).filter(k=>pp[k]===true).join("/"));
+        const pp=c.properties||{}; dbg("char "+(c.uuid.length>8?c.uuid.slice(4,8):c.uuid)+" "+Object.keys(pp).filter(k=>pp[k]===true).join("/"));
         if(!r&&(pp.notify||pp.indicate)) r=c;
         if(!t&&(pp.write||pp.writeWithoutResponse)) t=c;
       } }catch(e){}
-      if(t&&r){ tx=t; rx=r; svcU=s.uuid; }
+      if(t&&r){ tx=t; rx=r; svcU=s.uuid; dbg("using service "+s.uuid+": receive "+r.uuid+", send "+t.uuid); }
     }
     log("BT services: "+(seen.join(", ")||"none visible"),"sys");
     if(!tx||!rx){ btSetInfo((dev.name||"Dongle")+": no serial channel"); verdict("no","Connected, but there's no channel to talk to"); dev.gatt.disconnect(); return; }
@@ -761,7 +765,7 @@ async function btConnect(){
     if(!await btInit()){ verdict("no","Connected, but it doesn't answer OBD commands"); btSetInfo("Connected, but it doesn't answer OBD commands");
       log("The dongle connected but didn't answer ELM327 commands. Some dongles, including Automatic adapters, use a locked protocol of their own.","er"); return; }
     log("BT dongle connected: "+(dev.name||"unnamed"),"sys");
-    btSetInfo("Checking what it supports…"); await btCapabilities(); btSetInfo("Connected");
+    btSetInfo("Checking what it supports…"); dbg("checking capabilities"); try{ await btCapabilities(); dbg("capabilities done"); }catch(e){ dbg("capabilities failed: "+errText(e)+(e&&e.stack?" @ "+String(e.stack).split("\n")[0]:"")); } btSetInfo("Connected"); dbg("starting live polling");
     btStartPoll(); phTab("paneLive");
   }catch(e){ dbg("error: "+errText(e)); btSetInfo(e&&e.name==="NotFoundError"?"Not connected":"Couldn't connect: "+errText(e)); }
 }
@@ -796,9 +800,15 @@ function show(pid,v){
 function btStartPoll(){
   clearInterval(bt.poll); bt.round=0;
   bt.poll=setInterval(async()=>{
-    if(bt.busy) return; bt.busy=true;
+    if(bt.busy){ if(performance.now()-bt.busySince>15000){ dbg("poll was stuck for 15 s, restarting it"); bt.busy=false; } return; }
+    bt.busy=true; bt.busySince=performance.now();
+    try{ await btPollOnce(); }catch(e){ dbg("poll error: "+errText(e)+(e&&e.stack?" @ "+String(e.stack).split("\n").slice(0,2).join(" | "):"")); }
+    bt.busy=false;
+  },700);
+}
+async function btPollOnce(){ {
     let ok=0, bad=0, none=0;
-    for(const p of PIDS){ const r=await btSend(p.pid); if(!bt.dev&&!bt.demo){ bt.busy=false; return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
+    for(const p of PIDS){ const r=await btSend(p.pid); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
     if(bt.round%4===0){
       const d=parseDtc(await btSend("03",4000));
@@ -811,8 +821,8 @@ function btStartPoll(){
     if(ok===PIDS.length) verdict("ok","Dongle is reading the emulator");
     else if(none===PIDS.length) verdict("no","Dongle sees no car");
     else verdict("no",`${ok} of ${PIDS.length} readings match`);
-    bt.busy=false;
-  },700);
+  }
+  if((bt.round||0)===1) dbg("first live round finished");
 }
 function btCleanup(){ clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Dongle"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Dongle"); phBadge(0); bcClear(); verdict("","Connect a dongle to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
@@ -835,7 +845,7 @@ function dbg(t){ const el=$$("btLog"); const line=new Date().toLocaleTimeString(
 const PID_NAMES={"01":"Monitor status","03":"Fuel system","04":"Engine load","05":"Coolant temp","06":"Short fuel trim B1","07":"Long fuel trim B1","08":"Short fuel trim B2","09":"Long fuel trim B2","0A":"Fuel pressure","0B":"Intake pressure","0C":"Engine RPM","0D":"Speed","0E":"Timing advance","0F":"Intake air temp","10":"MAF air flow","11":"Throttle","12":"Secondary air","13":"O2 sensors","14":"O2 B1S1","15":"O2 B1S2","16":"O2 B1S3","17":"O2 B1S4","18":"O2 B2S1","19":"O2 B2S2","1C":"OBD standard","1F":"Run time","21":"Distance with MIL","22":"Fuel rail pressure","23":"Fuel rail gauge","24":"O2 S1 λ","2C":"EGR commanded","2D":"EGR error","2E":"Evap purge","2F":"Fuel level","30":"Warm-ups since clear","31":"Distance since clear","32":"Evap pressure","33":"Barometric pressure","34":"O2 S1 λ current","3C":"Cat temp B1S1","3D":"Cat temp B2S1","41":"Monitor status (cycle)","42":"Module voltage","43":"Absolute load","44":"Commanded λ","45":"Relative throttle","46":"Ambient temp","47":"Throttle B","49":"Pedal D","4A":"Pedal E","4C":"Throttle actuator","4D":"Time with MIL","4E":"Time since clear","51":"Fuel type","52":"Ethanol %","5A":"Relative pedal","5B":"Hybrid battery","5C":"Oil temp","5D":"Injection timing","5E":"Fuel rate","5F":"Emission standard"};
 const OBD_STD={1:"OBD-II (CARB)",2:"OBD (EPA)",3:"OBD and OBD-II",4:"OBD-I",5:"Not OBD compliant",6:"EOBD (Europe)",7:"EOBD and OBD-II",8:"EOBD and OBD",9:"EOBD, OBD and OBD-II",10:"JOBD (Japan)",11:"JOBD and OBD-II",12:"JOBD and EOBD",13:"JOBD, EOBD and OBD-II",17:"EMD",18:"EMD+",19:"HD OBD-C",20:"HD OBD",21:"WWH OBD",23:"HD EOBD-I",24:"HD EOBD-I N",25:"HD EOBD-II",26:"HD EOBD-II N",28:"OBDBr-1",29:"OBDBr-2",30:"KOBD",31:"IOBD I",32:"IOBD II",33:"HD EOBD-VI"};
 const M9_NAMES={"02":"VIN","04":"Calibration ID","06":"CVN","08":"Performance tracking","0A":"ECU name","0B":"Performance tracking (diesel)"};
-const shortUuid=u=>{ const m=/^0000([0-9a-f]{4})-0000-1000-8000-00805f9b34fb$/i.exec(u||""); return m? "0x"+m[1].toUpperCase() : (u? u.slice(0,8)+"…" : "–"); };
+const shortUuid=u=>{ if(u&&u.length<=8) return "0x"+u.toUpperCase().replace(/^0X/,""); const m=/^0000([0-9a-f]{4})-0000-1000-8000-00805f9b34fb$/i.exec(u||""); return m? "0x"+m[1].toUpperCase() : (u? u.slice(0,8)+"…" : "–"); };
 bt.rtt=[]; bt.to=0; bt.since=0;
 function bcSet(id,t){ const e=$$(id); if(e) e.textContent=(t===undefined||t===null||t==="")?"–":t; }
 function bcTick(){
