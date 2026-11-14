@@ -861,6 +861,7 @@ async function btInit(){
   return true;
 }
 async function btConnect(devGiven){
+  if(devGiven&&!devGiven.gatt) devGiven=null; /* only a Bluetooth device can be reconnected to */
   if(!devGiven && (bt.dev||bt.demo)) return btDisconnect();
   bt.userDisc=false; liveCard("connecting");
   if(DEMO){ bt.demo=true; btConnectedUI(); btSetName("Demo"); btSetInfo("Connected"); bcLink(null,"0000fff0-0000-1000-8000-00805f9b34fb"); await btInit(); await btCapabilities(); btStartPoll(); phTab("paneLive"); return; }
@@ -1037,7 +1038,7 @@ function demoUds(cmd){
   if(cmd==="AT@1") return "OBDII to RS232 Interpreter"; if(cmd==="STI") return "?"; if(cmd==="ATI"||cmd==="ATZ") return "ELM327 v1.5";
   return "OK";
 }
-$$("btBtn").onclick=btConnect;
+$$("btBtn").onclick=()=>btConnect(); // no argument: a click event is not a device
 $$("btLogCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText($$("btLog").textContent); $$("btLogCopy").textContent="Copied"; setTimeout(()=>$$("btLogCopy").textContent="Copy",1500); }catch(e){ const r=document.createRange(); r.selectNodeContents($$("btLog")); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); } };
 dbg("page loaded · Web Bluetooth "+(navigator.bluetooth?"available":"NOT available")+" · "+navigator.userAgent.replace(/.*\) /,"").slice(0,60));
 
@@ -1806,7 +1807,7 @@ ciSettings(); ciRender();
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.25";
+const APP_VER="2.26";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
