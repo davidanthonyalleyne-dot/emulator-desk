@@ -493,13 +493,30 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .lt-mid{flex:0 0 150px!important;min-width:0}
 .phone.land .screen{padding-left:40px;padding-right:40px}
 .phone.land #paneLive .lv-t{height:292px;padding:0 4px;gap:10px}
+/* Car pictures from CarImages API */
+.ci{padding:0 16px 12px;display:flex;flex-direction:column;gap:10px}
+.ci[hidden],.ci [hidden]{display:none!important}
+.ci-stage{position:relative;height:210px;border-radius:var(--r);overflow:hidden;background:radial-gradient(120% 80% at 50% 100%,var(--fill2) 0%,var(--fill) 55%,var(--group) 100%);display:flex;align-items:flex-end;justify-content:center}
+.ci.nokey .ci-stage{height:auto;min-height:60px}
+.ci-stage img{max-width:94%;max-height:88%;object-fit:contain;margin-bottom:5%;opacity:0;transition:opacity .25s}.ci-stage img.on{opacity:1}
+.ci-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center;font-size:13px;color:var(--label2)}
+.ci-src{position:absolute;right:8px;bottom:6px;font-size:10px;color:var(--label2)}.ci.nokey .ci-src{display:none}
+.ci-ctl{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ci-seg{display:inline-grid;grid-auto-flow:column;background:var(--fill);border-radius:9px;padding:2px}
+.ci-seg button{border:0;background:none;color:var(--label);font:500 13px var(--font);min-height:30px;padding:0 12px;border-radius:7px;cursor:pointer}
+.ci-seg button[aria-checked="true"]{background:var(--fill2);font-weight:600}
+.ci-sw{display:flex;gap:8px}
+.ci-sw button{width:26px;height:26px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px var(--sep)}
+.ci-sw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--group),0 0 0 4px var(--accent)}
+.ci-key{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--label2)}
+.ci-key input{flex:1;min-width:0;font:13px var(--mono)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.23</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.24</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -545,6 +562,11 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
             <button class="btn plain" id="setBus">Apply</button>
           </div>
           <div class="carrow" id="deskCar"></div>
+          <div class="ci" id="ciBox">
+            <div class="ci-stage"><img id="ciImg" alt=""><span class="ci-msg" id="ciMsg" hidden></span><span class="ci-src">CarImages API</span></div>
+            <div class="ci-ctl" id="ciCtl"><div class="ci-seg" id="ciViews" role="radiogroup" aria-label="Angle"></div><div class="ci-sw" id="ciPaints" role="radiogroup" aria-label="Paint"></div></div>
+            <label class="ci-key"><span>CarImages key</span><input class="field" id="ciKeyV" type="text" autocomplete="off" spellcheck="false" placeholder="ci_…, kept in this browser only"></label>
+          </div>
           <div class="mk" id="makes" role="group" aria-label="Load a sample VIN for a make"></div>
           <div class="row"><input class="field" id="vin" maxlength="17" value="" placeholder="Type a 17-character VIN" aria-label="VIN, 17 characters" aria-describedby="vinSrc" spellcheck="false" autocapitalize="characters"><button class="btn plain" id="setVin">Set VIN</button></div>
           <div class="row" style="min-height:0;padding-top:0"><span class="k" style="font-size:12.5px;color:var(--label2)" id="vinSrc">Current VIN unknown. Connect a dongle to read it.</span></div>
@@ -1813,6 +1835,39 @@ function deskCar(){
 }
 renderMakes(); deskCar();
 $("vin").addEventListener("input",deskCar);
+</script>
+<script>
+// ---------- Car pictures from CarImages API: the car being emulated, by make, model and year (never the VIN) ----------
+const CI={key:localStorage.getItem("ke.ciKey")||"",view:localStorage.getItem("ke.ciView")||"",color:localStorage.getItem("ke.ciColor")||"",car:null};
+const CI_VIEWS=[["","Front ¾"],["side","Side"],["rear34","Rear ¾"],["rear","Rear"]];
+const CI_PAINT=[["","Original paint","conic-gradient(#d9a441 0 25%,#c9ccd1 0 50%,#2f5fa8 0 75%,#b3262b 0)"],["silver","Silver","#C9CCD1"],["black","Black","#111"],["grey","Grey","#6b6f75"],["blue","Blue","#2f5fa8"],["red","Red","#b3262b"],["white","White","#f2f2f2"]];
+function ciUrl(car,view,width,color){ const q=new URLSearchParams({make:car.make,model:car.model}); if(car.year) q.set("year",car.year); if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width)); q.set("format","webp"); q.set("key",CI.key); return "https://carimagesapi.com/image?"+q.toString(); }
+async function ciShow(){
+  const box=$("ciBox"), img=$("ciImg"), msg=$("ciMsg"), car=CI.car;
+  box.classList.toggle("nokey",!CI.key||!car); $("ciCtl").hidden=!CI.key||!car;
+  const say=t=>{ img.removeAttribute("src"); img.classList.remove("on"); msg.hidden=false; msg.textContent=t; };
+  if(!car) return say("A picture of the car shows here once a VIN is decoded.");
+  if(!CI.key) return say("Add a CarImages API key below to see a picture of this car.");
+  $("ciViews").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.v===CI.view)));
+  $("ciPaints").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.c===CI.color)));
+  const url=ciUrl(car,CI.view,900,CI.color); msg.hidden=true; img.alt=`${car.year} ${car.make} ${car.model}`;
+  img.onload=()=>img.classList.add("on"); img.onerror=()=>say("No picture for this car yet.");
+  try{ const r=await fetch(url,{mode:"cors"}); if(r.status===401||r.status===403) return say("CarImages didn't accept that key."); if(r.status===429) return say("This month's CarImages pictures are used up."); if(!r.ok) return say("No picture for this car yet."); img.src=URL.createObjectURL(await r.blob()); }
+  catch(e){ img.src=url; }
+}
+$("ciViews").innerHTML=CI_VIEWS.map(([v,l])=>`<button type="button" role="radio" data-v="${v}" aria-checked="false">${l}</button>`).join("");
+$("ciPaints").innerHTML=CI_PAINT.map(([c,l,bg])=>`<button type="button" role="radio" data-c="${c}" aria-checked="false" aria-label="${l}" title="${l}" style="background:${bg}"></button>`).join("");
+$("ciViews").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.view=b.dataset.v; try{ localStorage.setItem("ke.ciView",CI.view); }catch(x){} ciShow(); };
+$("ciPaints").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.color=b.dataset.c; try{ localStorage.setItem("ke.ciColor",CI.color); }catch(x){} ciShow(); };
+$("ciKeyV").value=CI.key;
+$("ciKeyV").onchange=e=>{ CI.key=e.target.value.trim(); try{ CI.key?localStorage.setItem("ke.ciKey",CI.key):localStorage.removeItem("ke.ciKey"); }catch(x){} ciShow(); };
+// follow the VIN box: NHTSA gives the model; until then there's no picture to ask for
+{ let t=0; const follow=()=>{ clearTimeout(t); t=setTimeout(async()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ CI.car=null; return ciShow(); }
+    try{ const x=vinCache[v]||(vinCache[v]=(await (await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${v}?format=json`)).json()).Results[0]);
+      const nice=s=>String(s||"").toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\b(Bmw|Gmc|Mini)\b/g,m=>m.toUpperCase());
+      CI.car=x&&x.Make&&x.Model?{make:nice(x.Make),model:x.Model,year:String(x.ModelYear||"")}:null; }catch(e){ CI.car=null; }
+    ciShow(); },500); };
+  $("vin").addEventListener("input",follow); new MutationObserver(follow).observe($("deskCar"),{childList:true}); follow(); }
 </script>
 </body>
 </html>

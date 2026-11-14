@@ -448,6 +448,49 @@ html,body{background:#f2f2f7;color:#000}
   :root .sw i{background:#e9e9ea}
   :root .ev-toast.info{background:#3a3a3c}
 }
+/* ---------- Car pictures: CarImages API ---------- */
+.ci{display:flex;flex-direction:column;gap:10px;margin:0 0 12px}
+.ci[hidden],.ci [hidden],.ci-sheet[hidden],.tr-car[hidden],.ci-mini[hidden]{display:none!important}
+.ci-stage{position:relative;height:190px;border-radius:12px;overflow:hidden;background:radial-gradient(120% 80% at 50% 100%,#3a3f47 0%,#1c1d20 58%,#121214 100%);display:flex;align-items:flex-end;justify-content:center}
+.ci-stage img{max-width:96%;max-height:88%;object-fit:contain;margin-bottom:6%;opacity:0;transition:opacity .25s}
+.ci-stage img.on{opacity:1}
+.ci-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-size:14px;line-height:1.4;color:rgba(235,235,245,.66)}
+.ci.nokey .ci-stage{height:auto;min-height:64px}.ci.nokey .ci-src{display:none}
+.ci-src{position:absolute;right:8px;bottom:6px;font-size:10px;color:rgba(235,235,245,.5)}
+.ci-seg{display:grid;grid-template-columns:repeat(4,1fr);background:rgba(118,118,128,.24);border-radius:9px;padding:2px}
+.ci-seg button{border:0;background:none;color:inherit;font:500 13px var(--font);min-height:32px;border-radius:7px;cursor:pointer}
+.ci-seg button[aria-checked="true"]{background:#636366;font-weight:600}
+.ci-paint{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ci-paint>span{font-size:15px}
+.ci-sw{display:flex;gap:8px}
+.ci-sw button{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);position:relative}
+.ci-sw button::before{content:"";position:absolute;inset:-7px}
+.ci-sw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--g),0 0 0 4px #FF9F0A}
+.ci-3d{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:0;border-radius:12px;background:rgba(255,159,10,.16);color:#FF9F0A;font:600 16px var(--font);cursor:pointer}
+.ci-3d svg{width:20px;height:20px}
+.ci-mini{height:26px;width:auto;max-width:76px;object-fit:contain;vertical-align:-7px;margin-right:8px}
+.tr-head{display:flex;align-items:flex-end;gap:8px}
+.tr-head>div{flex:1;min-width:0}
+.tr-car{width:118px;height:60px;object-fit:contain;flex:none;margin:0 -4px 10px 0}
+.ci-sheet{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}
+.ci-sheet>div{width:100%;height:calc(100% - env(safe-area-inset-top) - 10px);background:var(--g);border-radius:14px 14px 0 0;display:flex;flex-direction:column;gap:12px;padding:8px 16px calc(env(safe-area-inset-bottom) + 18px);box-sizing:border-box}
+.ci-grab{align-self:center;width:36px;height:5px;border-radius:3px;background:#48484A}
+.ci-sh{display:flex;align-items:center;justify-content:space-between}
+.ci-sh b{font-size:17px;font-weight:600}
+.ci-sh button{border:0;background:none;color:#FF9F0A;font:600 17px var(--font);min-height:44px;min-width:60px;text-align:right;cursor:pointer}
+.ci-mv{position:relative;flex:1;border-radius:16px;overflow:hidden;background:radial-gradient(120% 120% at 50% 28%,#1b1e26 0%,#0d0f14 72%,#07080b 100%)}
+.ci-mv model-viewer{width:100%;height:100%;--poster-color:transparent}
+.ci-sheet p{margin:0;font-size:13px;line-height:1.45;color:var(--l2)}
+.ci-key{width:100%;box-sizing:border-box;border:0;border-radius:8px;background:rgba(118,118,128,.24);color:inherit;font:15px var(--mono);padding:10px;margin-top:6px}
+.kv.kv-col{flex-direction:column;align-items:stretch}
+@media (prefers-color-scheme: light){
+  :root .ci-stage{background:radial-gradient(120% 80% at 50% 100%,#d8dbe0 0%,#eef0f3 60%,#f7f7f9 100%)}
+  :root .ci-msg{color:rgba(60,60,67,.7)}:root .ci-src{color:rgba(60,60,67,.6)}
+  :root .ci-seg button[aria-checked="true"]{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  :root .ci-sw button{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+  :root .ci-3d,:root .ci-sh button{color:#c35a00}:root .ci-3d{background:rgba(201,90,0,.1)}
+  :root .ci-mv{background:radial-gradient(125% 125% at 50% 32%,#fff 0%,#eceff3 48%,#d5dae1 100%)}
+}
 </style>
 </head>
 <body>
@@ -534,8 +577,10 @@ html,body{background:#f2f2f7;color:#000}
                   <button id="trBack" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Trips</button>
                   <button id="trShare" type="button" aria-label="Share trip"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button>
                 </div>
+                <div class="tr-head"><div>
                 <h2 class="tr-h" id="trTitle"></h2>
                 <div class="tr-sub" id="trSub"></div>
+                </div><img class="tr-car" id="trCar" alt="" hidden></div>
                 <div class="tr-map" id="trMap" role="img" aria-label="Route map"></div>
                 <div class="tr-stats" id="trStats"></div>
                 <div class="psec"><span>Speed</span><span>km/h over the drive</span></div>
@@ -549,6 +594,12 @@ html,body{background:#f2f2f7;color:#000}
             <div class="pane" id="paneVehicle" role="tabpanel" aria-labelledby="tabVehicle" hidden>
               <div class="app-h"><div class="app-t">Vehicle</div></div>
               <div class="vd-card">
+                <div class="ci" id="ciBox" hidden>
+                  <div class="ci-stage"><img id="ciImg" alt=""><span class="ci-msg" id="ciMsg" hidden></span><span class="ci-src">CarImages API</span></div>
+                  <div class="ci-seg" id="ciViews" role="radiogroup" aria-label="Angle"></div>
+                  <div class="ci-paint" id="ciPaintRow"><span>Paint</span><div class="ci-sw" id="ciPaints" role="radiogroup" aria-label="Paint"></div></div>
+                  <button class="ci-3d" id="ci3d" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5zM3.3 7.4 12 12l8.7-4.6M12 22V12"/></svg>View in 3D</button>
+                </div>
                 <div class="vdhead" id="vdHead" hidden></div>
                 <div class="vd-vin" id="vdVin"><span class="muted">No VIN yet</span></div>
                 <div class="vd-legend"><span class="s-wmi">Maker</span><span class="s-vds">Model</span><span class="s-chk">Check</span><span class="s-yr">Year</span><span class="s-pl">Plant</span><span class="s-sn">Serial</span></div>
@@ -599,6 +650,13 @@ html,body{background:#f2f2f7;color:#000}
               </div>
               <button class="ph-btn" id="btBtn" style="margin:0 0 4px">Connect Kē</button>
               <button class="linkbtn" id="btAll" type="button">Don't see the Kē? Show all Bluetooth devices</button>
+              <div class="psec">Car Pictures</div>
+              <div class="pgroup">
+                <div class="kv kv-sw"><span id="ciOnL">Show Car Pictures</span><label class="sw"><input type="checkbox" role="switch" id="ciOn" aria-labelledby="ciOnL" checked><i></i></label></div>
+                <div class="kv kv-col"><label for="ciKeyV">CarImages API Key</label><input class="ci-key" id="ciKeyV" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ci_…"></div>
+                <div class="kv"><span>Pictures Fetched This Month</span><b id="ciUse">0</b></div>
+              </div>
+              <div class="ph-note" style="text-align:left;margin:8px 4px 0">Pictures come from carimagesapi.com. Only the make, model and year are sent, never the VIN, and each picture is kept on this phone after it first loads. The free plan allows 5,000 a month and marks pictures with a watermark.</div>
               <div class="psec">Trips</div>
               <div class="pgroup">
                 <div class="kv kv-sw"><span id="trRecL">Record Trips</span><label class="sw"><input type="checkbox" role="switch" id="trRec" aria-labelledby="trRecL" checked><i></i></label></div>
@@ -653,6 +711,12 @@ html,body{background:#f2f2f7;color:#000}
             <button class="scan-alt" id="scanPhoto">Take a Photo Instead</button>
             <input type="file" id="scanFile" accept="image/*" capture="environment" hidden>
           </div>
+          <div class="ci-sheet" id="ciSheet" hidden role="dialog" aria-modal="true" aria-labelledby="ci3dT"><div>
+            <span class="ci-grab" aria-hidden="true"></span>
+            <div class="ci-sh"><span style="width:60px"></span><b id="ci3dT">3D</b><button type="button" id="ci3dDone">Done</button></div>
+            <div class="ci-mv" id="ciMv"></div>
+            <p>Drag to turn, pinch to zoom. The model loads only when you open this view, about 1.5 MB.</p>
+          </div></div>
           <div class="ev-toast" id="evToast" hidden role="status" aria-live="assertive"></div>
           <nav class="tabbar" role="tablist" aria-label="Phone sections">
             <button role="tab" id="tabLive" aria-controls="paneLive" aria-selected="false" data-pane="paneLive">
@@ -1454,7 +1518,7 @@ function trEnd(how){
   let km=c.km; if(km<TR_MIN_KM&&c.path.length>1){ km=0; for(let i=1;i<c.path.length;i++) km+=trKm(c.path[i-1],c.path[i]); }
   if(km<TR_MIN_KM){ dbg("trip under "+TR_MIN_KM+" km, not kept"); return; }
   const odo=typeof LV["01A6"]==="number"?LV["01A6"]:c.odo0;
-  const t={id:c.id,start:c.start,end:Math.max(c.lastMove,c.start+1000),km:+km.toFixed(2),maxV:Math.round(c.maxV),odo:odo==null?null:Math.floor(odo),car:c.car,path:trThin(c.path,600),sp:trThin(c.sp,300),ev:c.ev};
+  const t={id:c.id,start:c.start,end:Math.max(c.lastMove,c.start+1000),km:+km.toFixed(2),maxV:Math.round(c.maxV),odo:odo==null?null:Math.floor(odo),car:c.car,path:trThin(c.path,600),sp:trThin(c.sp,300),ev:c.ev,ci:c.ci||null};
   const list=trLoad(); list.unshift(t); trStore(list); dbg("trip saved, "+t.km+" km, "+t.ev.length+" events");
   trRender(); trName(t);
   if(how!=="restore"){ phTab("paneTrips"); trOpen(t.id); }
@@ -1646,9 +1710,94 @@ if(DEMO){
 trRender(); trBar();
 </script>
 <script>
+// ---------- Car pictures from CarImages API (carimagesapi.com) ----------
+// Studio pictures by make, model and year. The key is typed into Settings on each phone and never lives in the repo.
+// Only make, model and year are sent, never the VIN. Pictures are kept in Cache Storage so each one is fetched once.
+const CI={on:localStorage.getItem("ke.ci")!=="off", key:localStorage.getItem("ke.ciKey")||"", view:localStorage.getItem("ke.ciView")||"", color:localStorage.getItem("ke.ciColor")||"", car:null, mv:false};
+const CI_VIEWS=[["","Front ¾"],["side","Side"],["rear34","Rear ¾"],["rear","Rear"]];
+const CI_PAINT=[["","Original paint","conic-gradient(#d9a441 0 25%,#c9ccd1 0 50%,#2f5fa8 0 75%,#b3262b 0)"],["silver","Silver","#C9CCD1"],["black","Black","#111"],["grey","Grey","#6b6f75"],["blue","Blue","#2f5fa8"],["red","Red","#b3262b"],["white","White","#f2f2f2"]];
+const ciReady=()=>CI.on&&!!CI.key&&!!(CI.car&&CI.car.make&&CI.car.model);
+function ciUrl(car,view,width,color){
+  const q=new URLSearchParams({make:car.make,model:car.model}); if(car.year) q.set("year",car.year);
+  if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width)); q.set("format","webp"); q.set("key",CI.key);
+  return "https://carimagesapi.com/image?"+q.toString();
+}
+function ciCount(){ const m=new Date().toISOString().slice(0,7); let c; try{ c=JSON.parse(localStorage.getItem("ke.ciUse")||"null"); }catch(e){} if(!c||c.m!==m) c={m,n:0}; return c; }
+function ciBump(){ const c=ciCount(); c.n++; try{ localStorage.setItem("ke.ciUse",JSON.stringify(c)); }catch(e){} ciSettings(); }
+const ciObj={};
+// Show a picture in an <img>: from the phone's cache if it has it, else fetched once and kept
+async function ciLoad(img,url,onFail){
+  img.classList.remove("on"); img.onload=()=>img.classList.add("on"); img.onerror=()=>{ img.removeAttribute("src"); onFail&&onFail(); };
+  if(ciObj[url]){ img.src=ciObj[url]; return; }
+  try{
+    const cache="caches" in window ? await caches.open("ke-carimages") : null;
+    let r=cache? await cache.match(url) : null;
+    if(!r){ let f; try{ f=await fetch(url,{mode:"cors"}); }catch(e){ f=null; }
+      if(!f){ img.src=url; ciBump(); return; } /* plain load if the CORS path isn't available */
+      if(f.status===401||f.status===403){ onFail&&onFail("key"); return; }
+      if(f.status===429){ onFail&&onFail("quota"); return; }
+      if(!f.ok||!/^image\//.test(f.headers.get("content-type")||"")){ onFail&&onFail(); return; }
+      ciBump(); r=f; if(cache) try{ await cache.put(url,r.clone()); }catch(e){} }
+    ciObj[url]=URL.createObjectURL(await r.blob()); img.src=ciObj[url];
+  }catch(e){ img.src=url; }
+}
+function ciCarFrom(v,L,x){
+  const nice=t=>t?String(t).toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()).replace(/\b(Bmw|Gmc|Mini)\b/g,m=>m.toUpperCase()):"";
+  const make=x&&x.Make?nice(x.Make):(L&&L.maker&&L.maker!=="Unknown"?L.maker.replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,""):"");
+  return {vin:v,make,model:x&&x.Model||"",year:String((x&&x.ModelYear)||(L&&L.year)||"")};
+}
+function ciRender(){
+  const box=$$("ciBox"), img=$$("ciImg"), msg=$$("ciMsg"), car=CI.car;
+  box.hidden=!CI.on||!car||!car.make; if(box.hidden) return;
+  const ok=ciReady(); ["ciViews","ciPaintRow","ci3d"].forEach(id=>$$(id).hidden=!ok); box.classList.toggle("nokey",!CI.key);
+  if(!CI.key){ img.removeAttribute("src"); img.classList.remove("on"); msg.hidden=false; msg.textContent="Add your CarImages API key in Settings to see a picture of this car."; return; }
+  if(!car.model){ img.removeAttribute("src"); msg.hidden=false; msg.textContent="Looking up the model…"; return; }
+  msg.hidden=true; img.alt=`${car.year} ${car.make} ${car.model}, ${(CI_VIEWS.find(v=>v[0]===CI.view)||CI_VIEWS[0])[1].replace("¾","three-quarter")} view`;
+  ciLoad(img,ciUrl(car,CI.view,800,CI.color),why=>{ msg.hidden=false; msg.textContent= why==="key"?"CarImages didn't accept the key in Settings.":why==="quota"?"This month's CarImages pictures are used up.":"No picture for this car yet."; });
+  $$("ciViews").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.v===CI.view)));
+  $$("ciPaints").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.c===CI.color)));
+  $$("ci3dT").textContent=`${car.year} ${car.make} ${car.model}`.trim();
+}
+function ciMini(){
+  const pc=$$("phCar"); let m=pc.querySelector(".ci-mini");
+  if(pc.hidden||!ciReady()||!CI.car||CI.car.vin!==bt.carVin){ if(m) m.remove(); return; }
+  if(!m){ m=document.createElement("img"); m.className="ci-mini"; m.alt=""; pc.prepend(m); }
+  ciLoad(m,ciUrl(CI.car,"side",240,CI.color),()=>m.remove());
+}
+function ciSettings(){ const s=$$("ciKeyV"); if(!s) return; $$("ciOn").checked=CI.on; s.value=CI.key; $$("ciUse").textContent=ciCount().n.toLocaleString("en-CA"); }
+// 3D: the CarImages loader signs the model URL and brings in Google's model-viewer (about 1.5 MB per car, only when opened)
+function ci3dOpen(){
+  if(!ciReady()) return; const sh=$$("ciSheet"), st=$$("ciMv"); sh.hidden=false; $$("ci3dDone").focus();
+  st.innerHTML=`<model-viewer data-ci-make="${trEsc(CI.car.make)}" data-ci-model="${trEsc(CI.car.model)}" data-ci-year="${trEsc(CI.car.year)}" data-ci-view="${CI.view||"front34"}" data-ci-speed="18" camera-controls touch-action="pan-y" alt="3D model of the ${trEsc(CI.car.make+" "+CI.car.model)}"></model-viewer><span class="ci-msg" id="ciMvMsg">Loading the 3D model…</span>`;
+  const mv=st.querySelector("model-viewer");
+  mv.addEventListener("load",()=>{ const m=$$("ciMvMsg"); if(m) m.remove(); ciBump(); },{once:true});
+  mv.addEventListener("error",()=>{ const m=$$("ciMvMsg"); if(m) m.textContent="The 3D model couldn't load."; },{once:true});
+  if(!CI.mv){ CI.mv=true; const s=document.createElement("script"); s.src="https://carimagesapi.com/assets/js/carimages.js"; s.async=true; s.setAttribute("data-api-key",CI.key); s.onerror=()=>{ CI.mv=false; const m=$$("ciMvMsg"); if(m) m.textContent="The 3D viewer couldn't load."; }; document.head.append(s); }
+}
+function ci3dClose(){ $$("ciSheet").hidden=true; $$("ciMv").innerHTML=""; $$("ci3d").focus(); }
+
+// Controls
+$$("ciViews").innerHTML=CI_VIEWS.map(([v,l])=>`<button type="button" role="radio" data-v="${v}" aria-checked="false">${l}</button>`).join("");
+$$("ciPaints").innerHTML=CI_PAINT.map(([c,l,bg])=>`<button type="button" role="radio" data-c="${c}" aria-checked="false" aria-label="${l}" title="${l}" style="background:${bg}"></button>`).join("");
+$$("ciViews").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.view=b.dataset.v; try{ localStorage.setItem("ke.ciView",CI.view); }catch(x){} ciRender(); };
+$$("ciPaints").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.color=b.dataset.c; try{ localStorage.setItem("ke.ciColor",CI.color); }catch(x){} ciRender(); ciMini(); };
+$$("ci3d").onclick=ci3dOpen; $$("ci3dDone").onclick=ci3dClose;
+$$("ciSheet").addEventListener("keydown",e=>{ if(e.key==="Escape") ci3dClose(); });
+$$("ciOn").onchange=e=>{ CI.on=e.target.checked; try{ localStorage.setItem("ke.ci",CI.on?"on":"off"); }catch(x){} ciRender(); ciMini(); };
+$$("ciKeyV").onchange=e=>{ CI.key=e.target.value.trim(); try{ CI.key?localStorage.setItem("ke.ciKey",CI.key):localStorage.removeItem("ke.ciKey"); }catch(x){} CI.mv=false; ciRender(); ciMini(); };
+
+// Hooks: the decoded car, and trips remember which car they were
+{ const _pc=phCarShow; phCarShow=function(v,L,x){ const r=_pc(v,L,x); CI.car=ciCarFrom(v,L,x); ciRender(); ciMini(); return r; }; }
+{ const _ts=trStart; trStart=function(now){ const r=_ts(now); if(TR.cur&&CI.car&&CI.car.vin===bt.carVin) TR.cur.ci={make:CI.car.make,model:CI.car.model,year:CI.car.year,color:CI.color}; return r; }; }
+{ const _to=trOpen; trOpen=function(id){ const r=_to(id); const t=trLoad().find(x=>x.id===id), im=$$("trCar");
+  if(t&&t.ci&&CI.on&&CI.key){ im.hidden=false; im.alt=""; ciLoad(im,ciUrl(t.ci,"side",360,t.ci.color||""),()=>{ im.hidden=true; }); } else im.hidden=true; return r; }; }
+if(DEMO&&!CI.key){ /* demo trips get a car too, so the header shows once a key is added */ const l=trLoad(); if(l.length&&!l[0].ci){ l.forEach(t=>t.ci={make:"Porsche",model:"911",year:"2026",color:""}); trStore(l); } }
+ciSettings(); ciRender();
+</script>
+<script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.23";
+const APP_VER="2.24";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
