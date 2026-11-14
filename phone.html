@@ -1248,7 +1248,7 @@ if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.20";
+const APP_VER="2.21";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();

@@ -403,13 +403,93 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 
 .g-odo{font-size:12px;margin-top:3px;color:var(--l2);font-variant-numeric:tabular-nums;letter-spacing:.2px}
 .g-odo[hidden]{display:none}
+/* ---------- Live layouts (CarPlay Ultra style): Widgets, Focus, and twin dials when sideways ---------- */
+.screen{--lv-track:#2C2F35;--lv-acc:#FF9F0A;--lv-card:rgba(255,255,255,.07)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .screen{--lv-track:#E3E3E8;--lv-card:#fff}}
+:root[data-theme="light"] .screen{--lv-track:#E3E3E8;--lv-card:#fff}
+#lvLegacy[hidden],.lv[hidden],[data-lv-row][hidden],[data-lv-card][hidden]{display:none!important}
+.lv-switch{display:flex;background:var(--lv-track);border-radius:9px;padding:2px;gap:2px;margin:0 2px}
+.lv-switch button{flex:1;min-height:30px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer}
+.lv-switch button[aria-selected=true]{background:#636366;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .lv-switch button[aria-selected=true]{background:#fff}}
+:root[data-theme="light"] .lv-switch button[aria-selected=true]{background:#fff}
+.lv{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.lv-w{gap:10px}
+.lw-dial{position:relative;flex:1 1 0;min-height:110px;max-height:290px;aspect-ratio:320/290;margin:0 auto;max-width:100%}
+.lw-dial svg{position:absolute;inset:0;width:100%;height:100%}
+.lw-c{position:absolute;left:0;right:0;top:27%;display:flex;flex-direction:column;align-items:center}
+.lw-sp{font-size:clamp(48px,9vh,92px);font-weight:700;line-height:1;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.lw-u{font-size:15px;color:var(--l2)}
+.lw-rpm{margin-top:6px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.lw-odo{position:absolute;left:0;right:0;bottom:2%;text-align:center;font-size:12px;color:var(--l2);font-variant-numeric:tabular-nums}
+.lw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lw-card{background:var(--lv-card);border-radius:20px;padding:11px 13px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.lw-t{font-size:12px;font-weight:600;color:var(--l2)}
+.lw-kv{display:flex;justify-content:space-between;align-items:baseline;font-size:12px}
+.lw-kv b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.lw-row{display:flex;flex-direction:column;gap:3px}
+.lw-bar{height:5px;border-radius:3px;background:var(--lv-track);overflow:hidden}.lw-bar i{display:block;height:5px;border-radius:3px;width:0;transition:width .3s}
+.lw-big{font-size:32px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1.05}
+.lw-big small,.lw-mid small{font-size:13px;font-weight:400;color:var(--l2)}
+.lw-segs{display:flex;gap:3px}.lw-segs i{flex:1;height:8px;border-radius:3px;background:var(--lv-track)}.lw-segs i.on{background:currentColor}
+.lw-mid{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.lw-sub{font-size:12px;color:var(--l2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv-f{justify-content:space-between;gap:14px;padding:6px 4px 0}
+.lf-speed{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.lf-sp{font-size:clamp(96px,21vh,176px);font-weight:700;line-height:.9;letter-spacing:-6px;font-variant-numeric:tabular-nums}
+.lf-u{font-size:18px;color:var(--l2);margin-top:6px}
+.lf-rpm{display:flex;flex-direction:column;gap:6px}
+.lf-segs{display:flex;gap:3px}.lf-segs i{flex:1;height:20px;border-radius:3px;background:var(--lv-track)}
+.lf-segs i.on{background:var(--lv-acc)}.lf-segs i.red{background:rgba(255,69,58,.28)}.lf-segs i.red.on{background:#FF453A}
+.lf-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--l2);font-variant-numeric:tabular-nums}.lf-scale b{color:inherit;font-weight:600}.lf-scale .red{color:#FF6961}
+.lf-keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:12px;border-top:1px solid var(--lv-track)}
+.lf-key{display:flex;flex-direction:column;align-items:center;gap:1px}.lf-key span{font-size:12px;color:var(--l2)}
+.lf-key b{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.lf-key b small{font-size:14px;font-weight:400;color:var(--l2)}
+.lf-note,.lt-note{text-align:center;font-size:13px;color:var(--l2);font-variant-numeric:tabular-nums;min-height:18px}
+.lf-note.warn,.lt-note.warn{color:#FF9F0A;font-weight:600}
+.lv-t{display:none}
+.lt-dial{position:relative;height:100%;aspect-ratio:1;max-height:340px}
+.lt-dial svg{position:absolute;inset:0;width:100%;height:100%}
+.lt-c{position:absolute;left:0;right:0;top:34%;display:flex;flex-direction:column;align-items:center}
+.lt-big{font-size:clamp(40px,15vh,64px);font-weight:700;line-height:1;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}
+.lt-u{font-size:14px;color:var(--l2)}
+.lt-foot{position:absolute;left:0;right:0;bottom:13%;text-align:center;font-size:13px;color:var(--l2);font-variant-numeric:tabular-nums}
+.lt-mid{flex:0 0 150px;display:flex;flex-direction:column;justify-content:center;gap:7px}
+.lt-car{font-size:13px;font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ltChips{display:flex;flex-direction:column;gap:6px}
+.lt-chip{background:var(--lv-card);border-radius:13px;padding:6px 10px;display:flex;flex-direction:column;gap:4px}
+.lt-chip .k{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--l2)}
+.lt-chip .k b{font-size:16px;font-weight:600;color:var(--tx,inherit);font-variant-numeric:tabular-nums}
+.g-svg-tk{stroke:#5A5E66;stroke-width:2;stroke-linecap:round}.g-svg-mj{stroke:#AEAEB2;stroke-width:3;stroke-linecap:round}
+.g-svg-tr{fill:none;stroke:var(--lv-track);stroke-linecap:round}.g-svg-red{fill:none;stroke:#FF453A;stroke-linecap:round;opacity:.85}
+.g-svg-val{fill:none;stroke:var(--lv-acc);stroke-linecap:round;transition:stroke-dasharray .25s}
+.g-svg-lb{font:600 15px var(--font);fill:var(--l2);text-anchor:middle;dominant-baseline:central}.g-svg-lb.red{fill:#FF6961}
+.g-svg-nd{stroke:currentColor;stroke-width:4;stroke-linecap:round}
+#paneLive .lw-sp{font-size:44px}#paneLive .lw-rpm{font-size:15px;margin-top:2px}#paneLive .lw-card{padding:9px 11px;gap:4px;border-radius:16px}#paneLive .lw-big{font-size:26px}#paneLive .lw-mid{font-size:18px}#paneLive .lw-kv b{font-size:15px}#paneLive .lf-sp{font-size:110px;letter-spacing:-4px}#paneLive .lf-key b{font-size:22px}#paneLive .lf-segs i{height:16px}
+/* Simulated phone turned sideways: it takes its own full-width row and Live becomes the twin-dial cluster */
+.rot{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--fill);color:inherit;font:inherit;font-size:13px;cursor:pointer}
+.rot svg{width:16px;height:16px}.rot[aria-pressed=true]{background:#FF9F0A;color:#000;font-weight:600}
+.lv-t{display:none}
+.layout.land{grid-template-columns:minmax(380px,1.25fr) minmax(280px,.85fr);grid-template-areas:"live side" "phone phone" "console console"}
+@media (max-width:1180px){ .layout.land{grid-template-columns:1fr 1fr;grid-template-areas:"live live" "side side" "phone phone" "console console"} }
+.phone.land{width:680px;height:330px;max-width:100%}
+.phone.land .island{top:50%;left:22px;transform:translateY(-50%);width:29px;height:98px}
+.phone.land .screen .sbar{display:none}
+.phone.land .screen{padding-left:36px}
+.phone.land .screen.live-on .tabbar{display:none}
+.phone.land #paneLive .app-h,.phone.land #paneLive .phcar,.phone.land #paneLive .verdict,.phone.land #paneLive .lv-switch,.phone.land #paneLive .lv-w,.phone.land #paneLive .lv-f{display:none!important}
+.phone.land #paneLive .lv-t{display:flex!important;flex-direction:row;align-items:center;justify-content:center;gap:8px;height:296px}
+.phone.land .lt-dial{height:212px;aspect-ratio:1;flex:0 0 auto}
+.phone.land .lt-big{font-size:40px}.phone.land .lt-mid{flex:0 0 140px}.phone.land #paneLive .lv-t{gap:4px}
+#paneLive{min-height:100%}
+.lw-dial{max-height:250px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.20</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.21</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -474,7 +554,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
     </section>
 
     <section class="phone-col" id="btCard">
-      <div class="sh"><h2>Kē over Bluetooth</h2></div>
+      <div class="sh"><h2>Kē over Bluetooth</h2><button class="rot" id="phRotate" aria-pressed="false" title="Turn the simulated phone sideways"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 9a8 8 0 0 0-4-5M18.5 4.2 16 4l.4 2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rotate</span></button></div>
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
@@ -484,11 +564,64 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <div class="app-h"><div class="app-t">Live</div></div>
               <div class="pgroup phcar" id="phCar" hidden role="group" aria-label="Connected car"></div>
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
+              <div id="lvLegacy" hidden>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
                 <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div><div class="g-odo" id="phOdoRow" hidden><span id="ph01A6">–</span> km</div></div>
               </div>
               <div class="tiles" id="phTiles"></div>
+              </div>
+              <div class="lv-switch" role="tablist" aria-label="Live layout">
+                <button role="tab" id="lvBtnW" aria-selected="true">Widgets</button>
+                <button role="tab" id="lvBtnF" aria-selected="false">Focus</button>
+              </div>
+              <div class="lv lv-w" id="lvW">
+                <div class="lw-dial" id="lwDial" role="img" aria-label="Speed and engine speed">
+                  <svg viewBox="0 0 320 290" aria-hidden="true" id="lwSvg"></svg>
+                  <div class="lw-c"><div class="lw-sp" data-lv="010D">–</div><div class="lw-u">km/h</div><div class="lw-rpm" data-lv-row="010C"><span data-lv="010C">–</span> rpm</div></div>
+                  <div class="lw-odo" data-lv-row="01A6"><span data-lv="01A6">–</span> km</div>
+                </div>
+                <div class="lw-grid">
+                  <div class="lw-card" data-lv-card="0105,015C">
+                    <div class="lw-t">Temperatures</div>
+                    <div class="lw-row" data-lv-row="0105"><div class="lw-kv"><span>Coolant</span><b><span data-lv="0105">–</span>°</b></div><div class="lw-bar"><i data-lv-bar="0105" style="background:#64D2FF"></i></div></div>
+                    <div class="lw-row" data-lv-row="015C"><div class="lw-kv"><span>Oil</span><b><span data-lv="015C">–</span>°</b></div><div class="lw-bar"><i data-lv-bar="015C" style="background:#FF9F0A"></i></div></div>
+                  </div>
+                  <div class="lw-card" data-lv-card="012F,ev">
+                    <div class="lw-t" id="lwFuelT">Fuel</div>
+                    <div class="lw-big"><span id="lwFuelV">–</span><small>%</small></div>
+                    <div class="lw-segs" id="lwSegs" aria-hidden="true"></div>
+                  </div>
+                  <div class="lw-card" data-lv-card="0104,0111,0110">
+                    <div class="lw-t">Engine</div>
+                    <div class="lw-mid"><span data-lv="0104">–</span><small>% load</small></div>
+                    <div class="lw-sub" id="lwEngSub"></div>
+                  </div>
+                  <div class="lw-card" data-lv-card="0146,010F,0142">
+                    <div class="lw-t">Outside</div>
+                    <div class="lw-mid"><span data-lv="0146">–</span>°<small> ambient</small></div>
+                    <div class="lw-sub" id="lwOutSub"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lv lv-f" id="lvF" hidden>
+                <div class="lf-speed" role="img" id="lfAria" aria-label="Speed"><div class="lf-sp" data-lv="010D">–</div><div class="lf-u">km/h</div></div>
+                <div class="lf-rpm" data-lv-row="010C">
+                  <div class="lf-segs" id="lfSegs" aria-hidden="true"></div>
+                  <div class="lf-scale"><span>0</span><b><span data-lv="010C">–</span> rpm</b><span class="red">8</span></div>
+                </div>
+                <div class="lf-keys" id="lfKeys"></div>
+                <div class="lf-note" id="lfNote" aria-live="polite">–</div>
+              </div>
+              <div class="lv lv-t" id="lvT" aria-label="Instrument cluster">
+                <div class="lt-dial" role="img" id="ltSpAria" aria-label="Speed"><svg viewBox="0 0 340 340" aria-hidden="true" id="ltSpSvg"></svg><div class="lt-c"><div class="lt-big" data-lv="010D">–</div><div class="lt-u">km/h</div></div><div class="lt-foot" data-lv-row="01A6"><span data-lv="01A6">–</span> km</div></div>
+                <div class="lt-mid">
+                  <div class="lt-car" id="ltCar"></div>
+                  <div id="ltChips"></div>
+                  <div class="lt-note" id="ltNote"></div>
+                </div>
+                <div class="lt-dial" role="img" id="ltRpmAria" aria-label="Engine speed" data-lv-row="010C"><svg viewBox="0 0 340 340" aria-hidden="true" id="ltRpmSvg"></svg><div class="lt-c"><div class="lt-big lt-rpm" data-lv="010C">–</div><div class="lt-u">rpm</div></div><div class="lt-foot">×1000 rpm</div></div>
+              </div>
             </div>
 
             <div class="pane" id="paneVehicle" role="tabpanel" aria-labelledby="tabVehicle" hidden>
@@ -1040,6 +1173,7 @@ function parseVin(r){
   return s.length>=17? s.slice(-17) : (s||null);
 }
 function show(pid,v){
+  LV[pid]=v; lvQueue();
   const p=PIDS.find(q=>q.pid===pid), el=$$("ph"+pid), m=$$("pm"+pid), em=+p.el.value;
   if(pid==="01A6") $$("phOdoRow").hidden = v===null;
   if(v===null){ el.textContent="–"; if(m) m.className="mdot no"; return null; }
@@ -1061,7 +1195,7 @@ async function btPollOnce(){ {
     for(const p of PIDS){ if(bt.std==="uds" && bt.sup && bt.sup.length && !bt.sup.includes(p.pid.slice(2))){ show(p.pid,null); none++; continue; } const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
     if(bt.ev){ const c=hexOf(await btSend(bt.std==="uds"?"22F45B":"015B")), k=bt.std==="uds"?"62F45B":"415B", i=c.indexOf(k);
-      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else $$("phEv").textContent="–"; }
+      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); LV.ev=soc; lvQueue(); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else { $$("phEv").textContent="–"; LV.ev=null; lvQueue(); } }
     if(bt.round%4===0){
       const d=await readDtcs();
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
@@ -1076,7 +1210,7 @@ async function btPollOnce(){ {
   }
   if((bt.round||0)===1) dbg("first live round finished");
 }
-function btCleanup(){ bt.carVin=""; document.querySelectorAll("#phTiles .tile").forEach(t=>{ if(t.id!=="phEvTile") t.hidden=false; }); { const g=document.querySelector(".g-rpm"); if(g) g.hidden=false; } if($$("phCar")) $$("phCar").hidden=true; clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
+function btCleanup(){ Object.keys(LV).forEach(k=>delete LV[k]); lvQueue(); bt.carVin=""; document.querySelectorAll("#phTiles .tile").forEach(t=>{ if(t.id!=="phEvTile") t.hidden=false; }); { const g=document.querySelector(".g-rpm"); if(g) g.hidden=false; } if($$("phCar")) $$("phCar").hidden=true; clearInterval(bt.poll); $$("gArc").style.opacity=0; bt.dev=null; bt.demo=false; bt.busy=false; $$("btBtn").textContent="Connect Kē"; $$("btBtn").classList.remove("on"); $$("btDot").classList.remove("on"); $$("btRing").classList.remove("on"); btSetInfo("Not connected"); btSetName("No Kē"); phBadge(0); bcClear(); verdict("","Connect the Kē to see what it reads"); }
 function btDisconnect(){ try{ bt.dev&&bt.dev.gatt.disconnect(); }catch{} btCleanup(); }
 const DEMO_MODE=new URLSearchParams(location.search).get("demo"), DEMO_UDS=DEMO_MODE==="uds"||DEMO_MODE==="zev", DEMO_ZEV=DEMO_MODE==="zev";
 function demoElm(cmd){
@@ -1214,6 +1348,115 @@ function gaugeRpm(v){
   const arc=$("gArc"), L=arc.getTotalLength(), f=Math.max(0,Math.min(1,v/G.max));
   arc.style.strokeDasharray=(L*f)+" 999"; arc.style.opacity=f>0?1:0; arc.classList.toggle("hot",v>=7000);
 }
+
+// ---------- Live layouts: Widgets and Focus (user's choice), twin dials when the phone is sideways ----------
+// All three read LV, which show() fills with every value the Kē reads (null = the car doesn't have it).
+const LV={};
+let lvRaf=0; function lvQueue(){ if(!lvRaf) lvRaf=requestAnimationFrame(()=>{ lvRaf=0; lvRender(); }); }
+function lvDial(svg,o){
+  const P=(a,r)=>[o.cx+r*Math.cos(a*Math.PI/180), o.cy+r*Math.sin(a*Math.PI/180)], A0=135, SW=270;
+  const ang=v=>A0+SW*Math.max(0,Math.min(1,v/o.max));
+  const arc=(v0,v1,r)=>{ const a0=ang(v0),a1=ang(v1),p0=P(a0,r),p1=P(a1,r); return `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`; };
+  let h=`<path class="g-svg-tr" stroke-width="${o.w}" d="${arc(0,o.max,o.r)}"/>`;
+  if(o.red!=null) h+=`<path class="g-svg-red" stroke-width="${o.w}" d="${arc(o.red,o.max,o.r)}"/>`;
+  const step=o.major/o.minor;
+  for(let v=0; v<=o.max+0.001; v+=step){
+    const mj=Math.abs(v/o.major-Math.round(v/o.major))<1e-6, a=ang(v), p0=P(a,o.r-o.w-4), p1=P(a,o.r-o.w-(mj?16:10));
+    h+=`<line class="${mj?"g-svg-mj":"g-svg-tk"}" x1="${p0[0].toFixed(1)}" y1="${p0[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}"/>`;
+    if(mj && o.labels){ const q=P(a,o.r-o.w-32); h+=`<text class="g-svg-lb${o.red!=null&&v>=o.red?" red":""}" x="${q[0].toFixed(1)}" y="${q[1].toFixed(1)}">${o.labels(v)}</text>`; }
+  }
+  h+=`<path class="g-svg-val" stroke-width="${o.w}" d="${arc(0,o.max,o.r)}"/>`;
+  svg.innerHTML=h;
+  const val=svg.querySelector(".g-svg-val"); let L=0;
+  return v=>{ if(!L) L=val.getTotalLength()||1; const f=v==null?0:Math.max(0,Math.min(1,v/o.max)); val.style.strokeDasharray=`${(L*f).toFixed(1)} 9999`; val.style.opacity=f>0?1:0; };
+}
+const lwSet=lvDial($$("lwSvg"),{cx:160,cy:150,r:132,w:13,max:8000,major:1000,minor:2,red:7000});
+$$("lwSegs").innerHTML="<i></i>".repeat(10);
+$$("lfSegs").innerHTML=Array.from({length:32},(_,i)=>`<i${i>=28?' class="red"':""}></i>`).join("");
+const LV_KEYS=[["0105","Coolant","°"],["015C","Oil","°"],["012F","Fuel","%"],["ev","HV Battery","%"],["0142","Battery"," V"],["0146","Ambient","°"]];
+const LV_WATCH=[["0105","Coolant",v=>v>=110,"°","high"],["015C","Oil",v=>v>=125,"°","high"],["0142","Battery",v=>v<12.2||v>15.2," V",null],["012F","Fuel",v=>v<=12,"%","low"],["010F","Intake air",v=>v>=60,"°","high"],["ev","HV battery",v=>v<=15,"%","low"]];
+const LV_RANGE={"0105":[40,130],"015C":[40,150],"012F":[0,100],"ev":[0,100],"0142":[11,15],"0146":[-30,40]};
+function lvFmt(pid,v){
+  if(v==null) return "–";
+  if(pid==="010C") return (Math.round(v/10)*10).toLocaleString("en-CA");
+  if(pid==="01A6") return Math.floor(v).toLocaleString("en-CA");
+  if(pid==="ev") return v.toFixed(0);
+  const p=PIDS.find(q=>q.pid===pid); return p&&p.step<1 ? v.toFixed(1) : String(Math.round(v));
+}
+const lvNum=k=>typeof LV[k]==="number";
+function lvAlerts(){
+  const out=[];
+  LV_WATCH.forEach(([k,name,bad,unit,word])=>{ if(lvNum(k)&&bad(LV[k])) out.push(`${name} ${lvFmt(k,LV[k])}${unit}${word?" "+word:""}`); });
+  const codes=[...new Set((($$("phDtc")||{}).textContent||"").match(/\b[PCBU][0-9A-F]{4}\b/g)||[])];
+  if(codes.length) out.push(codes.length===1?"1 trouble code":`${codes.length} trouble codes`);
+  return out;
+}
+function lvRender(){
+  document.querySelectorAll("#paneLive [data-lv]").forEach(e=>{ e.textContent=lvFmt(e.dataset.lv,LV[e.dataset.lv]); });
+  document.querySelectorAll("#paneLive [data-lv-row]").forEach(e=>{ e.hidden = LV[e.dataset.lvRow]===null; });
+  document.querySelectorAll("#paneLive [data-lv-card]").forEach(e=>{ e.hidden = e.dataset.lvCard.split(",").every(k=>LV[k]===null); });
+  document.querySelectorAll("#paneLive [data-lv-bar]").forEach(e=>{ const k=e.dataset.lvBar,[a,b]=LV_RANGE[k]; e.style.width = lvNum(k) ? Math.max(0,Math.min(100,(LV[k]-a)/(b-a)*100))+"%" : "0"; });
+  // small lines under Engine and Outside: only the readings this car has
+  const sub=(parts)=>parts.filter(([k])=>LV[k]!==null).map(([k,a,b])=>a+lvFmt(k,LV[k])+b).join(" · ");
+  $$("lwEngSub").textContent=sub([["0111","Throttle ","%"],["0110",""," g/s"]]);
+  $$("lwOutSub").textContent=sub([["010F","Intake ","°"],["0142",""," V"]]);
+  // fuel widget becomes the high-voltage battery on an EV
+  const fk = lvNum("012F") ? "012F" : (lvNum("ev") ? "ev" : "012F");
+  $$("lwFuelT").textContent = fk==="ev" ? "HV Battery" : "Fuel";
+  $$("lwFuelV").textContent = lvFmt(fk,LV[fk]);
+  const lit = lvNum(fk) ? Math.round(LV[fk]/10) : 0;
+  $$("lwSegs").querySelectorAll("i").forEach((s,i)=>s.classList.toggle("on",i<lit));
+  // dials and rpm bar
+  const rpm = lvNum("010C") ? LV["010C"] : null, spd = lvNum("010D") ? LV["010D"] : null;
+  lwSet(rpm);
+  const segs = rpm==null ? 0 : Math.round(32*Math.min(1,rpm/8000));
+  $$("lfSegs").querySelectorAll("i").forEach((s,i)=>s.classList.toggle("on",i<segs));
+  $$("lwDial").setAttribute("aria-label", `Speed ${lvFmt("010D",spd)} km/h, ${lvFmt("010C",rpm)} rpm`);
+  $$("lfAria").setAttribute("aria-label", `Speed ${lvFmt("010D",spd)} km/h`);
+  // the few readings Focus and the sideways cluster show: the first ones this car has
+  const keys = LV_KEYS.filter(([k])=> k==="ev" ? lvNum("ev") : LV[k]!==null);
+  $$("lfKeys").innerHTML = keys.slice(0,3).map(([k,n,u])=>`<div class="lf-key"><span>${n}</span><b>${lvFmt(k,LV[k])}<small>${u.trim()}</small></b></div>`).join("");
+  // one line: what needs attention, or that everything else is fine
+  const al = lvAlerts(), on = !!(bt.dev||bt.demo);
+  const note = !on ? "Kē not connected" : al.length ? al.join(" · ") : (lvNum("01A6") ? lvFmt("01A6",LV["01A6"])+" km · " : "") + "everything else is normal";
+  [["lfNote"]].forEach(([id])=>{ const e=$$(id); e.textContent=note; e.classList.toggle("warn", on && al.length>0); });
+}
+function lvLayout(which){
+  const w = which!=="f";
+  $$("lvW").hidden=!w; $$("lvF").hidden=w;
+  $$("lvBtnW").setAttribute("aria-selected",w); $$("lvBtnF").setAttribute("aria-selected",!w);
+  try{ localStorage.setItem("ke.layout", w?"w":"f"); }catch(e){}
+  lvQueue();
+}
+$$("lvBtnW").onclick=()=>lvLayout("w"); $$("lvBtnF").onclick=()=>lvLayout("f");
+(()=>{ let s="w"; try{ s=localStorage.getItem("ke.layout")||"w"; }catch(e){} lvLayout(s); })();
+
+
+// ---------- Sideways cluster (twin dials), shown when the simulated phone is rotated ----------
+const ltSpSet=lvDial($$("ltSpSvg"),{cx:170,cy:170,r:160,w:10,max:320,major:40,minor:4,labels:v=>String(v)});
+const ltRpmSet=lvDial($$("ltRpmSvg"),{cx:170,cy:170,r:160,w:10,max:8000,major:1000,minor:5,red:7000,labels:v=>String(v/1000)});
+const lvRenderUpright=lvRender;
+lvRender=function(){
+  lvRenderUpright();
+  const rpm = lvNum("010C") ? LV["010C"] : null, spd = lvNum("010D") ? LV["010D"] : null;
+  ltSpSet(spd); ltRpmSet(rpm);
+  $$("ltSpAria").setAttribute("aria-label", `Speed ${lvFmt("010D",spd)} km/h`);
+  $$("ltRpmAria").setAttribute("aria-label", `Engine speed ${lvFmt("010C",rpm)} rpm`);
+  const keys = LV_KEYS.filter(([k])=> k==="ev" ? lvNum("ev") : LV[k]!==null);
+  $$("ltChips").innerHTML = keys.slice(0,4).map(([k,n,u])=>{ const r=LV_RANGE[k], w = lvNum(k)&&r ? Math.max(0,Math.min(100,(LV[k]-r[0])/(r[1]-r[0])*100)) : 0;
+    return `<div class="lt-chip"><div class="k">${n}<b>${lvFmt(k,LV[k])}<small style="font-size:10px;font-weight:400"> ${u.trim()}</small></b></div><div class="lw-bar"><i style="width:${w}%;background:var(--lv-acc)"></i></div></div>`; }).join("");
+  $$("ltCar").textContent = ($$("phCar")&&!$$("phCar").hidden) ? $$("phCar").textContent : "";
+  const n=$$("lfNote"), t=$$("ltNote"); t.textContent=n.textContent; t.classList.toggle("warn", n.classList.contains("warn"));
+};
+$$("phRotate").onclick=()=>{
+  const land=!document.querySelector(".phone").classList.contains("land");
+  document.querySelector(".phone").classList.toggle("land",land);
+  document.querySelector(".layout").classList.toggle("land",land);
+  $$("phRotate").setAttribute("aria-pressed",land);
+  $$("phRotate").querySelector("span").textContent = land ? "Upright" : "Rotate";
+  lvQueue();
+  document.querySelector(".phone").scrollIntoView({block:"center",behavior:"smooth"});
+};
 
 // ---------- Car logos (Asetrix logo API, free, no key; returns a monogram when it has no logo) ----------
 const LOGO_API="https://api.asetrix.online/api/v1/logos/";
@@ -1414,6 +1657,7 @@ $$("scanSheet").addEventListener("keydown",e=>{ if(e.key==="Escape") scanClose()
 
 // ---------- Phone tab bar ----------
 function phTab(id){
+  document.querySelector(".screen").classList.toggle("live-on", id==="paneLive");
   document.querySelectorAll(".tabbar [role=tab]").forEach(t=>{ const on=t.dataset.pane===id; t.setAttribute("aria-selected",on); t.tabIndex=on?0:-1; $(t.dataset.pane).hidden=!on; });
   document.querySelector(".pane-wrap").scrollTop=0;
 }
