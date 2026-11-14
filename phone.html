@@ -343,6 +343,18 @@ html,body{background:#f2f2f7;color:#000}
   #paneLive .lv-t{display:flex!important;flex-direction:row;align-items:center;justify-content:center;gap:10px;height:calc(100vh - 24px)}
 }
 @media (max-height:620px){#paneLive .lw-odo,#paneLive .lw-sub{display:none}#paneLive .lw-card{padding:9px 12px;gap:4px}#paneLive .lw-sp{font-size:44px}#paneLive .lw-rpm{font-size:15px;margin-top:2px}}
+
+/* Sideways dials size themselves from the space they actually get (container units), so they never clip */
+.lv-t{container-type:size;box-sizing:border-box}
+.lt-dial{container-type:inline-size;width:min(calc((100cqw - 172px) / 2), 100cqh, 340px)!important;height:auto!important;aspect-ratio:1;max-height:none!important;flex:0 0 auto}
+.lt-big{font-size:21cqw!important;letter-spacing:-.5cqw}
+.lt-u{font-size:max(11px,5.5cqw)}
+.lt-foot{font-size:max(11px,5.5cqw)}
+.lt-mid{flex:0 0 150px!important;min-width:0}
+@media (orientation: landscape) and (max-height: 520px){
+  #paneLive .lv-t{height:calc(100vh - 24px - env(safe-area-inset-top));padding:0;gap:10px}
+  #paneLive{min-height:0}
+}
 </style>
 </head>
 <body>
@@ -776,7 +788,7 @@ async function btPollOnce(){ {
     for(const p of PIDS){ if(bt.std==="uds" && bt.sup && bt.sup.length && !bt.sup.includes(p.pid.slice(2))){ show(p.pid,null); none++; continue; } const r=await btSend(pidCmd(p.pid)); if(!bt.dev&&!bt.demo){ return; } const v=parsePid(p.pid,r); const res=show(p.pid,v); res===null?none++:res?ok++:bad++;
       if(p.pid==="010C"&&v!==null) gaugeRpm(v); }
     if(bt.ev){ const c=hexOf(await btSend(bt.std==="uds"?"22F45B":"015B")), k=bt.std==="uds"?"62F45B":"415B", i=c.indexOf(k);
-      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); LV.ev=soc; lvQueue(); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else { $$("phEv").textContent="–"; LV.ev=null; lvQueue(); } }
+      if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); LV.ev = (bt.zev||soc>0) ? soc : null; lvQueue(); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else { $$("phEv").textContent="–"; LV.ev=null; lvQueue(); } }
     if(bt.round%4===0){
       const d=await readDtcs();
       if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
@@ -1053,7 +1065,9 @@ function phCarShow(v,L,x){
     const make=x ? nice(x.Make) : (L.maker||"").replace(/\s*\(.*?\)|\s+(SUV|Truck|Commercial|Bus|Van|Sport|M|i)$/g,"");
     const rows=[["Make",make||"–"],["Model",x?(x.Model||"–"):"…"],["Trim",x?(x.Trim||x.Series||"–"):"…"],["Model Year",(x&&x.ModelYear)||L.year||"–"]];
     // one line, e.g. "2026 Porsche 911 Targa 4S"
-    const line=[rows[3][1],rows[0][1],rows[1][1],rows[2][1]].filter(t=>t&&t!=="–"&&t!=="…").join(" ");
+    let trim=String(rows[2][1]||""); if(trim.includes(",")) trim=trim.split(",").pop().trim();
+    const model=String(rows[1][1]||""); if(model && trim.toLowerCase().startsWith(model.toLowerCase())) trim=trim.slice(model.length).trim();
+    const line=[rows[3][1],rows[0][1],model,trim].filter(t=>t&&t!=="–"&&t!=="…").join(" ");
     pc.textContent=line||"Unknown car"; pc.title=line; }
   $$("vdHead").hidden=false; $$("vdHead").innerHTML=`${logoTile(c.slug,64)}<b>${c.name}</b><span>${c.sub}</span>`;
 }
@@ -1248,7 +1262,7 @@ if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.21";
+const APP_VER="2.22";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
