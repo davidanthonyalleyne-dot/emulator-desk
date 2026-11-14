@@ -399,13 +399,16 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 #paneLive .g-rpm[hidden]{display:none}
 #paneLive .phcar{display:block;background:none;padding:0 2px;margin:-4px 0 0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:0}
 #paneLive[hidden],.pane[hidden]{display:none!important}
+
+.g-odo{font-size:12px;margin-top:3px;color:var(--l2);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.g-odo[hidden]{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.17</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.18</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -482,7 +485,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
-                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
+                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div><div class="g-odo" id="phOdoRow" hidden><span id="ph01A6">–</span> km</div></div>
               </div>
               <div class="tiles" id="phTiles"></div>
             </div>
@@ -633,6 +636,8 @@ const PIDS = [
   {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
   {pid:"0110", vss:"Vehicle.Powertrain.CombustionEngine.MAF", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
   {pid:"0146", vss:"Vehicle.Exterior.AirTemperature", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
+  // odometer: 4 bytes, tenths of a km (SAE J1979 PID A6)
+  {pid:"01A6", vss:"Vehicle.TraveledDistance", name:"Odometer", unit:"km", min:0, max:999999, step:1, v:24318, enc:x=>{ const n=Math.round(x*10); return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]; }, dec:b=>(b[0]*16777216+b[1]*65536+b[2]*256+b[3])/10},
 ];
 const PRESETS = {
   "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"015C":20,"0142":12.4,"0110":0},
@@ -751,7 +756,7 @@ PIDS.forEach(p=>{
   r.addEventListener("input",()=>{ show(); if($("autoSend").checked){ clearTimeout(sendTimers[p.pid]); sendTimers[p.pid]=setTimeout(()=>sendPid(p),120); } });
   pidsEl.appendChild(row);
 });
-function fmt(p,x){ return p.step<1 ? x.toFixed(1) : String(Math.round(x)) }
+function fmt(p,x){ return p.pid==="01A6" ? Math.round(x).toLocaleString("en-CA") : p.step<1 ? x.toFixed(1) : String(Math.round(x)) }
 function paintPid(p){ const v=+p.el.value; p.out.innerHTML=fmt(p,v)+"<span>"+p.unit+"</span>"; p.el.style.setProperty("--p",((v-p.min)/(p.max-p.min)*100)+"%"); }
 function setPid(p,x,push=true){ p.el.value=x; paintPid(p); recordReading(p,+p.el.value,"emulator"); if(p.pid==="010C"||p.pid==="0111") engine.update(); if(push) sendPid(p); }
 PIDS.forEach(p=>{ if(p.pid==="010C"||p.pid==="0111") p.el.addEventListener("input",()=>engine.update()); });
@@ -885,10 +890,10 @@ async function btPick(){
   bt.pickWay=0; throw last||new Error("no way to pick a device worked");
 }
 const bt={dev:null,tx:null,rx:null,buf:"",wait:null,poll:null,busy:false,demo:false,round:0,req:0};
-const PH_LEN={"010C":2,"0142":2,"0110":2};
+const PH_LEN={"010C":2,"0142":2,"0110":2,"01A6":4};
 const $$=id=>document.getElementById(id);
 // tiles for every PID except speed and RPM (those are in the gauge)
-PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
+PIDS.filter(p=>!["010C","010D","01A6"].includes(p.pid)).forEach(p=>{
   const t=document.createElement("div"); t.className="tile"; t.title=`${p.name}: ${p.vss} · PID ${p.pid}`;
   t.innerHTML=`<div class="tl">${({"0105":"Coolant","010F":"Intake Air","0142":"Battery","0110":"Air Flow","0146":"Ambient"})[p.pid]||p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
@@ -1035,9 +1040,10 @@ function parseVin(r){
 }
 function show(pid,v){
   const p=PIDS.find(q=>q.pid===pid), el=$$("ph"+pid), m=$$("pm"+pid), em=+p.el.value;
+  if(pid==="01A6") $$("phOdoRow").hidden = v===null;
   if(v===null){ el.textContent="–"; if(m) m.className="mdot no"; return null; }
   recordReading(p,v,"dongle");
-  el.textContent= p.step<1? v.toFixed(1) : Math.round(v);
+  el.textContent= pid==="01A6" ? Math.floor(v).toLocaleString("en-CA") : p.step<1? v.toFixed(1) : Math.round(v);
   const ok=Math.abs(v-em)<=(pid==="010C"?50:p.step<1?Math.max(p.step,0.2):1.5); if(m) m.className="mdot "+(ok?"ok":"no"); return ok;
 }
 function btStartPoll(){
@@ -1085,12 +1091,12 @@ function demoElm(cmd){
 }
 function demoUds(cmd){
   const hx=a=>a.map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join(""), asc=t=>hx([...t].map(c=>c.charCodeAt(0)));
-  const have = DEMO_ZEV ? ["01","0D","1C","1F","21","2F","30","31","42","46","4D","4E","5B"] : PIDS.map(p=>p.pid.slice(2)).concat(["01","1C","20","40"]);
+  const have = DEMO_ZEV ? ["01","0D","1C","1F","21","2F","30","31","42","46","4D","4E","5B","A6"] : PIDS.map(p=>p.pid.slice(2)).concat(["01","1C","20","40"]);
   const mask=base=>{ let n=0; const b0=parseInt(base,16); have.forEach(p=>{ const v=parseInt(p,16)-b0; if(v>=1&&v<=32) n|=1<<(32-v); }); if(have.some(p=>parseInt(p,16)>b0+32)) n|=1; return (n>>>0).toString(16).toUpperCase().padStart(8,"0"); };
   if(cmd==="22F810") return "62F81001\r";
   if(cmd==="22F41C") return DEMO_ZEV ? "62F41C1B\r" : "62F41C06\r";
   const m=/^22F4([0-9A-F]{2})$/.exec(cmd);
-  if(m){ if(["00","20","40","60"].includes(m[1])) return parseInt(m[1],16)===0||have.some(p=>parseInt(p,16)>parseInt(m[1],16)) ? "62F4"+m[1]+mask(m[1])+"\r" : "7F2231\r";
+  if(m){ if(["00","20","40","60","80","A0"].includes(m[1])) return parseInt(m[1],16)===0||have.some(p=>parseInt(p,16)>parseInt(m[1],16)) ? "62F4"+m[1]+mask(m[1])+"\r" : "7F2231\r";
     if(m[1]==="5B") return "62F45B"+hx([Math.round(78.4*255/100)])+"\r";
     const p=have.includes(m[1]) && PIDS.find(q=>q.pid==="01"+m[1]); if(p) return "62F4"+m[1]+hx(p.enc(+p.el.value))+"\r";
     return "7F2231\r"; }
@@ -1433,6 +1439,7 @@ Object.keys(PRESETS).forEach(name=>{
 // Drive loop: a gentle accelerate / cruise / brake cycle pushed every 600 ms
 let simT=null, simPhase=0;
 function stopSim(){ clearInterval(simT); simT=null; }
+let odoAcc=0;
 $("driveSim").onchange=e=>{
   if(!e.target.checked){ stopSim(); return; }
   document.querySelectorAll("#presets button").forEach(c=>{c.classList.remove("active");c.setAttribute("aria-checked","false")});
@@ -1442,6 +1449,8 @@ $("driveSim").onchange=e=>{
     const t=simPhase/100, sp = t<.35? t/.35*90 : t<.7? 90+Math.sin(t*40)*4 : Math.max(0,(1-t)/.3*90);
     const accel = t<.35, rpm = sp<1? 850 : 1200+sp*18+(accel?600:0);
     const m={ "010D":Math.round(sp), "010C":Math.round(rpm/50)*50, "0111":accel?38:(t<.7?20:0), "0104":accel?62:(t<.7?35:12), "0110":+(rpm/150).toFixed(1) };
+    // odometer: add the distance covered in this 0.6 s step, whole km at a time like a real odometer
+    odoAcc += sp*0.6/3600; if(odoAcc>=1){ const op=PIDS.find(p=>p.pid==="01A6"); m["01A6"]=+op.el.value+Math.floor(odoAcc); odoAcc-=Math.floor(odoAcc); }
     PIDS.forEach(p=>{ if(p.pid in m){ setPid(p,m[p.pid],false); if(connected) sendPid(p,true); } });
   },600);
 };

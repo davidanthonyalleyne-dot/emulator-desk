@@ -273,6 +273,9 @@ html,body{background:#f2f2f7;color:#000}
 #paneLive .g-rpm[hidden]{display:none}
 #paneLive .phcar{display:block;background:none;padding:0 2px;margin:-4px 0 0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:0}
 #paneLive[hidden],.pane[hidden]{display:none!important}
+
+.g-odo{font-size:12px;margin-top:3px;color:var(--l2);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.g-odo[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -284,7 +287,7 @@ html,body{background:#f2f2f7;color:#000}
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div class="gauge">
                 <svg viewBox="0 0 220 156" aria-hidden="true"></svg>
-                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div></div>
+                <div class="g-c"><div class="g-big" id="ph010D">–</div><div class="g-u">km/h</div><div class="g-rpm"><span id="ph010C">–</span> rpm</div><div class="g-odo" id="phOdoRow" hidden><span id="ph01A6">–</span> km</div></div>
               </div>
               <div class="tiles" id="phTiles"></div>
             </div>
@@ -426,6 +429,8 @@ const PIDS = [
   {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
   {pid:"0110", vss:"Vehicle.Powertrain.CombustionEngine.MAF", name:"MAF Air Flow", unit:"g/s", min:0, max:300, step:0.5, v:3.5, enc:x=>u16(Math.round(x*100)), dec:b=>(b[0]*256+b[1])/100},
   {pid:"0146", vss:"Vehicle.Exterior.AirTemperature", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
+  // odometer: 4 bytes, tenths of a km (SAE J1979 PID A6)
+  {pid:"01A6", vss:"Vehicle.TraveledDistance", name:"Odometer", unit:"km", min:0, max:999999, step:1, v:24318, enc:x=>{ const n=Math.round(x*10); return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]; }, dec:b=>(b[0]*16777216+b[1]*65536+b[2]*256+b[3])/10},
 ];
 
 PIDS.forEach(p=>p.el={value:p.v});
@@ -456,10 +461,10 @@ async function btPick(){
   bt.pickWay=0; throw last||new Error("no way to pick a device worked");
 }
 const bt={dev:null,tx:null,rx:null,buf:"",wait:null,poll:null,busy:false,demo:false,round:0,req:0};
-const PH_LEN={"010C":2,"0142":2,"0110":2};
+const PH_LEN={"010C":2,"0142":2,"0110":2,"01A6":4};
 const $$=id=>document.getElementById(id);
 // tiles for every PID except speed and RPM (those are in the gauge)
-PIDS.filter(p=>p.pid!=="010C"&&p.pid!=="010D").forEach(p=>{
+PIDS.filter(p=>!["010C","010D","01A6"].includes(p.pid)).forEach(p=>{
   const t=document.createElement("div"); t.className="tile"; t.title=`${p.name}: ${p.vss} · PID ${p.pid}`;
   t.innerHTML=`<div class="tl">${({"0105":"Coolant","010F":"Intake Air","0142":"Battery","0110":"Air Flow","0146":"Ambient"})[p.pid]||p.name}</div><div class="tv"><span id="ph${p.pid}">–</span><small>${p.unit}</small></div><div class="tvss" title="${p.vss} · OBD-II PID ${p.pid}">${p.pid} · ${p.vss.replace(/^Vehicle\./,"")}</div><span class="mdot" id="pm${p.pid}"></span>`;
   $$("phTiles").appendChild(t);
@@ -631,9 +636,10 @@ function parseVin(r){
 }
 function show(pid,v){
   const p=PIDS.find(q=>q.pid===pid), el=$$("ph"+pid);
+  if(pid==="01A6") $$("phOdoRow").hidden = v===null;
   if(v===null){ el.textContent="–"; return null; }
   recordReading(p,v,"dongle");
-  el.textContent= p.step<1? v.toFixed(1) : (p.pid==="010C"? Math.round(v/10)*10 : Math.round(v)); p.el.value=v; return true;
+  el.textContent= pid==="01A6" ? Math.floor(v).toLocaleString("en-CA") : p.step<1? v.toFixed(1) : (p.pid==="010C"? Math.round(v/10)*10 : Math.round(v)); p.el.value=v; return true;
 }
 function btStartPoll(){
   clearInterval(bt.poll); bt.round=0;
@@ -680,12 +686,12 @@ function demoElm(cmd){
 }
 function demoUds(cmd){
   const hx=a=>a.map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join(""), asc=t=>hx([...t].map(c=>c.charCodeAt(0)));
-  const have = DEMO_ZEV ? ["01","0D","1C","1F","21","2F","30","31","42","46","4D","4E","5B"] : PIDS.map(p=>p.pid.slice(2)).concat(["01","1C","20","40"]);
+  const have = DEMO_ZEV ? ["01","0D","1C","1F","21","2F","30","31","42","46","4D","4E","5B","A6"] : PIDS.map(p=>p.pid.slice(2)).concat(["01","1C","20","40"]);
   const mask=base=>{ let n=0; const b0=parseInt(base,16); have.forEach(p=>{ const v=parseInt(p,16)-b0; if(v>=1&&v<=32) n|=1<<(32-v); }); if(have.some(p=>parseInt(p,16)>b0+32)) n|=1; return (n>>>0).toString(16).toUpperCase().padStart(8,"0"); };
   if(cmd==="22F810") return "62F81001\r";
   if(cmd==="22F41C") return DEMO_ZEV ? "62F41C1B\r" : "62F41C06\r";
   const m=/^22F4([0-9A-F]{2})$/.exec(cmd);
-  if(m){ if(["00","20","40","60"].includes(m[1])) return parseInt(m[1],16)===0||have.some(p=>parseInt(p,16)>parseInt(m[1],16)) ? "62F4"+m[1]+mask(m[1])+"\r" : "7F2231\r";
+  if(m){ if(["00","20","40","60","80","A0"].includes(m[1])) return parseInt(m[1],16)===0||have.some(p=>parseInt(p,16)>parseInt(m[1],16)) ? "62F4"+m[1]+mask(m[1])+"\r" : "7F2231\r";
     if(m[1]==="5B") return "62F45B"+hx([Math.round(78.4*255/100)])+"\r";
     const p=have.includes(m[1]) && PIDS.find(q=>q.pid==="01"+m[1]); if(p) return "62F4"+m[1]+hx(p.enc(+p.el.value))+"\r";
     return "7F2231\r"; }
@@ -1031,7 +1037,7 @@ if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.17";
+const APP_VER="2.18";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
