@@ -483,6 +483,10 @@ html,body{background:#f2f2f7;color:#000}
 .ci-sheet p{margin:0;font-size:13px;line-height:1.45;color:var(--l2)}
 .ci-key{width:100%;box-sizing:border-box;border:0;border-radius:8px;background:rgba(118,118,128,.24);color:inherit;font:15px var(--mono);padding:10px;margin-top:6px}
 .kv.kv-col{flex-direction:column;align-items:stretch}
+.ci-keyrow{display:flex;gap:8px;align-items:center;margin-top:6px}.ci-keyrow .ci-key{margin-top:0;flex:1;min-width:0}
+.ci-paste{border:0;border-radius:8px;background:rgba(255,159,10,.16);color:#FF9F0A;font:600 15px var(--font);min-height:44px;padding:0 12px;cursor:pointer;flex:none}
+.ci-pmsg{font-size:13px;color:var(--l2);min-height:0}.ci-pmsg:empty{display:none}
+@media (prefers-color-scheme: light){ :root .ci-paste{color:#c35a00;background:rgba(201,90,0,.1)} }
 @media (prefers-color-scheme: light){
   :root .ci-stage{background:radial-gradient(120% 80% at 50% 100%,#d8dbe0 0%,#eef0f3 60%,#f7f7f9 100%)}
   :root .ci-msg{color:rgba(60,60,67,.7)}:root .ci-src{color:rgba(60,60,67,.6)}
@@ -653,7 +657,7 @@ html,body{background:#f2f2f7;color:#000}
               <div class="psec">Car Pictures</div>
               <div class="pgroup">
                 <div class="kv kv-sw"><span id="ciOnL">Show Car Pictures</span><label class="sw"><input type="checkbox" role="switch" id="ciOn" aria-labelledby="ciOnL" checked><i></i></label></div>
-                <div class="kv kv-col"><label for="ciKeyV">CarImages API Key</label><input class="ci-key" id="ciKeyV" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ci_…"></div>
+                <div class="kv kv-col"><label for="ciKeyV">CarImages API Key</label><div class="ci-keyrow"><input class="ci-key" id="ciKeyV" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ci_…"><button type="button" class="ci-paste" id="ciPaste">Paste Key</button></div><span class="ci-pmsg" id="ciPMsg" role="status" aria-live="polite"></span></div>
                 <div class="kv"><span>Pictures Fetched This Month</span><b id="ciUse">0</b></div>
               </div>
               <div class="ph-note" style="text-align:left;margin:8px 4px 0">Pictures come from carimagesapi.com. Only the make, model and year are sent, never the VIN, and each picture is kept on this phone after it first loads. The free plan allows 5,000 a month and marks pictures with a watermark.</div>
@@ -1784,6 +1788,11 @@ $$("ciPaints").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; C
 $$("ci3d").onclick=ci3dOpen; $$("ci3dDone").onclick=ci3dClose;
 $$("ciSheet").addEventListener("keydown",e=>{ if(e.key==="Escape") ci3dClose(); });
 $$("ciOn").onchange=e=>{ CI.on=e.target.checked; try{ localStorage.setItem("ke.ci",CI.on?"on":"off"); }catch(x){} ciRender(); ciMini(); };
+// Paste Key: one tap fills the box from the clipboard (iOS asks to allow the paste)
+$$("ciPaste").onclick=async()=>{ const m=$$("ciPMsg"), f=$$("ciKeyV"); m.textContent="";
+  let t=""; try{ t=(await navigator.clipboard.readText()).trim(); }catch(e){ f.focus(); m.textContent="Couldn't read the clipboard here. Press and hold in the box, then Paste."; return; }
+  const k=(t.match(/ci_[A-Za-z0-9]{16,}/)||[])[0]; if(!k){ m.textContent="The clipboard doesn't hold a CarImages key. Copy it from the dashboard first."; return; }
+  f.value=k; f.dispatchEvent(new Event("change")); m.textContent="Key saved."; };
 $$("ciKeyV").onchange=e=>{ CI.key=e.target.value.trim(); try{ CI.key?localStorage.setItem("ke.ciKey",CI.key):localStorage.removeItem("ke.ciKey"); }catch(x){} CI.mv=false; ciRender(); ciMini(); };
 
 // Hooks: the decoded car, and trips remember which car they were
@@ -1797,7 +1806,7 @@ ciSettings(); ciRender();
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.24";
+const APP_VER="2.25";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();

@@ -46,7 +46,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v2.24</b><br>Document <b>v2.24.1</b></div>
+    <div class="vers">App <b>v2.25</b><br>Document <b>v2.25</b></div>
   </div>
   <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install, and follows Apple's Human Interface Guidelines in light and dark mode.</p>
   <div class="shots">
@@ -81,7 +81,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">Trips, the VIN scanner and car pictures</div></div>
-    <div class="vers">App <b>v2.24</b><br>Document <b>v2.24.1</b></div>
+    <div class="vers">App <b>v2.25</b><br>Document <b>v2.25</b></div>
   </div>
   <div class="shots" style="margin-top:14px">
     <div class="shot"><img src="shots/11-recording.png"><b>Recording a trip</b><p>Once the car moves with the Kē connected, a red bar shows distance and time, and a banner flags rapid acceleration or hard braking as it happens.</p></div>
@@ -97,7 +97,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
       <h2>How scanning works</h2>
       <p>Code 39, Code 128, Data Matrix, QR and PDF417, preferring a VIN with a valid check digit. Without a live camera, Take a Photo reads a picture instead.</p>
       <h2>Car pictures</h2>
-      <p>With a CarImages API key in Settings, the decoded car appears from four angles in seven paints, in 3D on the phone, and beside its name on Live.</p>
+      <p>Copy a CarImages key, tap Paste Key in Settings, and the decoded car appears from four angles in seven paints, in 3D on the phone, and beside its name on Live.</p>
 
     </div>
   </div>
@@ -106,12 +106,12 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page tech">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v2.24</b><br>Document <b>v2.24.1</b></div></div>
+  <div class="vers">App <b>v2.25</b><br>Document <b>v2.25</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
     <tr><th style="width:21%">Piece</th><th style="width:13%">Version</th><th>What it does</th><th style="width:22%">Loaded from</th><th style="width:15%">Licence</th></tr>
-    <tr><td>Emulator Desk and Kē</td><td>2.24</td><td>The whole app, no other libraries or web fonts; type is the system font</td><td><code>index.html</code>, <code>phone.html</code></td><td>Written for this app</td></tr>
+    <tr><td>Emulator Desk and Kē</td><td>2.25</td><td>The whole app, no other libraries or web fonts; type is the system font</td><td><code>index.html</code>, <code>phone.html</code></td><td>Written for this app</td></tr>
     <tr><td>Freematics AT commands</td><td>EMULATOR-OBDII V3</td><td><code>ATSET</code>, <code>ATGET</code>, <code>ATCLR DTC</code> and friends</td><td>Built into the emulator</td><td>Freematics</td></tr>
     <tr><td>OBD-II PIDs, VSS names</td><td>J1979, J1979-2/-3, ISO 14229, VSS 4</td><td>Each value has a VSS name (Vehicle.Speed) and a PID with its byte encoding</td><td>Hard-coded</td><td>Public standards</td></tr>
     <tr><td>MapLibre GL JS with CARTO Dark Matter and Positron</td><td>5.24.1</td><td>Draws each trip's route and events on a map that matches dark or light mode</td><td>jsDelivr (unpkg backup) when a trip opens; tiles from <code>basemaps.cartocdn.com</code></td><td>BSD-3; map data ODbL</td></tr>

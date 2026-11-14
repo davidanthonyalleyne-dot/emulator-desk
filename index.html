@@ -510,13 +510,14 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .ci-sw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--group),0 0 0 4px var(--accent)}
 .ci-key{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--label2)}
 .ci-key input{flex:1;min-width:0;font:13px var(--mono)}
+.ci-pmsg{font-size:12.5px;color:var(--label2)}.ci-pmsg:empty{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.24</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.25</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -565,7 +566,8 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
           <div class="ci" id="ciBox">
             <div class="ci-stage"><img id="ciImg" alt=""><span class="ci-msg" id="ciMsg" hidden></span><span class="ci-src">CarImages API</span></div>
             <div class="ci-ctl" id="ciCtl"><div class="ci-seg" id="ciViews" role="radiogroup" aria-label="Angle"></div><div class="ci-sw" id="ciPaints" role="radiogroup" aria-label="Paint"></div></div>
-            <label class="ci-key"><span>CarImages key</span><input class="field" id="ciKeyV" type="text" autocomplete="off" spellcheck="false" placeholder="ci_…, kept in this browser only"></label>
+            <div class="ci-key"><label for="ciKeyV">CarImages key</label><input class="field" id="ciKeyV" type="text" autocomplete="off" spellcheck="false" placeholder="ci_…, kept in this browser only"><button type="button" class="btn plain" id="ciPaste">Paste Key</button></div>
+            <span class="ci-pmsg" id="ciPMsg" role="status" aria-live="polite"></span>
           </div>
           <div class="mk" id="makes" role="group" aria-label="Load a sample VIN for a make"></div>
           <div class="row"><input class="field" id="vin" maxlength="17" value="" placeholder="Type a 17-character VIN" aria-label="VIN, 17 characters" aria-describedby="vinSrc" spellcheck="false" autocapitalize="characters"><button class="btn plain" id="setVin">Set VIN</button></div>
@@ -1860,6 +1862,10 @@ $("ciPaints").innerHTML=CI_PAINT.map(([c,l,bg])=>`<button type="button" role="ra
 $("ciViews").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.view=b.dataset.v; try{ localStorage.setItem("ke.ciView",CI.view); }catch(x){} ciShow(); };
 $("ciPaints").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; CI.color=b.dataset.c; try{ localStorage.setItem("ke.ciColor",CI.color); }catch(x){} ciShow(); };
 $("ciKeyV").value=CI.key;
+$("ciPaste").onclick=async()=>{ const m=$("ciPMsg"), f=$("ciKeyV"); m.textContent="";
+  let t=""; try{ t=(await navigator.clipboard.readText()).trim(); }catch(e){ f.focus(); m.textContent="Chrome didn't allow reading the clipboard. Click in the box and press Cmd+V."; return; }
+  const k=(t.match(/ci_[A-Za-z0-9]{16,}/)||[])[0]; if(!k){ m.textContent="The clipboard doesn't hold a CarImages key. Copy it from the dashboard first."; return; }
+  f.value=k; f.dispatchEvent(new Event("change")); m.textContent="Key saved."; };
 $("ciKeyV").onchange=e=>{ CI.key=e.target.value.trim(); try{ CI.key?localStorage.setItem("ke.ciKey",CI.key):localStorage.removeItem("ke.ciKey"); }catch(x){} ciShow(); };
 // follow the VIN box: NHTSA gives the model; until then there's no picture to ask for
 { let t=0; const follow=()=>{ clearTimeout(t); t=setTimeout(async()=>{ const v=$("vin").value.trim().toUpperCase(); if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)){ CI.car=null; return ciShow(); }
