@@ -420,6 +420,7 @@ const PIDS = [
   {pid:"0104", vss:"Vehicle.OBD.EngineLoad", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0111", vss:"Vehicle.OBD.ThrottlePosition", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0105", vss:"Vehicle.Powertrain.CombustionEngine.ECT", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"015C", vss:"Vehicle.Powertrain.CombustionEngine.EOT", name:"Oil Temp", unit:"°C", min:-40, max:150, step:1, v:96, enc:x=>[x+40], dec:b=>b[0]-40},
   {pid:"010F", vss:"Vehicle.OBD.IntakeTemp", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
   {pid:"012F", vss:"Vehicle.Powertrain.FuelSystem.RelativeLevel", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
@@ -1030,7 +1031,7 @@ if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.16";
+const APP_VER="2.17";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();

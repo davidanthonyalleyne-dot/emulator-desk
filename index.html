@@ -405,7 +405,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.16</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.17</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -627,6 +627,7 @@ const PIDS = [
   {pid:"0104", vss:"Vehicle.OBD.EngineLoad", name:"Engine Load", unit:"%", min:0, max:100, step:1, v:18, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0111", vss:"Vehicle.OBD.ThrottlePosition", name:"Throttle", unit:"%", min:0, max:100, step:1, v:12, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0105", vss:"Vehicle.Powertrain.CombustionEngine.ECT", name:"Coolant Temp", unit:"°C", min:-40, max:150, step:1, v:88, enc:x=>[x+40], dec:b=>b[0]-40},
+  {pid:"015C", vss:"Vehicle.Powertrain.CombustionEngine.EOT", name:"Oil Temp", unit:"°C", min:-40, max:150, step:1, v:96, enc:x=>[x+40], dec:b=>b[0]-40},
   {pid:"010F", vss:"Vehicle.OBD.IntakeTemp", name:"Intake Air Temp", unit:"°C", min:-40, max:100, step:1, v:24, enc:x=>[x+40], dec:b=>b[0]-40},
   {pid:"012F", vss:"Vehicle.Powertrain.FuelSystem.RelativeLevel", name:"Fuel Level", unit:"%", min:0, max:100, step:1, v:64, enc:x=>[pct(x)], dec:b=>Math.round(b[0]*100/255)},
   {pid:"0142", vss:"Vehicle.OBD.ControlModuleVoltage", name:"Battery Voltage", unit:"V", min:0, max:16, step:0.1, v:14.1, enc:x=>u16(Math.round(x*1000)), dec:b=>(b[0]*256+b[1])/1000},
@@ -634,12 +635,12 @@ const PIDS = [
   {pid:"0146", vss:"Vehicle.Exterior.AirTemperature", name:"Ambient Temp", unit:"°C", min:-40, max:50, step:1, v:6, enc:x=>[x+40], dec:b=>b[0]-40},
 ];
 const PRESETS = {
-  "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"0142":12.4,"0110":0},
-  "Idle":     {"010C":850,"010D":0,"0104":18,"0111":12,"0105":88,"0142":14.1,"0110":3.5},
-  "City":     {"010C":2100,"010D":45,"0104":42,"0111":24,"0105":90,"0142":14.2,"0110":14},
-  "Highway":  {"010C":2800,"010D":110,"0104":55,"0111":31,"0105":92,"0142":14.3,"0110":32},
-  "Hard pull":{"010C":6400,"010D":140,"0104":96,"0111":100,"0105":101,"0142":14.0,"0110":190},
-  "Overheat": {"010C":900,"010D":0,"0104":22,"0111":12,"0105":124,"0142":13.6,"0110":4},
+  "Parked":   {"010C":0,"010D":0,"0104":0,"0111":0,"0105":20,"015C":20,"0142":12.4,"0110":0},
+  "Idle":     {"010C":850,"010D":0,"0104":18,"0111":12,"0105":88,"015C":95,"0142":14.1,"0110":3.5},
+  "City":     {"010C":2100,"010D":45,"0104":42,"0111":24,"0105":90,"015C":98,"0142":14.2,"0110":14},
+  "Highway":  {"010C":2800,"010D":110,"0104":55,"0111":31,"0105":92,"015C":104,"0142":14.3,"0110":32},
+  "Hard pull":{"010C":6400,"010D":140,"0104":96,"0111":100,"0105":101,"015C":118,"0142":14.0,"0110":190},
+  "Overheat": {"010C":900,"010D":0,"0104":22,"0111":12,"0105":124,"015C":136,"0142":13.6,"0110":4},
 };
 function u16(n){n=Math.max(0,Math.min(65535,n));return [n>>8, n&255]}
 function pct(x){return Math.round(Math.max(0,Math.min(100,x))*255/100)}
