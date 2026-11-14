@@ -40,6 +40,8 @@ require('child_process').execFileSync('python3', ['make-label.py'], { cwd: path.
   const c = await chromium.launch({ args: ['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream','--use-file-for-fake-video-capture=' + path.join(__dirname, 'fixtures', 'label.y4m')] });
   const q = await c.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   q.on('pageerror', e => errs.push(e.message));
+  // Car pictures need a CarImages key; pass it as CI_KEY when running this script, it is never stored in the repo (v2.24)
+  if (process.env.CI_KEY) await q.addInitScript(k => { try { localStorage.setItem('ke.ciKey', k); } catch (e) {} }, process.env.CI_KEY);
   await q.emulateMedia({ colorScheme: 'dark' });
   await q.goto('http://localhost:5791/phone.html?demo'); await q.waitForTimeout(400);
   await q.evaluate(() => { phTab('paneVehicle'); window.__found = scanFound; window.scanFound = v => { window.__v = v; }; });
@@ -54,6 +56,7 @@ require('child_process').execFileSync('python3', ['make-label.py'], { cwd: path.
   const d = await chromium.launch({ args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
   const r = await d.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   r.on('pageerror', e => errs.push(e.message));
+  if (process.env.CI_KEY) await r.addInitScript(k => { try { localStorage.setItem('ke.ciKey', k); } catch (e) {} }, process.env.CI_KEY);
   await r.emulateMedia({ colorScheme: 'dark' });
   await r.goto('http://localhost:5791/phone.html?demo'); await r.waitForTimeout(400);
   await r.evaluate(() => document.getElementById('liveConnect').click());
