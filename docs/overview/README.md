@@ -1,7 +1,7 @@
 # Emulator Desk overview
 
 Regenerate: `node shoot.js` (demo-mode screenshots), then `node pdf.js` (prints overview.pdf).
-Current copy is also kept in Google Drive > App Overviews as "Emulator Desk Overview - App 2.25 - Doc 2.25.pdf".
+Current copy is also kept in Google Drive > App Overviews as "Emulator Desk Overview - App 2.27 - Doc 2.27.pdf".
 
 The scanner screenshot uses a fake camera: `shoot.js` runs `fixtures/make-label.py` (needs Python with Pillow, and ffmpeg) to build a sample VIN label as `label.y4m`.
 
@@ -9,4 +9,3 @@ Pretend cars: `?demo` classic OBD-II, `?demo=uds` a 2027 engine car on SAE J1979
 
 Trips screenshots run with SwiftShader WebGL so MapLibre can draw, and need network for the map library and CARTO tiles. Demo trips are stored under `ke.trips.demo`, separate from real trips.
 
-Car pictures in the screenshots need a CarImages key: run `CI_KEY=ci_... node shoot.js`. Without it the Vehicle shot shows the "add your key" note.

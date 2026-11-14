@@ -483,10 +483,6 @@ html,body{background:#f2f2f7;color:#000}
 .ci-sheet p{margin:0;font-size:13px;line-height:1.45;color:var(--l2)}
 .ci-key{width:100%;box-sizing:border-box;border:0;border-radius:8px;background:rgba(118,118,128,.24);color:inherit;font:15px var(--mono);padding:10px;margin-top:6px}
 .kv.kv-col{flex-direction:column;align-items:stretch}
-.ci-keyrow{display:flex;gap:8px;align-items:center;margin-top:6px}.ci-keyrow .ci-key{margin-top:0;flex:1;min-width:0}
-.ci-paste{border:0;border-radius:8px;background:rgba(255,159,10,.16);color:#FF9F0A;font:600 15px var(--font);min-height:44px;padding:0 12px;cursor:pointer;flex:none}
-.ci-pmsg{font-size:13px;color:var(--l2);min-height:0}.ci-pmsg:empty{display:none}
-@media (prefers-color-scheme: light){ :root .ci-paste{color:#c35a00;background:rgba(201,90,0,.1)} }
 @media (prefers-color-scheme: light){
   :root .ci-stage{background:radial-gradient(120% 80% at 50% 100%,#d8dbe0 0%,#eef0f3 60%,#f7f7f9 100%)}
   :root .ci-msg{color:rgba(60,60,67,.7)}:root .ci-src{color:rgba(60,60,67,.6)}
@@ -657,7 +653,6 @@ html,body{background:#f2f2f7;color:#000}
               <div class="psec">Car Pictures</div>
               <div class="pgroup">
                 <div class="kv kv-sw"><span id="ciOnL">Show Car Pictures</span><label class="sw"><input type="checkbox" role="switch" id="ciOn" aria-labelledby="ciOnL" checked><i></i></label></div>
-                <div class="kv kv-col"><label for="ciKeyV">CarImages API Key</label><div class="ci-keyrow"><input class="ci-key" id="ciKeyV" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ci_…"><button type="button" class="ci-paste" id="ciPaste">Paste Key</button></div><span class="ci-pmsg" id="ciPMsg" role="status" aria-live="polite"></span></div>
                 <div class="kv"><span>Pictures Fetched This Month</span><b id="ciUse">0</b></div>
               </div>
               <div class="ph-note" style="text-align:left;margin:8px 4px 0">Pictures come from carimagesapi.com. Only the make, model and year are sent, never the VIN, and each picture is kept on this phone after it first loads. The free plan allows 5,000 a month and marks pictures with a watermark.</div>
@@ -1718,7 +1713,9 @@ trRender(); trBar();
 // ---------- Car pictures from CarImages API (carimagesapi.com) ----------
 // Studio pictures by make, model and year. The key is typed into Settings on each phone and never lives in the repo.
 // Only make, model and year are sent, never the VIN. Pictures are kept in Cache Storage so each one is fetched once.
-const CI={on:localStorage.getItem("ke.ci")!=="off", key:localStorage.getItem("ke.ciKey")||"", view:localStorage.getItem("ke.ciView")||"", color:localStorage.getItem("ke.ciColor")||"", car:null, mv:false};
+// The CarImages key is a publishable key, meant to sit in a web page like their own loader does (data-api-key).
+const CI_KEY="ci_8d82652ec311a7fce9ed792fbc59d3fca76f10daa00a2fbfd079793d";
+const CI={on:localStorage.getItem("ke.ci")!=="off", key:CI_KEY, view:localStorage.getItem("ke.ciView")||"", color:localStorage.getItem("ke.ciColor")||"", car:null, mv:false};
 const CI_VIEWS=[["","Front ¾"],["side","Side"],["rear34","Rear ¾"],["rear","Rear"]];
 const CI_PAINT=[["","Original paint","conic-gradient(#d9a441 0 25%,#c9ccd1 0 50%,#2f5fa8 0 75%,#b3262b 0)"],["silver","Silver","#C9CCD1"],["black","Black","#111"],["grey","Grey","#6b6f75"],["blue","Blue","#2f5fa8"],["red","Red","#b3262b"],["white","White","#f2f2f2"]];
 const ciReady=()=>CI.on&&!!CI.key&&!!(CI.car&&CI.car.make&&CI.car.model);
@@ -1755,10 +1752,10 @@ function ciRender(){
   const box=$$("ciBox"), img=$$("ciImg"), msg=$$("ciMsg"), car=CI.car;
   box.hidden=!CI.on||!car||!car.make; if(box.hidden) return;
   const ok=ciReady(); ["ciViews","ciPaintRow","ci3d"].forEach(id=>$$(id).hidden=!ok); box.classList.toggle("nokey",!CI.key);
-  if(!CI.key){ img.removeAttribute("src"); img.classList.remove("on"); msg.hidden=false; msg.textContent="Add your CarImages API key in Settings to see a picture of this car."; return; }
+  if(!CI.key){ img.removeAttribute("src"); img.classList.remove("on"); msg.hidden=false; msg.textContent="Car pictures aren't set up."; return; }
   if(!car.model){ img.removeAttribute("src"); msg.hidden=false; msg.textContent="Looking up the model…"; return; }
   msg.hidden=true; img.alt=`${car.year} ${car.make} ${car.model}, ${(CI_VIEWS.find(v=>v[0]===CI.view)||CI_VIEWS[0])[1].replace("¾","three-quarter")} view`;
-  ciLoad(img,ciUrl(car,CI.view,800,CI.color),why=>{ msg.hidden=false; msg.textContent= why==="key"?"CarImages didn't accept the key in Settings.":why==="quota"?"This month's CarImages pictures are used up.":"No picture for this car yet."; });
+  ciLoad(img,ciUrl(car,CI.view,800,CI.color),why=>{ msg.hidden=false; msg.textContent= why==="key"?"CarImages didn't accept the app's key.":why==="quota"?"This month's CarImages pictures are used up.":"No picture for this car yet."; });
   $$("ciViews").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.v===CI.view)));
   $$("ciPaints").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.c===CI.color)));
   $$("ci3dT").textContent=`${car.year} ${car.make} ${car.model}`.trim();
@@ -1769,7 +1766,7 @@ function ciMini(){
   if(!m){ m=document.createElement("img"); m.className="ci-mini"; m.alt=""; pc.prepend(m); }
   ciLoad(m,ciUrl(CI.car,"side",240,CI.color),()=>m.remove());
 }
-function ciSettings(){ const s=$$("ciKeyV"); if(!s) return; $$("ciOn").checked=CI.on; s.value=CI.key; $$("ciUse").textContent=ciCount().n.toLocaleString("en-CA"); }
+function ciSettings(){ if(!$$("ciOn")) return; $$("ciOn").checked=CI.on; $$("ciUse").textContent=ciCount().n.toLocaleString("en-CA"); }
 // 3D: the CarImages loader signs the model URL and brings in Google's model-viewer (about 1.5 MB per car, only when opened)
 function ci3dOpen(){
   if(!ciReady()) return; const sh=$$("ciSheet"), st=$$("ciMv"); sh.hidden=false; $$("ci3dDone").focus();
@@ -1789,12 +1786,6 @@ $$("ciPaints").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; C
 $$("ci3d").onclick=ci3dOpen; $$("ci3dDone").onclick=ci3dClose;
 $$("ciSheet").addEventListener("keydown",e=>{ if(e.key==="Escape") ci3dClose(); });
 $$("ciOn").onchange=e=>{ CI.on=e.target.checked; try{ localStorage.setItem("ke.ci",CI.on?"on":"off"); }catch(x){} ciRender(); ciMini(); };
-// Paste Key: one tap fills the box from the clipboard (iOS asks to allow the paste)
-$$("ciPaste").onclick=async()=>{ const m=$$("ciPMsg"), f=$$("ciKeyV"); m.textContent="";
-  let t=""; try{ t=(await navigator.clipboard.readText()).trim(); }catch(e){ f.focus(); m.textContent="Couldn't read the clipboard here. Press and hold in the box, then Paste."; return; }
-  const k=(t.match(/ci_[A-Za-z0-9]{16,}/)||[])[0]; if(!k){ m.textContent="The clipboard doesn't hold a CarImages key. Copy it from the dashboard first."; return; }
-  f.value=k; f.dispatchEvent(new Event("change")); m.textContent="Key saved."; };
-$$("ciKeyV").onchange=e=>{ CI.key=e.target.value.trim(); try{ CI.key?localStorage.setItem("ke.ciKey",CI.key):localStorage.removeItem("ke.ciKey"); }catch(x){} CI.mv=false; ciRender(); ciMini(); };
 
 // Hooks: the decoded car, and trips remember which car they were
 { const _pc=phCarShow; phCarShow=function(v,L,x){ const r=_pc(v,L,x); CI.car=ciCarFrom(v,L,x); ciRender(); ciMini(); return r; }; }
@@ -1807,7 +1798,7 @@ ciSettings(); ciRender();
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.26";
+const APP_VER="2.27";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();
