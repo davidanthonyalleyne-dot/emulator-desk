@@ -46,7 +46,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
   <div class="top">
     <div class="logo">OB</div>
     <div><h1>Emulator Desk</h1><div class="tag">A Mac control panel for the Freematics OBD-II Emulator MK2</div></div>
-    <div class="vers">App <b>v2.22</b><br>Document <b>v2.22</b></div>
+    <div class="vers">App <b>v2.23</b><br>Document <b>v2.23</b></div>
   </div>
   <p class="intro">Emulator Desk drives a Freematics MK2 emulator from Google Chrome over its USB cable, so a Mac can do what the Windows-only Freematics GUI does. You set live engine values, the VIN, the bus protocol and trouble codes, and any OBD-II dongle or scan tool plugged into the emulator reads them as if it were in a real car. It runs from a web page, with nothing to install, and follows Apple's Human Interface Guidelines in light and dark mode.</p>
   <div class="shots">
@@ -63,7 +63,7 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
     <div class="cols">
     <div>
       <h2>On your phone</h2>
-      <p>phone.html in Bluefy calls the dongle the Kē, shows Live as Widgets or Focus (twin dials when held sideways), a blue dot when connected, reconnects if it drops, keeps the screen on and can scan a VIN barcode.</p>
+      <p>phone.html in Bluefy calls the dongle the Kē, shows Live as Widgets or Focus (twin dials when held sideways), records each drive to Trips, reconnects if it drops, keeps the screen on and can scan a VIN barcode.</p>
       <h2>Dongle over Bluetooth</h2>
       <p>Any ELM327 dongle shows as the Kē. It reads classic OBD-II, or OBD on UDS for 2027 cars and EVs, where it adds battery charge and module names.</p>
     </div>
@@ -80,21 +80,24 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 <section class="page">
   <div class="top">
     <div class="logo">OB</div>
-    <div><h1>Emulator Desk</h1><div class="tag">Appearance, car logos and the VIN scanner</div></div>
-    <div class="vers">App <b>v2.22</b><br>Document <b>v2.22</b></div>
+    <div><h1>Emulator Desk</h1><div class="tag">Trips, the VIN scanner and light mode</div></div>
+    <div class="vers">App <b>v2.23</b><br>Document <b>v2.23</b></div>
   </div>
-  <div class="wide"><img src="shots/10-light.png" style="aspect-ratio:1200/600;object-fit:cover;object-position:top"></div>
-  <p style="margin-top:8px;color:var(--muted);font-size:12px"><b style="color:var(--text)">Light mode.</b> The switch beside Engine Sound picks Auto, Light or Dark, and the choice is remembered. Here a sample Porsche VIN is loaded, so the Vehicle panel shows the car and its logo.</p>
+  <div class="shots" style="margin-top:14px">
+    <div class="shot"><img src="shots/11-recording.png"><b>Recording a trip</b><p>Once the car moves with the Kē connected, a red bar shows distance and time, and a banner flags rapid acceleration or hard braking as it happens.</p></div>
+    <div class="shot"><img src="shots/12-trip.png"><b>Trip on a map</b><p>When the trip ends it opens on a map with the route and each event marked, then the stats, a speed chart and the events.</p></div>
+    <div class="shot"><img src="shots/13-trips.png"><b>Trips</b><p>Every trip with its route, the week's totals and a Smooth or events badge. The last 50 stay on the phone.</p></div>
+  </div>
   <div class="shots" style="margin-top:12px">
-    <div class="shot"><img src="shots/8-scan.png"><b>Scan VIN</b><p>The barcode button beside Decode opens the camera and reads the door-jamb or windshield barcode on its own.</p></div>
-    <div class="shot"><img src="shots/9-vehicle.png"><b>Decoded car</b><p>Decoded straight away: logo, model, year and plant, then engine, body and drivetrain from NHTSA.</p></div>
+    <div class="shot"><img src="shots/8-scan.png" style="aspect-ratio:390/470;object-position:center"><b>Scan VIN</b><p>The barcode button beside Decode opens the camera and reads the door-jamb or windshield barcode on its own.</p></div>
+    <div class="shot"><img src="shots/9-vehicle.png" style="aspect-ratio:390/470"><b>Decoded car</b><p>Decoded straight away: logo, model, year and plant, then engine, body and drivetrain from NHTSA.</p></div>
     <div>
-      <h2 style="margin-top:4px">How scanning works</h2>
-      <p>It reads Code 39, Code 128, Data Matrix, QR and PDF417, drops the leading "I" that door-jamb labels add, and prefers a VIN whose check digit is valid. A barcode that isn't a VIN gets a hint instead of a wrong result.</p>
-      <h2>No live camera?</h2>
-      <p>If the browser can't show the camera, or access is off, Take a Photo opens the camera app or photo library and the photo is read instead.</p>
-      <h2>Car logos</h2>
-      <p>Logos always sit on a white tile so they read in both modes. If one can't load, a plain car symbol shows.</p>
+      <h2 style="margin-top:4px">How trips are measured</h2>
+      <p>Events come from the car's own speed: rising faster than 0.35 g is rapid acceleration, slowing faster than 0.4 g is hard braking. GPS draws the route. A trip ends five minutes after the engine stops, or with End.</p>
+      <h2>How scanning works</h2>
+      <p>Code 39, Code 128, Data Matrix, QR and PDF417, preferring a VIN with a valid check digit. Without a live camera, Take a Photo reads a picture instead.</p>
+      <h2>Light mode</h2>
+      <p>Both apps follow the system, and Emulator Desk adds an Auto, Light or Dark switch.</p>
     </div>
   </div>
   <div class="foot"><span>Emulator Desk</span><span>Updated November 14, 2026 · 2</span></div>
@@ -102,40 +105,41 @@ code{font-family:var(--mono);font-size:11px;color:var(--text)}
 
 <section class="page tech">
   <div class="top"><div class="logo">OB</div><div><h1>Technical setup</h1><div class="tag">Sources, integrations and what runs where</div></div>
-  <div class="vers">App <b>v2.22</b><br>Document <b>v2.22</b></div></div>
+  <div class="vers">App <b>v2.23</b><br>Document <b>v2.23</b></div></div>
 
   <h2>Sources and libraries</h2>
   <table>
-    <tr><th>Piece</th><th>Version</th><th>What it does</th><th>Loaded from</th><th>Licence</th></tr>
-    <tr><td>Emulator Desk</td><td>2.22</td><td>The whole app: UI, command queue, PID encoding, presets, drive loop, engine sound, dongle check, VIN decoder</td><td><code>index.html</code> and <code>phone.html</code> on GitHub Pages</td><td>Written for this app</td></tr>
-    <tr><td>Freematics AT command set</td><td>EMULATOR-OBDII V3 (tested)</td><td>Commands the app sends: <code>ATE0</code>, <code>ATZ</code>, <code>ATSET</code>, <code>ATGET</code> (PIDs), <code>ATCLR DTC</code></td><td>Built into the emulator</td><td>Freematics</td></tr>
-    <tr><td>OBD-II PIDs and VSS names</td><td>SAE J1979, J1979-2/-3, ISO 14229; VSS 4</td><td>Each value is tracked by its VSS name (e.g. Vehicle.Speed) and fetched by its PID, with byte encodings such as RPM × 4</td><td>Hard-coded in the app</td><td>Public standard</td></tr>
-    <tr><td>barcode-detector (with zxing-wasm)</td><td>3.2.3 (zxing-wasm 3.1.6)</td><td>Reads VIN barcodes where the browser has no built-in barcode reader (Safari, Bluefy)</td><td>jsDelivr CDN, loaded only when you first tap Scan</td><td>MIT; ZXing C++ Apache-2.0</td></tr>
+    <tr><th style="width:21%">Piece</th><th style="width:13%">Version</th><th>What it does</th><th style="width:22%">Loaded from</th><th style="width:15%">Licence</th></tr>
+    <tr><td>Emulator Desk and Kē</td><td>2.23</td><td>The whole app, no other libraries or web fonts; type is the system font</td><td><code>index.html</code>, <code>phone.html</code></td><td>Written for this app</td></tr>
+    <tr><td>Freematics AT commands</td><td>EMULATOR-OBDII V3</td><td><code>ATSET</code>, <code>ATGET</code>, <code>ATCLR DTC</code> and friends</td><td>Built into the emulator</td><td>Freematics</td></tr>
+    <tr><td>OBD-II PIDs, VSS names</td><td>J1979, J1979-2/-3, ISO 14229, VSS 4</td><td>Each value has a VSS name (Vehicle.Speed) and a PID with its byte encoding</td><td>Hard-coded</td><td>Public standards</td></tr>
+    <tr><td>MapLibre GL JS with CARTO Dark Matter and Positron</td><td>5.24.1</td><td>Draws each trip's route and events on a map that matches dark or light mode</td><td>jsDelivr (unpkg backup) when a trip opens; tiles from <code>basemaps.cartocdn.com</code></td><td>BSD-3; map data ODbL</td></tr>
+    <tr><td>barcode-detector, zxing-wasm</td><td>3.2.3, 3.1.6</td><td>Reads VIN barcodes where the browser has no reader of its own</td><td>jsDelivr, on first Scan</td><td>MIT; Apache-2.0</td></tr>
   </table>
-  <p style="margin-top:6px;color:var(--muted);font-size:11.5px">No other libraries or web fonts; type is the system font.</p>
 
   <h2>Integrations</h2>
   <table>
-    <tr><th style="width:19%">Integration</th><th style="width:20%">Used for</th><th>Details</th></tr>
-    <tr><td>Web Serial API</td><td>Talking to the emulator</td><td><code>navigator.serial.requestPort()</code> filtered to CP2102 and CH340 USB chips, 38400 baud, 8N1. You pick the port in Chrome's chooser.</td></tr>
-    <tr><td>Freematics OBD-II Emulator MK2</td><td>The device controlled</td><td>USB serial through a CP2102 or CH340 chip, drivers built into macOS. Needs its 12V adapter.</td></tr>
-    <tr><td>Web Bluetooth</td><td>Reading the dongle</td><td><code>navigator.bluetooth.requestDevice()</code>, then ELM327 commands: Mode 01, or <code>22F810</code> (SAE J1979-3), <code>22F4xx</code>, <code>22F802</code> VIN and <code>1942330802</code> codes.</td></tr>
-    <tr><td>NHTSA vPIC</td><td>VIN details</td><td><code>vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{VIN}?format=json</code>, no key. Sends only the VIN. Maker, country, year and check digit decode offline.</td></tr>
-    <tr><td>Camera and BarcodeDetector</td><td>Scanning a VIN barcode</td><td>Rear camera frames to <code>BarcodeDetector</code> or zxing-wasm every 180 ms, photo picker as fallback. Images never leave the phone.</td></tr>
-    <tr><td>Asetrix logos API</td><td>Car maker logos</td><td><code>api.asetrix.online/api/v1/logos/{make}</code>, free, no key. Sends only the make name, such as "porsche"; returns a PNG.</td></tr>
-    <tr><td>Web Audio API</td><td>Engine sound</td><td>An AudioWorklet flat-six model with exhaust resonators, muffler filter and compressor. Starts only when you flip the switch.</td></tr>
-    <tr><td>Diagnostics</td><td>Problem reports</td><td>Errors and dead taps, no readings, to <code>diag</code> in Med Med's Firestore; copied hourly to <code>med-med/data/diag/</code>.</td></tr>
-    <tr><td>GitHub Pages</td><td>Hosting</td><td><code>davidanthonyalleyne-dot.github.io/emulator-desk</code>, served from the <code>main</code> branch of the public <code>emulator-desk</code> repo. Static files only.</td></tr>
+    <tr><th style="width:19%">Integration</th><th style="width:15%">Used for</th><th>Details</th></tr>
+    <tr><td>Web Serial API</td><td>The emulator</td><td>CP2102 or CH340 USB chip, 38400 baud 8N1, picked in Chrome. The MK2 needs 12V.</td></tr>
+    <tr><td>Web Bluetooth</td><td>The Kē dongle</td><td>ELM327 commands: Mode 01, or <code>22F810</code>, <code>22F4xx</code>, <code>22F802</code> and <code>1942330802</code> on UDS cars.</td></tr>
+    <tr><td>Geolocation API</td><td>Trip routes</td><td><code>watchPosition</code> at high accuracy while the Kē is connected and Record Trips is on. Positions stay on the phone.</td></tr>
+    <tr><td>Photon (komoot)</td><td>Trip names</td><td><code>photon.komoot.io/reverse</code>, no key. Sends a trip's start and end point once to name it.</td></tr>
+    <tr><td>NHTSA vPIC</td><td>VIN details</td><td><code>vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{VIN}</code>, no key, sends only the VIN.</td></tr>
+    <tr><td>Asetrix logos API</td><td>Maker logos</td><td><code>api.asetrix.online/api/v1/logos/{make}</code>, no key, sends only the make name.</td></tr>
+    <tr><td>Camera, BarcodeDetector</td><td>VIN barcodes</td><td>Rear camera frames every 180 ms, or a photo. Images never leave the phone.</td></tr>
+    <tr><td>Web Audio API</td><td>Engine sound</td><td>AudioWorklet flat-six model, only after you flip the switch.</td></tr>
+    <tr><td>Diagnostics</td><td>Problem reports</td><td>Errors and dead taps, no readings, to <code>diag</code> in Med Med's Firestore, copied hourly to <code>med-med/data/diag/</code>.</td></tr>
+    <tr><td>GitHub Pages</td><td>Hosting</td><td><code>davidanthonyalleyne-dot.github.io/emulator-desk</code> from <code>main</code>. A GitHub Action sends a phone notification through ntfy after each build.</td></tr>
   </table>
 
   <h2>What runs where</h2>
   <div class="cols">
     <div>
-      <p><b>On the device:</b> everything. The page runs in Chrome or Bluefy and sends one emulator command at a time.</p>
-      <p><b>Network:</b> the page itself, NHTSA per new VIN, a logo per make, the barcode reader on first scan.</p>
+      <p><b>On the device:</b> everything. The page runs in Chrome or Bluefy and sends one command at a time.</p>
+      <p><b>Network:</b> the page, NHTSA per new VIN, a logo per make, the barcode reader on first scan, the map and tiles when a trip opens, Photon once per trip.</p>
     </div>
     <div>
-      <p><b>Data kept:</b> two browser settings, <code>edTheme</code> (appearance) and <code>ed.lastDongle</code> (phone). Values, VIN and codes stay in the page and on the emulator.</p>
+      <p><b>Data kept:</b> browser storage only: <code>edTheme</code>, <code>ed.lastDongle</code>, <code>ke.layout</code>, <code>ke.rec</code>, <code>ke.trips</code> (last 50) and <code>ke.tripLive</code> (a trip in progress).</p>
       <p><b>Demo mode:</b> add <code>?demo</code> to try it without hardware. Screenshots here use it.</p>
     </div>
   </div>

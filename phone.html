@@ -355,6 +355,99 @@ html,body{background:#f2f2f7;color:#000}
   #paneLive .lv-t{height:calc(100vh - 24px - env(safe-area-inset-top));padding:0;gap:10px}
   #paneLive{min-height:0}
 }
+/* ---------- Trips: GPS drive recording ---------- */
+.tabbar{grid-template-columns:repeat(4,1fr)}
+.rec-bar{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 6px 0 14px;border:0;border-radius:12px;background:rgba(255,69,58,.16);color:inherit;font:inherit;text-align:left;width:100%;flex:none}
+.rec-bar[hidden],.ev-toast[hidden],#paneTrips [hidden]{display:none!important}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#FF453A;box-shadow:0 0 0 4px rgba(255,69,58,.25);flex:none}
+@media (prefers-reduced-motion:no-preference){.rec-dot{animation:recp 1.2s ease-in-out infinite alternate}@keyframes recp{to{opacity:.4}}}
+.rec-t{flex:1;font-size:15px;font-weight:600;white-space:nowrap}
+.rec-v{font-size:15px;font-variant-numeric:tabular-nums;color:var(--l2);white-space:nowrap}
+.rec-gps{font-size:12px;font-weight:600;color:var(--l2);min-width:30px;text-align:center}.rec-gps.ok{color:#30D158}
+.rec-end{border:0;background:none;color:#FF6961;font:600 15px var(--font);min-height:44px;min-width:44px;padding:0 8px;cursor:pointer}
+#paneLive.rec .verdict:not(.no){display:none}
+.ev-toast{position:absolute;left:16px;right:16px;top:calc(env(safe-area-inset-top) + 58px);z-index:30;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;background:#FF453A;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.ev-toast.acc{background:#FF9F0A;color:#000}.ev-toast.info{background:#2C2C2E;color:#fff}
+.ev-toast svg{width:20px;height:20px;flex:none}.ev-toast span{flex:1}.ev-toast b{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){.ev-toast{animation:evin .25s ease-out}@keyframes evin{from{transform:translateY(-12px);opacity:0}}}
+@media (orientation: landscape) and (max-height: 520px){#paneLive .rec-bar{display:none!important}.ev-toast{left:25%;right:25%;top:12px}}
+.tr-week{background:var(--g);border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.tr-week>span{font-size:13px;font-weight:600;color:var(--l2)}
+.tr-wk{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tr-wk div{display:flex;flex-direction:column}.tr-wk b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}.tr-wk span{font-size:12px;color:var(--l2)}
+.tr-wk .hot{color:#FF9F0A}
+.tr-rows{padding:0 12px}
+.tr-row{display:flex;align-items:center;gap:12px;min-height:76px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:0;cursor:pointer;position:relative}
+.tr-row + .tr-row::before{content:"";position:absolute;top:0;left:68px;right:0;height:1px;background:#38383a;transform:scaleY(.5)}
+.tr-thumb{width:56px;height:56px;border-radius:10px;background:#16181C;flex:none;overflow:hidden}
+.tr-thumb svg{display:block;width:56px;height:56px}
+.tr-mid{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tr-mid b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-mid span{font-size:13px;color:var(--l2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-end{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.tr-badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(255,159,10,.18);color:#FF9F0A;white-space:nowrap}
+.tr-badge.ok{background:rgba(48,209,88,.16);color:#30D158}
+.tr-chev{width:14px;height:14px;color:#636366}
+.tr-empty{padding:18px 4px;text-align:center;font-size:14px;color:var(--l2);line-height:1.45}
+.tr-top{display:flex;justify-content:space-between;align-items:center;margin:2px -6px 0}
+.tr-top button{border:0;background:none;color:#FF9F0A;font:17px var(--font);min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0 6px}
+.tr-top svg{width:22px;height:22px}
+.tr-h{margin:2px 4px 2px;font-size:26px;font-weight:700;letter-spacing:-.3px;line-height:1.15}
+.tr-sub{margin:0 4px 12px;font-size:14px;color:var(--l2)}
+.tr-map{position:relative;height:min(300px,40vh);border-radius:18px;overflow:hidden;background:#16181C}
+.tr-map svg.tr-fb{position:absolute;inset:0;width:100%;height:100%}
+.tr-map .tr-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;font-size:14px;color:rgba(235,235,245,.6)}
+.tr-attr{position:absolute;right:8px;bottom:8px;z-index:2;font-size:10px;line-height:1;padding:4px 7px;border-radius:6px;background:rgba(0,0,0,.55);color:rgba(235,235,245,.75)}.tr-attr a{color:inherit;text-decoration:none}
+.tr-mk{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:2px solid #000;background:#FF453A;color:#fff}
+.tr-mk.acc{background:#FF9F0A;color:#000}.tr-mk svg{width:14px;height:14px}
+.tr-pin{width:16px;height:16px;border-radius:50%;border:3px solid #fff;background:#30D158;box-shadow:0 1px 4px rgba(0,0,0,.4)}.tr-pin.end{background:#F5F5F7;border-color:#000}
+.tr-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.tr-stat{background:var(--g);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tr-stat span{font-size:12px;color:var(--l2)}
+.tr-stat b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-stat b small{font-size:12px;font-weight:400;color:var(--l2)}
+.tr-stat b.hot{color:#FF9F0A}
+.tr-chart{padding:12px}
+.tr-bars{display:flex;align-items:flex-end;gap:2px;height:76px}
+.tr-bars i{flex:1;border-radius:2px;background:#3A6EA5;min-height:3px}
+.tr-bars i.acc{background:#FF9F0A}.tr-bars i.brk{background:#FF453A}
+.tr-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--l2);margin-top:6px;font-variant-numeric:tabular-nums}
+.tr-evs{padding:0 14px}
+.tr-ev{display:flex;gap:12px;align-items:center;min-height:62px;position:relative}
+.tr-ev + .tr-ev::before{content:"";position:absolute;top:0;left:44px;right:0;height:1px;background:#38383a;transform:scaleY(.5)}
+.tr-ev .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;background:#FF453A;color:#fff}
+.tr-ev .ic.acc{background:#FF9F0A;color:#000}.tr-ev .ic svg{width:16px;height:16px}
+.tr-ev .m{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
+.tr-ev .m b{font-size:16px;font-weight:600}.tr-ev .m span{font-size:13px;color:var(--l2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-ev .r{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.tr-ev .r b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}.tr-ev .r span{font-size:12px;color:var(--l2)}
+.tr-ev.none{justify-content:center;font-size:14px;color:#30D158;min-height:52px}
+.tr-del{width:100%;margin:18px 0 6px;min-height:50px;border-radius:14px;border:0;background:var(--g);color:#FF453A;font:600 17px var(--font);cursor:pointer}
+#paneTrips .ph-note{text-align:left;margin:8px 4px 0}
+.sw{position:relative;width:51px;height:31px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:16px;background:#39393d;transition:background .2s}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked + i{background:#30D158}.sw input:checked + i::after{transform:translateX(20px)}
+.sw input:focus-visible + i{outline:3px solid #0a84ff;outline-offset:2px}
+.kv.kv-sw{align-items:center;padding-top:7px;padding-bottom:7px}
+@media (prefers-color-scheme: light){
+  :root .rec-bar{background:rgba(215,0,21,.09)}
+  :root .rec-gps.ok{color:#248a3d}
+  :root .rec-end{color:#d70015}
+  :root .tr-thumb{background:#e9e9ee}
+  :root .tr-map{background:#e5e5ea}
+  :root .tr-map .tr-msg{color:rgba(60,60,67,.66)}
+  :root .tr-attr{background:rgba(255,255,255,.8);color:rgba(60,60,67,.8)}
+  :root .tr-row + .tr-row::before,:root .tr-ev + .tr-ev::before{background:#c6c6c8}
+  :root .tr-badge{background:rgba(201,52,0,.1);color:#c35a00}
+  :root .tr-badge.ok{background:rgba(36,138,61,.12);color:#248a3d}
+  :root .tr-wk .hot,:root .tr-stat b.hot{color:#c35a00}
+  :root .tr-top button{color:#c35a00}
+  :root .tr-ev.none{color:#248a3d}
+  :root .sw i{background:#e9e9ea}
+  :root .ev-toast.info{background:#3a3a3c}
+}
 </style>
 </head>
 <body>
@@ -363,6 +456,11 @@ html,body{background:#f2f2f7;color:#000}
             <div class="pane" id="paneLive" role="tabpanel" aria-labelledby="tabLive">
               <div class="app-h"><div class="app-t">Live</div><button class="kdot" id="liveConnect" aria-label="Kē not connected. Tap to connect." title="Kē not connected. Tap to connect."><i></i></button></div>
               <div class="pgroup phcar" id="phCar" hidden role="group" aria-label="Connected car"></div>
+              <div class="rec-bar" id="recBar" hidden role="group" aria-label="Trip recording">
+                <span class="rec-dot" aria-hidden="true"></span><span class="rec-t">Recording Trip</span>
+                <span class="rec-v" id="recV">0.0 km · 0:00</span><span class="rec-gps" id="recGps">GPS</span>
+                <button class="rec-end" id="recEnd" type="button" aria-label="End trip now">End</button>
+              </div>
               <div class="verdict" id="btVerdict">Connect the Kē to see what it reads</div>
               <div id="lvLegacy" hidden>
               <div class="gauge">
@@ -424,6 +522,30 @@ html,body{background:#f2f2f7;color:#000}
               </div>
             </div>
 
+            <div class="pane" id="paneTrips" role="tabpanel" aria-labelledby="tabTrips" hidden>
+              <div id="trList">
+                <div class="app-h"><div class="app-t">Trips</div></div>
+                <div class="tr-week" id="trWeek"><span>This Week</span><div class="tr-wk" id="trWk"></div></div>
+                <div class="pgroup tr-rows" id="trRows"></div>
+                <div class="ph-note">Trips stay on this phone. A trip starts when the car moves with the Kē connected and ends five minutes after the engine stops. Keep Bluefy open with the screen on while you drive.</div>
+              </div>
+              <div id="trDetail" hidden>
+                <div class="tr-top">
+                  <button id="trBack" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Trips</button>
+                  <button id="trShare" type="button" aria-label="Share trip"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button>
+                </div>
+                <h2 class="tr-h" id="trTitle"></h2>
+                <div class="tr-sub" id="trSub"></div>
+                <div class="tr-map" id="trMap" role="img" aria-label="Route map"></div>
+                <div class="tr-stats" id="trStats"></div>
+                <div class="psec"><span>Speed</span><span>km/h over the drive</span></div>
+                <div class="pgroup tr-chart" role="img" id="trChart"><div class="tr-bars" id="trBars"></div><div class="tr-axis" id="trAxis"></div></div>
+                <div class="psec"><span>Driving Events</span><span id="trEvN"></span></div>
+                <div class="pgroup tr-evs" id="trEvs"></div>
+                <div class="ph-note">Rapid acceleration is speed rising faster than 0.35 g, about 12 km/h each second. Hard braking is slowing faster than 0.4 g. Both are measured from the car's own speed, so they don't depend on how the phone is held.</div>
+                <button class="tr-del" id="trDel" type="button">Delete Trip</button>
+              </div>
+            </div>
             <div class="pane" id="paneVehicle" role="tabpanel" aria-labelledby="tabVehicle" hidden>
               <div class="app-h"><div class="app-t">Vehicle</div></div>
               <div class="vd-card">
@@ -477,6 +599,11 @@ html,body{background:#f2f2f7;color:#000}
               </div>
               <button class="ph-btn" id="btBtn" style="margin:0 0 4px">Connect Kē</button>
               <button class="linkbtn" id="btAll" type="button">Don't see the Kē? Show all Bluetooth devices</button>
+              <div class="psec">Trips</div>
+              <div class="pgroup">
+                <div class="kv kv-sw"><span id="trRecL">Record Trips</span><label class="sw"><input type="checkbox" role="switch" id="trRec" aria-labelledby="trRecL" checked><i></i></label></div>
+                <div class="kv"><span>Saved Trips</span><b id="trSaved">0</b></div>
+              </div>
               <div class="psec">Connection</div>
               <div class="pgroup">
                 <div class="kv"><span>Connected For</span><b id="bcUp">–</b></div>
@@ -526,10 +653,14 @@ html,body{background:#f2f2f7;color:#000}
             <button class="scan-alt" id="scanPhoto">Take a Photo Instead</button>
             <input type="file" id="scanFile" accept="image/*" capture="environment" hidden>
           </div>
+          <div class="ev-toast" id="evToast" hidden role="status" aria-live="assertive"></div>
           <nav class="tabbar" role="tablist" aria-label="Phone sections">
             <button role="tab" id="tabLive" aria-controls="paneLive" aria-selected="false" data-pane="paneLive">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a9 9 0 0 0-9 9 9 9 0 0 0 2.2 5.9h13.6A9 9 0 0 0 21 13a9 9 0 0 0-9-9zm4.6 4.6l-3.3 4.9a1.6 1.6 0 1 1-2.2-1.6z" fill="currentColor"/></svg>
               <span>Live</span></button>
+            <button role="tab" id="tabTrips" aria-controls="paneTrips" aria-selected="false" data-pane="paneTrips">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20"/></svg>
+              <span>Trips</span></button>
             <button role="tab" id="tabVehicle" aria-controls="paneVehicle" aria-selected="false" data-pane="paneVehicle">
               <span class="tb-badge" id="tbBadge" hidden></span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.2C6 5.9 7 5 8.4 5h7.2c1.4 0 2.4.9 2.9 2.2L19.7 11c.8.3 1.3 1.1 1.3 2v3.5c0 .6-.4 1-1 1h-.6v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H8v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H4c-.6 0-1-.4-1-1V13c0-.9.5-1.7 1.3-2zM7.3 10.5h9.4l-.9-2.7c-.2-.5-.6-.8-1.1-.8H9.3c-.5 0-.9.3-1.1.8zM7 15.3a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z" fill="currentColor"/></svg>
@@ -1256,13 +1387,268 @@ liveCard("idle");
   if(d){ dbg("found "+(d.name||"last dongle")+" from last time, connecting"); btConnect(d); } else dbg("last dongle not remembered by the browser");
 }catch(e){ dbg("auto-connect skipped: "+errText(e)); } })();
 // demo: a car that drives around, so the screen can be tried without hardware
-if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.35?f/.35*95:f<.7?95:Math.max(0,(1-f)/.3*95), acc=f<.35;
+if(DEMO){ let t=0; setInterval(()=>{ t=(t+1)%100; const f=t/100, sp=f<.06?f/.06*55:f<.3?55+(f-.06)/.24*40:f<.5?95:f<.55?95-(f-.5)/.05*55:f<.75?40+(f-.55)/.2*30:Math.max(0,(1-f)/.25*70), acc=f<.3; /* includes one quick launch and one hard stop, so Trips has events to show */
   const set=(pid,v)=>PIDS.find(p=>p.pid===pid).el.value=v; set("010D",Math.round(sp)); set("010C",sp<1?850:1200+sp*18+(acc?2600:0)); set("0111",acc?70:f<.7?18:0); set("0104",acc?80:f<.7?35:12); },600); }
+</script>
+<script>
+// ---------- Trips: GPS drive recording, rapid acceleration and hard braking, plotted on a MapLibre map ----------
+const TR={on:localStorage.getItem("ke.rec")!=="off", cur:null, watch:null, fix:null, gpsErr:0, buf:[], ev:null, last:{acc:0,brk:0}, stopAt:0, saveT:0, map:null, open:null};
+const TR_KEY=DEMO?"ke.trips.demo":"ke.trips", TR_LIVE=DEMO?"ke.tripLive.demo":"ke.tripLive";
+const TR_ACC=.35, TR_BRK=-.40, TR_END_MS=5*60*1000, TR_MIN_KM=.2, TR_MAX=50;
+const ML_VER="5.24.1", ML_CDN=["https://cdn.jsdelivr.net/npm/maplibre-gl@"+ML_VER,"https://unpkg.com/maplibre-gl@"+ML_VER];
+const TR_UP="M12 19V5M6 11l6-6 6 6", TR_DN="M12 5v14M6 13l6 6 6-6";
+const trIcon=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+const trConn=()=>!!(bt.dev||bt.demo);
+function trLoad(){ try{ return JSON.parse(localStorage.getItem(TR_KEY)||"[]"); }catch(e){ return []; } }
+function trStore(list){ try{ localStorage.setItem(TR_KEY,JSON.stringify(list.slice(0,TR_MAX))); }catch(e){ dbg("couldn't save trips: "+errText(e)); } }
+function trKm(a,b){ const R=6371, r=Math.PI/180, dLa=(b[0]-a[0])*r, dLo=(b[1]-a[1])*r; const h=Math.sin(dLa/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function trThin(a,n){ if(a.length<=n) return a.slice(); const out=[]; for(let i=0;i<n;i++) out.push(a[Math.round(i*(a.length-1)/(n-1))]); return out; }
+const trG=g=>(g>0?"+":"−")+Math.abs(g).toFixed(2)+" g";
+const trClock=ms=>{ const s=Math.max(0,Math.round(ms/1000)), h=Math.floor(s/3600), m=Math.floor(s/60)%60; return h? h+":"+String(m).padStart(2,"0")+":"+String(s%60).padStart(2,"0") : m+":"+String(s%60).padStart(2,"0"); };
+const trTime=t=>new Date(t).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+
+// GPS: a watch runs while the Kē is connected and recording is on, so the location prompt comes up when parked, not mid-drive
+function trGpsStart(){
+  if(!TR.on||TR.watch!==null) return;
+  if(DEMO){ TR.watch="demo"; return; }
+  if(!navigator.geolocation){ TR.gpsErr=2; return; }
+  TR.watch=navigator.geolocation.watchPosition(p=>{ TR.gpsErr=0; TR.fix={t:Date.now(),la:p.coords.latitude,lo:p.coords.longitude,acc:p.coords.accuracy}; trOnFix(); },
+    e=>{ TR.gpsErr=e.code||2; if(e.code===1) dbg("location permission was declined, trips will have no map"); trBar(); },
+    {enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+}
+function trGpsStop(){ if(TR.watch!==null&&TR.watch!=="demo"&&navigator.geolocation) navigator.geolocation.clearWatch(TR.watch); TR.watch=null; TR.fix=null; }
+function trOnFix(){ const c=TR.cur, f=TR.fix; if(!c||!f||f.acc>80) return; const q=[+f.la.toFixed(5),+f.lo.toFixed(5),Math.round((f.t-c.start)/1000)], l=c.path[c.path.length-1]; if(!l||trKm(l,q)>.008) c.path.push(q); }
+
+// Every speed reading from the Kē lands here
+function trSpeed(v){
+  if(!TR.on||!trConn()||typeof v!=="number") return;
+  const now=Date.now();
+  if(!TR.cur){ if(v>5) trStart(now); else return; }
+  const c=TR.cur, b=TR.buf, lp=b[b.length-1];
+  if(lp){ const dt=Math.min(5,(now-lp.t)/1000); c.km+=(v+lp.v)/2*dt/3600; }
+  b.push({t:now,v}); while(b.length&&now-b[0].t>4000) b.shift();
+  c.lastT=now; if(v>0) c.lastMove=now; if(v>c.maxV) c.maxV=v;
+  c.sp.push([Math.round((now-c.start)/1000),Math.round(v)]);
+  // acceleration from the car's speed over about a second and a half
+  let ref=null; for(const s of b){ const age=now-s.t; if(age>=900&&age<=3000&&(!ref||Math.abs(age-1500)<Math.abs(now-ref.t-1500))) ref=s; }
+  if(ref) trEvent((v-ref.v)/3.6/((now-ref.t)/1000)/9.81,ref,v,now);
+}
+function trEvent(g,ref,v,now){
+  const k=g>=TR_ACC?"acc":g<=TR_BRK?"brk":null, e=TR.ev;
+  if(e&&e.k===k){ if(Math.abs(g)>Math.abs(e.g)){ e.g=g; trToast(e); } e.to=v; e.t1=now; return; }
+  if(e) trCloseEv();
+  if(k&&now-TR.last[k]>4000){ const f=TR.fix&&now-TR.fix.t<10000?TR.fix:null; TR.ev={k,g,from:ref.v,to:v,t0:ref.t,t1:now,la:f?+f.la.toFixed(5):null,lo:f?+f.lo.toFixed(5):null}; trToast(TR.ev); }
+}
+function trCloseEv(){ const e=TR.ev, c=TR.cur; TR.ev=null; if(!e) return; TR.last[e.k]=e.t1; if(!c) return;
+  c.ev.push({k:e.k,g:+e.g.toFixed(2),from:Math.round(e.from),to:Math.round(e.to),d:+((e.t1-e.t0)/1000).toFixed(1),t:e.t0,la:e.la,lo:e.lo}); trBar(); }
+function trStart(now){
+  const pc=$$("phCar");
+  TR.cur={id:now.toString(36),start:now,lastT:now,lastMove:now,km:0,maxV:0,odo0:typeof LV["01A6"]==="number"?LV["01A6"]:null,car:pc&&!pc.hidden?pc.textContent.trim():"",path:[],sp:[],ev:[]};
+  TR.buf=[]; TR.ev=null; TR.stopAt=0; trGpsStart(); trOnFix(); trBar(); dbg("trip started");
+}
+function trEnd(how){
+  const c=TR.cur; if(!c) return; trCloseEv(); TR.cur=null; TR.buf=[]; TR.stopAt=0;
+  try{ localStorage.removeItem(TR_LIVE); }catch(e){}
+  if(!trConn()) trGpsStop();
+  trBar();
+  let km=c.km; if(km<TR_MIN_KM&&c.path.length>1){ km=0; for(let i=1;i<c.path.length;i++) km+=trKm(c.path[i-1],c.path[i]); }
+  if(km<TR_MIN_KM){ dbg("trip under "+TR_MIN_KM+" km, not kept"); return; }
+  const odo=typeof LV["01A6"]==="number"?LV["01A6"]:c.odo0;
+  const t={id:c.id,start:c.start,end:Math.max(c.lastMove,c.start+1000),km:+km.toFixed(2),maxV:Math.round(c.maxV),odo:odo==null?null:Math.floor(odo),car:c.car,path:trThin(c.path,600),sp:trThin(c.sp,300),ev:c.ev};
+  const list=trLoad(); list.unshift(t); trStore(list); dbg("trip saved, "+t.km+" km, "+t.ev.length+" events");
+  trRender(); trName(t);
+  if(how!=="restore"){ phTab("paneTrips"); trOpen(t.id); }
+}
+function trSaveLive(){ if(!TR.cur) return; try{ localStorage.setItem(TR_LIVE,JSON.stringify(TR.cur)); }catch(e){} }
+// Once a second: the recording bar, the end-of-trip check, and a copy of the trip in progress in case the page is closed
+function trTick(){
+  const c=TR.cur; if(!c){ trBar(); return; }
+  const now=Date.now(), v=LV["010D"], r=LV["010C"];
+  if(now-c.lastT>TR_END_MS){ trEnd(); return; }
+  const stopped=!trConn()||(typeof r==="number"? r<200 : !(v>0));
+  if(stopped){ if(!TR.stopAt) TR.stopAt=now; if(now-TR.stopAt>=TR_END_MS){ trEnd(); return; } } else TR.stopAt=0;
+  if(now-TR.saveT>10000){ TR.saveT=now; trSaveLive(); }
+  trBar();
+}
+function trBar(){
+  const c=TR.cur, bar=$$("recBar"); bar.hidden=!c; $$("paneLive").classList.toggle("rec",!!c); if(!c) return;
+  $$("recV").textContent=c.km.toFixed(1)+" km · "+trClock(Date.now()-c.start);
+  const g=$$("recGps"), ok=TR.fix&&Date.now()-TR.fix.t<10000;
+  g.className="rec-gps"+(ok?" ok":""); g.textContent=ok?"GPS":TR.gpsErr===1?"No GPS":"GPS…";
+  g.title=ok?"Location is being recorded":TR.gpsErr===1?"Location is off for this page, so the trip will have no map":"Waiting for a location fix";
+}
+let trToastT=0;
+function trToast(e){ const el=$$("evToast"), acc=e.k==="acc"; if(e.k&&$$("paneLive").hidden) return; /* events still count on other tabs, the banner only shows on Live */
+  el.className="ev-toast "+(e.k||"info");
+  el.innerHTML=e.k? trIcon(acc?TR_UP:TR_DN)+`<span>${acc?"Rapid acceleration":"Hard braking"}</span><b>${trG(e.g)}</b>` : `<span>${e.text}</span>`;
+  const rb=$$("recBar"), sc=document.querySelector(".screen"); el.style.top=""; if(!rb.hidden&&rb.offsetParent&&!$$("paneLive").hidden){ el.style.top=(rb.getBoundingClientRect().bottom-sc.getBoundingClientRect().top+8)+"px"; } /* sits just under the recording bar */
+  el.hidden=false; clearTimeout(trToastT); trToastT=setTimeout(()=>{ el.hidden=true; },4000);
+}
+
+// Trip names: the neighbourhoods at each end, from OpenStreetMap through Photon, else the day and time
+function trPart(t){ const h=new Date(t).getHours(); return h<5?"Night":h<12?"Morning":h<17?"Afternoon":h<21?"Evening":"Night"; }
+function trDefName(t){ return new Date(t.start).toLocaleDateString("en-US",{weekday:"long"})+" "+trPart(t.start).toLowerCase()+" drive"; }
+async function trPlace(p){ try{
+  const r=await fetch(`https://photon.komoot.io/reverse?lat=${p[0]}&lon=${p[1]}&limit=1&lang=en`); const j=await r.json(); const q=j.features&&j.features[0]&&j.features[0].properties; if(!q) return null;
+  const short=s=>s&&s.replace(/\bStreet\b/,"St").replace(/\bAvenue\b/,"Ave").replace(/\bRoad\b/,"Rd").replace(/\bBoulevard\b/,"Blvd").replace(/\bDrive\b/,"Dr").replace(/\bWest\b/,"W").replace(/\bEast\b/,"E");
+  return q.locality||short(q.street)||q.name||q.city||null;
+}catch(e){ return null; } }
+async function trName(t){
+  if(t.name||t.path.length<2||DEMO) return;
+  const a=await trPlace(t.path[0]), b=await trPlace(t.path[t.path.length-1]); if(!a&&!b) return;
+  const name=a&&b? (a===b?"Around "+a:a+" to "+b) : "From "+(a||b);
+  const list=trLoad(), x=list.find(y=>y.id===t.id); if(!x) return; x.name=name; trStore(list); trRender(); if(TR.open===t.id) $$("trTitle").textContent=name;
+}
+
+// Drawing
+function trProj(path,w,h,pad){
+  let a=1e9,b=-1e9,c=1e9,d=-1e9; for(const p of path){ a=Math.min(a,p[0]); b=Math.max(b,p[0]); c=Math.min(c,p[1]); d=Math.max(d,p[1]); }
+  const k=Math.cos((a+b)/2*Math.PI/180), sx=(d-c)*k||1e-5, sy=(b-a)||1e-5, s=Math.min((w-2*pad)/sx,(h-2*pad)/sy), ox=(w-sx*s)/2, oy=(h-sy*s)/2;
+  return p=>[ox+(p[1]-c)*k*s, h-(oy+(p[0]-a)*s)];
+}
+function trLine(path,f){ return path.map((p,i)=>{ const q=f(p); return (i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1); }).join(""); }
+function trThumb(t){ const grid='<path d="M0 16H56M0 36H56M18 0V56M38 0V56" stroke="currentColor" stroke-opacity=".12" stroke-width="2"/>';
+  if(t.path.length<2) return `<svg viewBox="0 0 56 56">${grid}</svg>`;
+  const f=trProj(t.path,56,56,8); return `<svg viewBox="0 0 56 56">${grid}<path d="${trLine(trThin(t.path,60),f)}" stroke="#0A84FF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function trWhen(t){ const d=new Date(t), n=new Date(), day=864e5, d0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime();
+  const w= t>=d0?"Today": t>=d0-day?"Yesterday": t>=d0-6*day? d.toLocaleDateString("en-US",{weekday:"long"}) : d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  return w+", "+trTime(t); }
+const trMin=t=>Math.max(1,Math.round((t.end-t.start)/60000));
+function trBadge(n){ return n?`<span class="tr-badge">${n} event${n===1?"":"s"}</span>`:'<span class="tr-badge ok">Smooth</span>'; }
+function trRender(){
+  const list=trLoad(); $$("trSaved").textContent=list.length;
+  const n=new Date(), mon=new Date(n.getFullYear(),n.getMonth(),n.getDate()-((n.getDay()+6)%7)).getTime(), wk=list.filter(t=>t.start>=mon);
+  const km=wk.reduce((s,t)=>s+t.km,0), mins=wk.reduce((s,t)=>s+trMin(t),0), ev=wk.reduce((s,t)=>s+t.ev.length,0);
+  $$("trWk").innerHTML=`<div><b>${wk.length}</b><span>trip${wk.length===1?"":"s"}</span></div><div><b>${Math.round(km)}</b><span>km</span></div><div><b>${Math.floor(mins/60)}:${String(mins%60).padStart(2,"0")}</b><span>hours</span></div><div><b class="${ev?"hot":""}">${ev}</b><span>events</span></div>`;
+  $$("trRows").innerHTML= list.length? list.map(t=>`<button class="tr-row" type="button" data-id="${t.id}"><span class="tr-thumb">${trThumb(t)}</span><span class="tr-mid"><b>${trEsc(t.name||trDefName(t))}</b><span>${trWhen(t.start)}</span><span>${t.km.toFixed(1)} km · ${trMin(t)} min</span></span><span class="tr-end">${trBadge(t.ev.length)}<svg class="tr-chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></button>`).join("")
+    : '<div class="tr-empty">No trips yet. Connect the Kē and drive, and each trip saves itself when you park.</div>';
+  $$("trRows").querySelectorAll(".tr-row").forEach(b=>b.onclick=()=>trOpen(b.dataset.id));
+}
+function trEsc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function trEvAt(t,e){ if(e.la!=null) return [e.la,e.lo]; const s=(e.t-t.start)/1000; let best=null; for(const p of t.path) if(!best||Math.abs(p[2]-s)<Math.abs(best[2]-s)) best=p; return best; }
+function trOpen(id){
+  const t=trLoad().find(x=>x.id===id); if(!t) return;
+  TR.open=id; $$("trList").hidden=true; $$("trDetail").hidden=false; document.querySelector(".pane-wrap").scrollTop=0;
+  const d=new Date(t.start);
+  $$("trTitle").textContent=t.name||trDefName(t);
+  $$("trSub").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"})+" · "+trTime(t.start)+" to "+trTime(t.end)+(t.car?" · "+t.car:"");
+  const mins=trMin(t), avg=t.km/((t.end-t.start)/36e5||1), acc=t.ev.filter(e=>e.k==="acc").length, brk=t.ev.length-acc;
+  const st=[["Distance",t.km.toFixed(1),"km"],["Time",mins>=60?Math.floor(mins/60)+":"+String(mins%60).padStart(2,"0"):mins,mins>=60?"h":"min"],["Average",Math.round(avg),"km/h"],["Top Speed",t.maxV,"km/h"],["Events",t.ev.length,"",t.ev.length?"hot":""],["Odometer, km",t.odo==null?"–":t.odo.toLocaleString("en-CA"),""]];
+  $$("trStats").innerHTML=st.map(s=>`<div class="tr-stat"><span>${s[0]}</span><b class="${s[3]||""}">${s[1]}${s[2]?` <small>${s[2]}</small>`:""}</b></div>`).join("");
+  // speed bars, coloured where an event happened
+  const N=48, dur=Math.max(1,(t.end-t.start)/1000), bins=Array(N).fill(-1), mark=Array(N).fill("");
+  for(const [s,v] of t.sp){ const i=Math.min(N-1,Math.floor(s/dur*N)); if(v>bins[i]) bins[i]=v; }
+  for(let i=0;i<N;i++) if(bins[i]<0) bins[i]=i?bins[i-1]:0; /* short trips have fewer readings than bars */
+  for(const e of t.ev){ const i=Math.min(N-1,Math.max(0,Math.floor((e.t-t.start)/1000/dur*N))); mark[i]=e.k; }
+  const top=Math.max(1,...bins);
+  $$("trBars").innerHTML=bins.map((v,i)=>`<i class="${mark[i]}" style="height:${Math.max(4,Math.round(v/top*100))}%"></i>`).join("");
+  $$("trAxis").innerHTML=`<span>${trTime(t.start)}</span><span>${trTime(t.start+(t.end-t.start)/2)}</span><span>${trTime(t.end)}</span>`;
+  $$("trChart").setAttribute("aria-label",`Speed over the drive, peaking at ${t.maxV} km/h`);
+  $$("trEvN").textContent=t.ev.length?t.ev.length+" on this trip":"";
+  $$("trEvs").innerHTML= t.ev.length? t.ev.map(e=>{ const a=e.k==="acc"; return `<div class="tr-ev"><span class="ic ${e.k}">${trIcon(a?TR_UP:TR_DN)}</span><span class="m"><b>${a?"Rapid acceleration":"Hard braking"}</b><span>${e.from} to ${e.to} km/h in ${e.d} s</span></span><span class="r"><b>${trG(e.g)}</b><span>${trTime(e.t)}</span></span></div>`; }).join("")
+    : '<div class="tr-ev none">No rapid acceleration or hard braking. Smooth drive.</div>';
+  $$("trMap").setAttribute("aria-label",`Route map, ${t.km.toFixed(1)} km`+(t.ev.length?`, with ${acc} rapid acceleration${acc===1?"":"s"} and ${brk} hard braking${brk===1?"":" events"} marked`:""));
+  trMap(t);
+}
+function trClose(){ TR.open=null; $$("trDetail").hidden=true; $$("trList").hidden=false; if(TR.map){ try{ TR.map.remove(); }catch(e){} TR.map=null; } }
+
+// Map: MapLibre GL with CARTO's free vector tiles from OpenStreetMap data; a plain drawing of the route if that can't load
+let trMlP=null;
+function trLoadMl(){
+  if(window.maplibregl) return Promise.resolve();
+  if(trMlP) return trMlP;
+  const one=base=>new Promise((res,rej)=>{ const l=document.createElement("link"); l.rel="stylesheet"; l.href=base+"/dist/maplibre-gl.css"; document.head.append(l);
+    const s=document.createElement("script"); s.src=base+"/dist/maplibre-gl.js"; s.onload=()=>window.maplibregl?res():rej(); s.onerror=()=>{ l.remove(); s.remove(); rej(); }; document.head.append(s); });
+  trMlP=one(ML_CDN[0]).catch(()=>one(ML_CDN[1])).catch(e=>{ trMlP=null; throw e; });
+  return trMlP;
+}
+function trFallback(t,box,msg){
+  if(t.path.length<2){ box.innerHTML=`<div class="tr-msg">${msg||"No GPS route for this trip. Allow location for this page in Bluefy so the next trip has a map."}</div>`; return; }
+  const w=box.clientWidth||358, h=box.clientHeight||300, f=trProj(t.path,w,h,28), d=trLine(t.path,f), s=f(t.path[0]), e=f(t.path[t.path.length-1]);
+  const mk=t.ev.map(v=>{ const p=trEvAt(t,v); if(!p) return ""; const q=f(p); return `<circle cx="${q[0]}" cy="${q[1]}" r="9" fill="${v.k==="acc"?"#FF9F0A":"#FF453A"}" stroke="#000" stroke-width="2"/>`; }).join("");
+  box.innerHTML=`<svg class="tr-fb" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}" stroke="#fff" stroke-width="8" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" stroke="#0A84FF" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>${mk}<circle cx="${s[0]}" cy="${s[1]}" r="7" fill="#30D158" stroke="#fff" stroke-width="3"/><circle cx="${e[0]}" cy="${e[1]}" r="7" fill="#F5F5F7" stroke="#000" stroke-width="3"/></svg>`+(msg?`<div class="tr-msg" style="inset:auto 0 8px;padding:0;font-size:11px">${msg}</div>`:"");
+}
+async function trMap(t){
+  const box=$$("trMap"); if(TR.map){ try{ TR.map.remove(); }catch(e){} TR.map=null; } box.innerHTML="";
+  if(t.path.length<2){ trFallback(t,box); return; }
+  trFallback(t,box);
+  try{ await trLoadMl(); }catch(e){ dbg("map library didn't load, showing the route on its own"); trFallback(t,box,"Map couldn't load, showing the route on its own"); return; }
+  if(TR.open!==t.id) return;
+  const light=matchMedia("(prefers-color-scheme: light)").matches, ll=t.path.map(p=>[p[1],p[0]]);
+  let a=[180,90,-180,-90]; for(const p of ll){ a=[Math.min(a[0],p[0]),Math.min(a[1],p[1]),Math.max(a[2],p[0]),Math.max(a[3],p[1])]; }
+  const holder=document.createElement("div"); holder.style.cssText="position:absolute;inset:0"; box.append(holder);
+  const cr=document.createElement("div"); cr.className="tr-attr"; cr.innerHTML='© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'; box.append(cr);
+  let map; try{
+    map=new maplibregl.Map({container:holder,style:`https://basemaps.cartocdn.com/gl/${light?"positron":"dark-matter"}-gl-style/style.json`,bounds:[[a[0],a[1]],[a[2],a[3]]],fitBoundsOptions:{padding:36,maxZoom:16},attributionControl:false,dragRotate:false,pitchWithRotate:false,cooperativeGestures:false});
+  }catch(e){ holder.remove(); trFallback(t,box,"Map couldn't start on this phone, showing the route on its own"); return; }
+  TR.map=map; map.touchZoomRotate.disableRotation();
+  const fail=setTimeout(()=>{ if(TR.map===map&&!map.loaded()){ /* keep the drawing underneath visible */ holder.style.opacity="0"; } },12000);
+  map.on("load",()=>{
+    clearTimeout(fail); box.querySelector("svg.tr-fb")&&box.querySelector("svg.tr-fb").remove();
+    map.addSource("route",{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates:ll}}});
+    map.addLayer({id:"route-casing",type:"line",source:"route",layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":light?"#fff":"#fff","line-width":8,"line-opacity":light?1:.9}});
+    map.addLayer({id:"route",type:"line",source:"route",layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#0A84FF","line-width":5}});
+    const pin=c=>{ const d=document.createElement("div"); d.className="tr-pin"+(c?" "+c:""); return d; };
+    new maplibregl.Marker({element:pin("")}).setLngLat(ll[0]).addTo(map);
+    new maplibregl.Marker({element:pin("end")}).setLngLat(ll[ll.length-1]).addTo(map);
+    for(const e of t.ev){ const p=trEvAt(t,e); if(!p) continue; const d=document.createElement("div"); d.className="tr-mk "+e.k; d.innerHTML=trIcon(e.k==="acc"?TR_UP:TR_DN); d.title=(e.k==="acc"?"Rapid acceleration ":"Hard braking ")+trG(e.g); new maplibregl.Marker({element:d}).setLngLat([p[1],p[0]]).addTo(map); }
+  });
+  map.on("error",e=>dbg("map: "+(e&&e.error&&e.error.message||"error")));
+}
+async function trShare(){
+  const t=trLoad().find(x=>x.id===TR.open); if(!t) return;
+  const acc=t.ev.filter(e=>e.k==="acc").length, brk=t.ev.length-acc;
+  const text=`${t.name||trDefName(t)}\n${new Date(t.start).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}, ${trTime(t.start)} to ${trTime(t.end)}${t.car?" · "+t.car:""}\n${t.km.toFixed(1)} km in ${trMin(t)} min, average ${Math.round(t.km/((t.end-t.start)/36e5||1))} km/h, top ${t.maxV} km/h\n`+(t.ev.length?`${acc} rapid acceleration${acc===1?"":"s"}, ${brk} hard braking${brk===1?"":" events"}`:"No rapid acceleration or hard braking");
+  try{ if(navigator.share){ await navigator.share({title:"Kē trip",text}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(text); trToast({text:"Trip summary copied"}); }catch(e){ trToast({text:"Sharing isn't available here"}); }
+}
+function trDelete(){
+  const t=trLoad().find(x=>x.id===TR.open); if(!t) return;
+  if(!confirm(`Delete "${t.name||trDefName(t)}"? This can't be undone.`)) return;
+  trStore(trLoad().filter(x=>x.id!==t.id)); trClose(); trRender();
+}
+
+// Hooks into the existing app: speed readings, connect and disconnect
+{ const _show=show; show=function(pid,v){ const r=_show(pid,v); if(pid==="010D") trSpeed(v); return r; }; }
+{ const _up=btConnectedUI; btConnectedUI=function(...a){ const r=_up.apply(this,a); trGpsStart(); return r; }; }
+{ const _cl=btCleanup; btCleanup=function(...a){ const r=_cl.apply(this,a); TR.buf=[]; if(TR.ev) trCloseEv(); if(!TR.cur) trGpsStop(); return r; }; }
+$$("recEnd").onclick=()=>trEnd();
+{ const _tab=phTab; phTab=function(id){ const r=_tab(id); $$("evToast").hidden=true; return r; }; }
+$$("trBack").onclick=trClose;
+$$("trShare").onclick=trShare;
+$$("trDel").onclick=trDelete;
+$$("tabTrips").addEventListener("click",()=>{ if(TR.open) trClose(); trRender(); });
+$$("trRec").checked=TR.on;
+$$("trRec").onchange=e=>{ TR.on=e.target.checked; try{ localStorage.setItem("ke.rec",TR.on?"on":"off"); }catch(x){} if(!TR.on){ if(TR.cur) trEnd("restore"); trGpsStop(); } else if(trConn()) trGpsStart(); };
+// a trip that was still going when the page closed: finish it if it's been parked long enough, otherwise carry on
+try{ const live=JSON.parse(localStorage.getItem(TR_LIVE)||"null"); if(live&&live.start){ TR.cur=live; if(Date.now()-live.lastT>TR_END_MS) trEnd("restore"); } }catch(e){}
+setInterval(trTick,1000);
+
+// Demo: a drive along Queen St W and up Avenue Rd, made up for trying the screen without a car
+if(DEMO){
+  const R=[[43.6447,-79.4196],[43.6466,-79.4105],[43.6487,-79.4005],[43.6505,-79.3906],[43.6512,-79.3874],[43.6560,-79.3893],[43.6608,-79.3911],[43.6655,-79.3934],[43.6702,-79.3952],[43.6748,-79.3972],[43.6803,-79.3987],[43.6866,-79.3998],[43.6952,-79.4021],[43.7041,-79.4052]];
+  const RK=[0]; for(let i=1;i<R.length;i++) RK.push(RK[i-1]+trKm(R[i-1],R[i]));
+  const at=km=>{ const L=RK[RK.length-1], m=km%(2*L), x=m>L?2*L-m:m; let i=1; while(i<RK.length-1&&RK[i]<x) i++; const f=(x-RK[i-1])/(RK[i]-RK[i-1]||1); return [R[i-1][0]+(R[i][0]-R[i-1][0])*f, R[i-1][1]+(R[i][1]-R[i-1][1])*f]; };
+  setInterval(()=>{ if(!TR.cur||!trConn()) return; const p=at(TR.cur.km*1.0); TR.fix={t:Date.now(),la:p[0],lo:p[1],acc:5}; trOnFix(); },1000);
+  if(!trLoad().length){
+    const mk=(daysAgo,h,m,km0,km1,evs,name,maxV)=>{ const n=new Date(), s=new Date(n.getFullYear(),n.getMonth(),n.getDate()-daysAgo,h,m).getTime(), L=km1-km0, dur=Math.round(Math.abs(L)/38*3600);
+      const path=[]; for(let i=0;i<=80;i++){ const p=at(km0+L*i/80); path.push([+p[0].toFixed(5),+p[1].toFixed(5),Math.round(dur*i/80)]); }
+      const K=[[0,0],[.1,8],[.13,62],[.3,70],[.49,maxV],[.53,12],[.6,50],[.78,44],[.81,70],[.92,58],[1,0]], sp=[]; for(let i=0;i<=150;i++){ const f=i/150; let j=1; while(j<K.length-1&&K[j][0]<f) j++; const u=(f-K[j-1][0])/(K[j][0]-K[j-1][0]); sp.push([Math.round(dur*f),Math.max(0,Math.round(K[j-1][1]+(K[j][1]-K[j-1][1])*u+(i%7-3)))]); }
+      const ev=evs.map(([k,f,g,a,b,d])=>{ const p=at(km0+L*f); return {k,g,from:a,to:b,d,t:s+Math.round(dur*f*1000),la:+p[0].toFixed(5),lo:+p[1].toFixed(5)}; });
+      return {id:"demo"+daysAgo+h,start:s,end:s+dur*1000,km:+Math.abs(L).toFixed(2),maxV,odo:24337-daysAgo*31,car:"2026 Porsche 911 Targa 4S",name,path,sp,ev}; };
+    trStore([
+      mk(0,14,12,0,9.4,[["acc",.1,.41,0,62,4.6],["brk",.52,-.52,84,12,3.9],["acc",.8,.38,44,70,1.9]],"Queen St W to Midtown",92),
+      mk(2,18,5,9.4,0.2,[["brk",.4,-.44,66,18,3.1]],"Midtown to Queen St W",74),
+      mk(3,9,40,1.2,4.8,[],"Queen St W to Queen's Park",58)
+    ]);
+  }
+}
+trRender(); trBar();
 </script>
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.22";
+const APP_VER="2.23";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();

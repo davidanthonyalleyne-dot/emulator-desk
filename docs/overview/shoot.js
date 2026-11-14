@@ -48,6 +48,22 @@ require('child_process').execFileSync('python3', ['make-label.py'], { cwd: path.
   await q.waitForTimeout(300); await q.screenshot({ path: out('8-scan') });
   await q.evaluate(() => { window.scanFound = window.__found; scanFound(window.__v); });
   await q.waitForTimeout(4000); await q.evaluate(() => { document.querySelector('.pane-wrap').scrollTop = 0; }); await q.waitForTimeout(200); await q.screenshot({ path: out('9-vehicle') });
+  await c.close();
+
+  // Kē phone: Trips (v2.23). A demo drive records with GPS made up along Queen St W; three sample trips are seeded.
+  const d = await chromium.launch({ args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
+  const r = await d.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  r.on('pageerror', e => errs.push(e.message));
+  await r.emulateMedia({ colorScheme: 'dark' });
+  await r.goto('http://localhost:5791/phone.html?demo'); await r.waitForTimeout(400);
+  await r.evaluate(() => document.getElementById('liveConnect').click());
+  await r.waitForFunction(() => !document.getElementById('evToast').hidden, null, { timeout: 40000 });
+  await r.waitForTimeout(300); await r.screenshot({ path: out('11-recording') });
+  await r.evaluate(() => { phTab('paneTrips'); trRender(); }); await r.waitForTimeout(300);
+  await r.screenshot({ path: out('13-trips') });
+  await r.evaluate(() => trOpen(trLoad().find(t => /Midtown$/.test(t.name)).id));
+  await r.waitForFunction(() => document.querySelector('#trMap canvas') && !document.querySelector('#trMap svg.tr-fb'), null, { timeout: 20000 }).catch(() => errs.push('map did not load'));
+  await r.waitForTimeout(4000); await r.screenshot({ path: out('12-trip') });
   console.log('errors:', errs);
-  await c.close(); srv.close();
+  await d.close(); srv.close();
 })();
