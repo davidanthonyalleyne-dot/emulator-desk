@@ -1713,16 +1713,15 @@ trRender(); trBar();
 // ---------- Car pictures from CarImages API (carimagesapi.com) ----------
 // Studio pictures by make, model and year. The key is typed into Settings on each phone and never lives in the repo.
 // Only make, model and year are sent, never the VIN. Pictures are kept in Cache Storage so each one is fetched once.
-// The CarImages key is a publishable key, meant to sit in a web page like their own loader does (data-api-key).
-const CI_KEY="ci_8d82652ec311a7fce9ed792fbc59d3fca76f10daa00a2fbfd079793d";
-const CI={on:localStorage.getItem("ke.ci")!=="off", key:CI_KEY, view:localStorage.getItem("ke.ciView")||"", color:localStorage.getItem("ke.ciColor")||"", car:null, mv:false};
+const CI_PROXY="https://ke-carimages.davidanthonyalleyne.workers.dev"; // Cloudflare Worker (worker/) that holds the CarImages key; only this site may use it
+const CI={on:localStorage.getItem("ke.ci")!=="off", key:CI_PROXY, view:localStorage.getItem("ke.ciView")||"", color:localStorage.getItem("ke.ciColor")||"", car:null, mv:false};
 const CI_VIEWS=[["","Front ¾"],["side","Side"],["rear34","Rear ¾"],["rear","Rear"]];
 const CI_PAINT=[["","Original paint","conic-gradient(#d9a441 0 25%,#c9ccd1 0 50%,#2f5fa8 0 75%,#b3262b 0)"],["silver","Silver","#C9CCD1"],["black","Black","#111"],["grey","Grey","#6b6f75"],["blue","Blue","#2f5fa8"],["red","Red","#b3262b"],["white","White","#f2f2f2"]];
 const ciReady=()=>CI.on&&!!CI.key&&!!(CI.car&&CI.car.make&&CI.car.model);
 function ciUrl(car,view,width,color){
   const q=new URLSearchParams({make:car.make,model:car.model}); if(car.year) q.set("year",car.year);
-  if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width)); q.set("format","webp"); q.set("key",CI.key);
-  return "https://carimagesapi.com/image?"+q.toString();
+  if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width));
+  return CI_PROXY+"/image?"+q.toString();
 }
 function ciCount(){ const m=new Date().toISOString().slice(0,7); let c; try{ c=JSON.parse(localStorage.getItem("ke.ciUse")||"null"); }catch(e){} if(!c||c.m!==m) c={m,n:0}; return c; }
 function ciBump(){ const c=ciCount(); c.n++; try{ localStorage.setItem("ke.ciUse",JSON.stringify(c)); }catch(e){} ciSettings(); }
@@ -1736,7 +1735,7 @@ async function ciLoad(img,url,onFail){
     let r=cache? await cache.match(url) : null;
     if(!r){ let f; try{ f=await fetch(url,{mode:"cors"}); }catch(e){ f=null; }
       if(!f){ img.src=url; ciBump(); return; } /* plain load if the CORS path isn't available */
-      if(f.status===401||f.status===403){ onFail&&onFail("key"); return; }
+      if(f.status===401||f.status===403||f.status===502||f.status===503){ onFail&&onFail("key"); return; }
       if(f.status===429){ onFail&&onFail("quota"); return; }
       if(!f.ok||!/^image\//.test(f.headers.get("content-type")||"")){ onFail&&onFail(); return; }
       ciBump(); r=f; if(cache) try{ await cache.put(url,r.clone()); }catch(e){} }
@@ -1755,7 +1754,7 @@ function ciRender(){
   if(!CI.key){ img.removeAttribute("src"); img.classList.remove("on"); msg.hidden=false; msg.textContent="Car pictures aren't set up."; return; }
   if(!car.model){ img.removeAttribute("src"); msg.hidden=false; msg.textContent="Looking up the model…"; return; }
   msg.hidden=true; img.alt=`${car.year} ${car.make} ${car.model}, ${(CI_VIEWS.find(v=>v[0]===CI.view)||CI_VIEWS[0])[1].replace("¾","three-quarter")} view`;
-  ciLoad(img,ciUrl(car,CI.view,800,CI.color),why=>{ msg.hidden=false; msg.textContent= why==="key"?"CarImages didn't accept the app's key.":why==="quota"?"This month's CarImages pictures are used up.":"No picture for this car yet."; });
+  ciLoad(img,ciUrl(car,CI.view,800,CI.color),why=>{ msg.hidden=false; msg.textContent= why==="key"?"Car pictures aren't available right now.":why==="quota"?"This month's CarImages pictures are used up.":"No picture for this car yet."; });
   $$("ciViews").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.v===CI.view)));
   $$("ciPaints").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.c===CI.color)));
   $$("ci3dT").textContent=`${car.year} ${car.make} ${car.model}`.trim();
@@ -1770,11 +1769,13 @@ function ciSettings(){ if(!$$("ciOn")) return; $$("ciOn").checked=CI.on; $$("ciU
 // 3D: the CarImages loader signs the model URL and brings in Google's model-viewer (about 1.5 MB per car, only when opened)
 function ci3dOpen(){
   if(!ciReady()) return; const sh=$$("ciSheet"), st=$$("ciMv"); sh.hidden=false; $$("ci3dDone").focus();
-  st.innerHTML=`<model-viewer data-ci-make="${trEsc(CI.car.make)}" data-ci-model="${trEsc(CI.car.model)}" data-ci-year="${trEsc(CI.car.year)}" data-ci-view="${CI.view||"front34"}" data-ci-speed="18" camera-controls touch-action="pan-y" alt="3D model of the ${trEsc(CI.car.make+" "+CI.car.model)}"></model-viewer><span class="ci-msg" id="ciMvMsg">Loading the 3D model…</span>`;
+  const q=new URLSearchParams({make:CI.car.make,model:CI.car.model}); if(CI.car.year) q.set("year",CI.car.year);
+  const orbit={"":"315deg 72deg auto",side:"270deg 88deg auto",rear34:"135deg 72deg auto",rear:"180deg 82deg auto"}[CI.view]||"315deg 72deg auto";
+  st.innerHTML=`<model-viewer src="${CI_PROXY}/model?${q}" camera-controls auto-rotate auto-rotate-delay="0" rotation-per-second="18deg" camera-orbit="${orbit}" interaction-prompt="none" tone-mapping="neutral" shadow-intensity="1.1" shadow-softness="1" field-of-view="30deg" exposure="1.28" touch-action="pan-y" alt="3D model of the ${trEsc(CI.car.make+" "+CI.car.model)}"></model-viewer><span class="ci-msg" id="ciMvMsg">Loading the 3D model…</span>`;
   const mv=st.querySelector("model-viewer");
   mv.addEventListener("load",()=>{ const m=$$("ciMvMsg"); if(m) m.remove(); ciBump(); },{once:true});
   mv.addEventListener("error",()=>{ const m=$$("ciMvMsg"); if(m) m.textContent="The 3D model couldn't load."; },{once:true});
-  if(!CI.mv){ CI.mv=true; const s=document.createElement("script"); s.src="https://carimagesapi.com/assets/js/carimages.js"; s.async=true; s.setAttribute("data-api-key",CI.key); s.onerror=()=>{ CI.mv=false; const m=$$("ciMvMsg"); if(m) m.textContent="The 3D viewer couldn't load."; }; document.head.append(s); }
+  if(!CI.mv&&!(window.customElements&&customElements.get("model-viewer"))){ CI.mv=true; const s=document.createElement("script"); s.type="module"; s.src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"; s.onerror=()=>{ CI.mv=false; const m=$$("ciMvMsg"); if(m) m.textContent="The 3D viewer couldn't load."; }; document.head.append(s); }
 }
 function ci3dClose(){ $$("ciSheet").hidden=true; $$("ciMv").innerHTML=""; $$("ci3d").focus(); }
 
@@ -1798,7 +1799,7 @@ ciSettings(); ciRender();
 <script>
 // Stay current: GitHub Pages lets browsers cache this page for 10 minutes and Bluefy can keep it longer.
 // On open (and when the app comes back to the front) fetch a fresh copy; if its version differs, reload onto it.
-const APP_VER="2.27";
+const APP_VER="2.28";
 async function checkForUpdate(){
   try{
     const html=await (await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"})).text();

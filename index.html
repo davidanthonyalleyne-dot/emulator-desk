@@ -517,7 +517,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.27</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.28</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -1838,11 +1838,11 @@ $("vin").addEventListener("input",deskCar);
 </script>
 <script>
 // ---------- Car pictures from CarImages API: the car being emulated, by make, model and year (never the VIN) ----------
-const CI_KEY="ci_8d82652ec311a7fce9ed792fbc59d3fca76f10daa00a2fbfd079793d"; // publishable key, as CarImages' own loader puts in a page
-const CI={key:CI_KEY,view:localStorage.getItem("ke.ciView")||"",color:localStorage.getItem("ke.ciColor")||"",car:null};
+const CI_PROXY="https://ke-carimages.davidanthonyalleyne.workers.dev"; // Cloudflare Worker (worker/) that holds the CarImages key; only this site may use it
+const CI={key:CI_PROXY,view:localStorage.getItem("ke.ciView")||"",color:localStorage.getItem("ke.ciColor")||"",car:null};
 const CI_VIEWS=[["","Front ¾"],["side","Side"],["rear34","Rear ¾"],["rear","Rear"]];
 const CI_PAINT=[["","Original paint","conic-gradient(#d9a441 0 25%,#c9ccd1 0 50%,#2f5fa8 0 75%,#b3262b 0)"],["silver","Silver","#C9CCD1"],["black","Black","#111"],["grey","Grey","#6b6f75"],["blue","Blue","#2f5fa8"],["red","Red","#b3262b"],["white","White","#f2f2f2"]];
-function ciUrl(car,view,width,color){ const q=new URLSearchParams({make:car.make,model:car.model}); if(car.year) q.set("year",car.year); if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width)); q.set("format","webp"); q.set("key",CI.key); return "https://carimagesapi.com/image?"+q.toString(); }
+function ciUrl(car,view,width,color){ const q=new URLSearchParams({make:car.make,model:car.model}); if(car.year) q.set("year",car.year); if(view) q.set("view",view); if(color) q.set("color",color); q.set("width",String(width)); return CI_PROXY+"/image?"+q.toString(); }
 async function ciShow(){
   const box=$("ciBox"), img=$("ciImg"), msg=$("ciMsg"), car=CI.car;
   box.classList.toggle("nokey",!CI.key||!car); $("ciCtl").hidden=!CI.key||!car;
@@ -1853,7 +1853,7 @@ async function ciShow(){
   $("ciPaints").querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.c===CI.color)));
   const url=ciUrl(car,CI.view,900,CI.color); msg.hidden=true; img.alt=`${car.year} ${car.make} ${car.model}`;
   img.onload=()=>img.classList.add("on"); img.onerror=()=>say("No picture for this car yet.");
-  try{ const r=await fetch(url,{mode:"cors"}); if(r.status===401||r.status===403) return say("CarImages didn't accept the app's key."); if(r.status===429) return say("This month's CarImages pictures are used up."); if(!r.ok) return say("No picture for this car yet."); img.src=URL.createObjectURL(await r.blob()); }
+  try{ const r=await fetch(url,{mode:"cors"}); if(r.status===401||r.status===403||r.status===502||r.status===503) return say("Car pictures aren't available right now."); if(r.status===429) return say("This month's CarImages pictures are used up."); if(!r.ok) return say("No picture for this car yet."); img.src=URL.createObjectURL(await r.blob()); }
   catch(e){ img.src=url; }
 }
 $("ciViews").innerHTML=CI_VIEWS.map(([v,l])=>`<button type="button" role="radio" data-v="${v}" aria-checked="false">${l}</button>`).join("");
