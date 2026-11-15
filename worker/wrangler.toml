@@ -1,0 +1,7 @@
+name = "ke-carimages"
+main = "carimages-proxy.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+# Secret, set in the Cloudflare dashboard (Settings > Variables and Secrets) or with: npx wrangler secret put CI_KEY
+# CI_KEY = the CarImages API key. It is never stored in this repo.
