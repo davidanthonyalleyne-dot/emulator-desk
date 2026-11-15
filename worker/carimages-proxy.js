@@ -39,6 +39,12 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { headers: cors(new Headers({ "Access-Control-Allow-Methods": "GET", "Access-Control-Max-Age": "86400" })) });
     if (req.method !== "GET") return fail(405, "GET only");
     if (url.pathname === "/") return new Response("Ke car pictures proxy", { headers: cors() });
+    // Setup check without showing the key: is it there, does it look like a CarImages key, and does CarImages take it?
+    if (url.pathname === "/health") {
+      const k = (env.CI_KEY || "").trim(), shape = !k ? "missing" : /^ci_[0-9a-f]{20,}$/.test(k) ? "looks like a key" : k.startsWith("ci_") ? "starts with ci_ but has odd characters" : "not a ci_ key (secret pasted instead?)";
+      let status = null; if (k) { const r = await fetch(`${CI}/image?make=Porsche&model=911&width=240&format=webp&key=${encodeURIComponent(k)}`, { headers: { Referer: ALLOWED_ORIGIN + "/" }, redirect: "manual" }); status = r.status; }
+      return new Response(JSON.stringify({ key: shape, length: k.length, carimages: status }), { headers: cors(new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" })) });
+    }
     if (!fromOurSite(req)) return fail(403, "Only the Ke app and Emulator Desk can use this");
     if (!env.CI_KEY) return fail(503, "CarImages key isn't set on the Worker yet");
 
@@ -56,13 +62,13 @@ export default {
       const q = new URLSearchParams({ make, model, width: String(width), format: "webp" });
       if (year) q.set("year", year); if (view) q.set("view", view); if (color) q.set("color", color);
       key.search = q.toString();
-      q.set("key", env.CI_KEY);
+      q.set("key", env.CI_KEY.trim());
       upstream = () => fetch(`${CI}/image?${q}`, { headers: { Referer: ALLOWED_ORIGIN + "/" } });
     } else if (url.pathname === "/model") {
       const q = new URLSearchParams({ make, model }); if (year) q.set("year", year);
       key.search = q.toString();
       upstream = async () => {
-        const s = await fetch(`${CI}/api/v1/signed-model-urls?api_key=${encodeURIComponent(env.CI_KEY)}`, {
+        const s = await fetch(`${CI}/api/v1/signed-model-urls?api_key=${encodeURIComponent(env.CI_KEY.trim())}`, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8", Origin: ALLOWED_ORIGIN, Referer: ALLOWED_ORIGIN + "/" },
           body: JSON.stringify({ models: [{ make, model, year }] })
         });
