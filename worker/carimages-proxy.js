@@ -23,6 +23,8 @@ function fail(status, msg) {
 }
 function fromOurSite(req) {
   const o = req.headers.get("Origin"), r = req.headers.get("Referer") || "";
+  // the native Ke iPhone app has no web origin, so it names itself
+  if (req.headers.get("X-Ke-App") === "ca.davidalleyne.ke") return true;
   return o === ALLOWED_ORIGIN || r === ALLOWED_ORIGIN || r.startsWith(ALLOWED_ORIGIN + "/");
 }
 function tooMany(req) {
