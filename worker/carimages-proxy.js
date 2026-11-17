@@ -35,17 +35,55 @@ function tooMany(req) {
 }
 const clean = s => String(s || "").trim().slice(0, 40);
 
+// Live Activity push-to-start for the Ke iPhone app. iOS won't let an app start a Live Activity from the
+// background, so when a trip starts with the phone in a pocket the app asks here, and this sends Apple the
+// start push with the app's own start token. Secrets: APNS_KEY (the .p8 text), APNS_KEY_ID.
+const TEAM_ID = "M8GX2N7YR2", TOPIC = "ca.davidalleyne.ke.push-type.liveactivity";
+let apnsJwt = null;   // [token, madeAt]
+const b64url = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const b64urlText = t => b64url(new TextEncoder().encode(t));
+async function apnsToken(env) {
+  if (apnsJwt && Date.now() - apnsJwt[1] < 45 * 60000) return apnsJwt[0];
+  const pem = String(env.APNS_KEY).replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey("pkcs8", der, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const head = b64urlText(JSON.stringify({ alg: "ES256", kid: String(env.APNS_KEY_ID).trim() }));
+  const claims = b64urlText(JSON.stringify({ iss: TEAM_ID, iat: Math.floor(Date.now() / 1000) }));
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(head + "." + claims));
+  apnsJwt = [head + "." + claims + "." + b64url(sig), Date.now()];
+  return apnsJwt[0];
+}
+async function liveActivityStart(req, env) {
+  if (req.headers.get("X-Ke-App") !== "ca.davidalleyne.ke") return fail(403, "Only the Ke app");
+  if (!env.APNS_KEY || !env.APNS_KEY_ID) return fail(503, "APNs key isn't set on the Worker yet");
+  if (tooMany(req)) return fail(429, "Too many requests");
+  let b; try { b = await req.json(); } catch { return fail(400, "JSON body needed"); }
+  const token = String(b.token || "");
+  if (!/^[0-9a-f]{32,200}$/.test(token) || typeof b.attributes !== "object" || typeof b.state !== "object") return fail(400, "token, attributes and state are needed");
+  const payload = { aps: {
+    timestamp: Math.floor(Date.now() / 1000), event: "start",
+    "attributes-type": "TripActivityAttributes", attributes: b.attributes, "content-state": b.state,
+    alert: { title: "Trip started", body: "Kē is recording. It saves itself when you park." },
+  } };
+  const host = b.sandbox ? "https://api.sandbox.push.apple.com" : "https://api.push.apple.com";
+  const r = await fetch(`${host}/3/device/${token}`, { method: "POST", body: JSON.stringify(payload), headers: {
+    authorization: "bearer " + await apnsToken(env), "apns-topic": TOPIC, "apns-push-type": "liveactivity", "apns-priority": "10", "content-type": "application/json" } });
+  const text = r.status === 200 ? "" : await r.text();
+  return new Response(JSON.stringify({ apns: r.status, reason: text.slice(0, 200) }), { status: r.status === 200 ? 200 : 502, headers: { "Content-Type": "application/json" } });
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null, { headers: cors(new Headers({ "Access-Control-Allow-Methods": "GET", "Access-Control-Max-Age": "86400" })) });
+    if (req.method === "POST" && url.pathname === "/la/start") return liveActivityStart(req, env);
     if (req.method !== "GET") return fail(405, "GET only");
     if (url.pathname === "/") return new Response("Ke car pictures proxy", { headers: cors() });
     // Setup check without showing the key: is it there, does it look like a CarImages key, and does CarImages take it?
     if (url.pathname === "/health") {
       const k = (env.CI_KEY || "").trim(), shape = !k ? "missing" : /^ci_[0-9a-f]{20,}$/.test(k) ? "looks like a key" : k.startsWith("ci_") ? "starts with ci_ but has odd characters" : "not a ci_ key (secret pasted instead?)";
       let status = null; if (k) { const r = await fetch(`${CI}/image?make=Porsche&model=911&width=240&format=webp&key=${encodeURIComponent(k)}`, { headers: { Referer: ALLOWED_ORIGIN + "/" }, redirect: "manual" }); status = r.status; }
-      return new Response(JSON.stringify({ key: shape, length: k.length, carimages: status }), { headers: cors(new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" })) });
+      return new Response(JSON.stringify({ key: shape, length: k.length, carimages: status, apns: env.APNS_KEY && env.APNS_KEY_ID ? "set" : "missing" }), { headers: cors(new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" })) });
     }
     if (!fromOurSite(req)) return fail(403, "Only the Ke app and Emulator Desk can use this");
     if (!env.CI_KEY) return fail(503, "CarImages key isn't set on the Worker yet");
