@@ -53,6 +53,39 @@ async function apnsToken(env) {
   apnsJwt = [head + "." + claims + "." + b64url(sig), Date.now()];
   return apnsJwt[0];
 }
+// Auto.dev Vehicle Photos: dealer listing photos of a car by its VIN, when it was ever listed for sale.
+// The VIN is passed on to Auto.dev and nothing is stored here except Cloudflare's cache. Secret: AUTODEV_KEY.
+const AUTODEV = "https://api.auto.dev";
+async function vehiclePhotos(req, url, env, ctx) {
+  if (!env.AUTODEV_KEY) return fail(503, "Auto.dev key isn't set on the Worker yet");
+  const cache = caches.default, ckey = new Request(url.toString());
+  const hit = await cache.match(ckey); if (hit) return hit;
+  if (tooMany(req)) return fail(429, "Too many requests");
+  const auth = { "X-API-Key": String(env.AUTODEV_KEY).trim() };
+  let res;
+  if (url.pathname === "/photos") {
+    const vin = (url.searchParams.get("vin") || "").toUpperCase();
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return fail(400, "A 17-character VIN is needed");
+    const r = await fetch(`${AUTODEV}/photos/${vin}`, { headers: auth });
+    if (r.status === 404) res = new Response(JSON.stringify({ photos: [] }), { headers: { "Content-Type": "application/json" } });
+    else if (!r.ok) return fail(r.status === 429 ? 429 : 502, "Auto.dev answered " + r.status);
+    else {
+      const j = await r.json().catch(() => ({})), list = (j.data && j.data.retail) || [];
+      const photos = list.filter(u => typeof u === "string" && u.startsWith("https://")).slice(0, 40).map(u => `${url.origin}/photo?u=${encodeURIComponent(u)}`);
+      res = new Response(JSON.stringify({ photos, removedAt: j.removedAt || null }), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=604800" } });
+    }
+  } else {
+    const u = url.searchParams.get("u") || "";
+    let host; try { host = new URL(u).hostname; } catch { return fail(400, "bad photo address"); }
+    if (!(host === "api.auto.dev" || host.endsWith(".auto.dev"))) return fail(400, "Only Auto.dev photos");
+    const r = await fetch(u, { headers: host === "api.auto.dev" ? auth : {} });
+    if (!r.ok || !(r.headers.get("Content-Type") || "").startsWith("image/")) return fail(502, "Auto.dev didn't send a photo");
+    res = new Response(r.body, { headers: { "Content-Type": r.headers.get("Content-Type"), "Cache-Control": "public, max-age=2592000" } });
+  }
+  ctx.waitUntil(cache.put(ckey, res.clone()));
+  return res;
+}
+
 async function liveActivityStart(req, env) {
   if (req.headers.get("X-Ke-App") !== "ca.davidalleyne.ke") return fail(403, "Only the Ke app");
   if (!env.APNS_KEY || !env.APNS_KEY_ID) return fail(503, "APNs key isn't set on the Worker yet");
@@ -83,9 +116,10 @@ export default {
     if (url.pathname === "/health") {
       const k = (env.CI_KEY || "").trim(), shape = !k ? "missing" : /^ci_[0-9a-f]{20,}$/.test(k) ? "looks like a key" : k.startsWith("ci_") ? "starts with ci_ but has odd characters" : "not a ci_ key (secret pasted instead?)";
       let status = null; if (k) { const r = await fetch(`${CI}/image?make=Porsche&model=911&width=240&format=webp&key=${encodeURIComponent(k)}`, { headers: { Referer: ALLOWED_ORIGIN + "/" }, redirect: "manual" }); status = r.status; }
-      return new Response(JSON.stringify({ key: shape, length: k.length, carimages: status, apns: env.APNS_KEY && env.APNS_KEY_ID ? "set" : "missing" }), { headers: cors(new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" })) });
+      return new Response(JSON.stringify({ key: shape, length: k.length, carimages: status, apns: env.APNS_KEY && env.APNS_KEY_ID ? "set" : "missing", autodev: env.AUTODEV_KEY ? "set" : "missing" }), { headers: cors(new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" })) });
     }
     if (!fromOurSite(req)) return fail(403, "Only the Ke app and Emulator Desk can use this");
+    if (url.pathname === "/photos" || url.pathname === "/photo") return vehiclePhotos(req, url, env, ctx);
     if (!env.CI_KEY) return fail(503, "CarImages key isn't set on the Worker yet");
 
     const make = clean(url.searchParams.get("make")), model = clean(url.searchParams.get("model"));
