@@ -16,7 +16,8 @@ require('child_process').execFileSync('python3', ['make-label.py'], { cwd: path.
   await p.screenshot({ path: out('2-live') });
   await p.evaluate(() => document.querySelector('#bus').closest('section').scrollIntoView());
   await p.waitForTimeout(200); await p.screenshot({ path: out('3-vehicle') });
-  await p.click('#setDtc'); await p.waitForTimeout(400);
+  await p.fill('#dtc7', 'P0171'); await p.fill('#dtcA', 'P0420');
+  await p.click('#setDtc'); await p.waitForTimeout(600);
   await p.evaluate(() => document.querySelector('#dtc').closest('section').scrollIntoView());
   await p.waitForTimeout(200); await p.screenshot({ path: out('4-codes') });
   await p.fill('#raw', 'ATGET VIN'); await p.press('#raw', 'Enter'); await p.waitForTimeout(400);

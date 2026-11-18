@@ -132,6 +132,9 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .codes{display:flex;gap:6px;flex-wrap:wrap}
 .code{font-family:var(--mono);font-size:12.5px;padding:4px 9px;border-radius:7px;background:var(--fill)}
 .code.bad{color:var(--red);background:var(--red-fill)}
+.code small{font-family:var(--font);color:var(--label2);margin-left:5px;font-size:11px}
+.dk{flex:none;width:92px}.dk small{display:block;font-family:var(--mono);font-size:11px;color:var(--label2)}
+.dtc small{font-family:var(--font);opacity:.75;margin-left:4px;font-size:11px}
 
 /* ---- Phone ---- */
 .phone-col .sh{margin-left:10px}
@@ -517,7 +520,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.28</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.29</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -557,11 +560,12 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
               <option value="CAN_11B_250K">CAN 11-bit 250K</option>
               <option value="CAN_29B_250K">CAN 29-bit 250K</option>
               <option value="KWP2000_FAST">KWP2000 Fast</option>
-              <option value="KWP2000_5KBPS">KWP2000 5 Baud</option>
-              <option value="ISO9141">ISO 9141-2</option>
+              <option value="KWP2000_5BPS">KWP2000 5 Baud</option>
+              <option value="ISO9141_2">ISO 9141-2</option>
             </select>
             <button class="btn plain" id="setBus">Apply</button>
           </div>
+          <label class="row tog"><span class="k">Ignition<small style="font-family:var(--font)">Off is the car parked with the key out</small></span><input type="checkbox" id="ign" checked><span class="switch"></span></label>
           <div class="carrow" id="deskCar"></div>
           <div class="ci" id="ciBox">
             <div class="ci-stage"><img id="ciImg" alt=""><span class="ci-msg" id="ciMsg" hidden></span><span class="ci-src">CarImages API</span></div>
@@ -578,7 +582,9 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
       <div class="section">
         <div class="sh"><h2>Trouble Codes</h2><span class="aux">Up to 6</span></div>
         <div class="group">
-          <div class="row"><input class="field" id="dtc" value="P0301,P0420" aria-label="Trouble codes, comma separated" spellcheck="false"></div>
+          <div class="row"><span class="k dk">Stored<small>Mode 03</small></span><input class="field" id="dtc" value="P0301,P0420" aria-label="Stored trouble codes, comma separated" spellcheck="false"></div>
+          <div class="row"><span class="k dk">Pending<small>Mode 07</small></span><input class="field" id="dtc7" value="" placeholder="None" aria-label="Pending trouble codes, comma separated" spellcheck="false"></div>
+          <div class="row"><span class="k dk">Permanent<small>Mode 0A</small></span><input class="field" id="dtcA" value="" placeholder="None" aria-label="Permanent trouble codes, comma separated" spellcheck="false"></div>
           <div class="row"><div class="codes" id="dtcChips"></div></div>
         </div>
         <div class="btn-row" style="padding:10px 0 0"><button class="btn prominent" id="setDtc">Set Codes</button><button class="btn" id="clrDtc">Clear All</button></div>
@@ -1172,11 +1178,11 @@ function parsePid(pid,r){
   const b=[]; for(let k=0;k<n;k++) b.push(parseInt(h.slice(k*2,k*2+2),16)); if(n===1) b.push(0);
   return PIDS.find(p=>p.pid===pid).dec(b);
 }
-function parseDtc(r){
+function parseDtc(r,head="43"){
   if(r===null) return null;
   let c=(r||"").split(/[\r\n]+/).map(l=>l.replace(/^[0-9A-F]:/i,"")).join("").replace(/\s/g,"").toUpperCase();
   if(/NODATA/.test(c)) return [];
-  const i=c.indexOf("43"); if(i<0) return null; c=c.slice(i+2);
+  const i=c.indexOf(head); if(i<0) return null; c=c.slice(i+2);
   if(c.length%4===2) c=c.slice(2); // CAN count byte
   const out=[]; for(let k=0;k+4<=c.length;k+=4){ const w=c.slice(k,k+4); if(w==="0000") continue; const n=parseInt(w[0],16); out.push("PCBU"[n>>2]+(n&3)+w.slice(1)); }
   return out;
@@ -1194,7 +1200,11 @@ function parseUdsDtc(r){
   const d=c.slice(i+6); for(let k=0;k+8<=d.length;k+=8){ const w=d.slice(k,k+6); if(w.slice(0,4)!=="0000") out.push(dtcName(w)); } return [...new Set(out)];
 }
 async function readDtcs(){
-  if(bt.std!=="uds") return parseDtc(await btSend("03",4000));
+  if(bt.std!=="uds"){
+    const a=parseDtc(await btSend("03",4000)); if(a===null) return null;
+    const p=parseDtc(await btSend("07",4000),"47")||[], f=parseDtc(await btSend("0A",4000),"4A")||[];
+    return [...a, ...p.filter(c=>!a.includes(c)).map(c=>c+" pending"), ...f.filter(c=>!a.includes(c)&&!p.includes(c)).map(c=>c+" permanent")];
+  }
   const a=parseUdsDtc(await btSend("1942330802",4000)); if(a!==null) return a;
   return parseUdsDtc(await btSend("190208",4000));
 }
@@ -1230,7 +1240,7 @@ async function btPollOnce(){ {
       if(i>=0){ const soc=parseInt(c.slice(i+k.length,i+k.length+2),16)*100/255; $$("phEv").textContent=soc.toFixed(1); LV.ev = (bt.zev||soc>0) ? soc : null; lvQueue(); $$("phEvTile").hidden=!(bt.zev||soc>0); recordReading({vss:"Vehicle.Powertrain.TractionBattery.StateOfCharge.Current",unit:"%",pid:"015B"},soc,"dongle"); } else { $$("phEv").textContent="–"; LV.ev=null; lvQueue(); } }
     if(bt.round%4===0){
       const d=await readDtcs();
-      if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>`<span class="dtc">${c}</span>`).join(""):'<span class="ok">No codes stored</span>'; }
+      if(d){ $$("phDtcN").textContent=d.length?d.length:""; phBadge(d.length); $$("phDtc").innerHTML=d.length?d.map(c=>{ const [k,t]=c.split(" "); return `<span class="dtc">${k}${t?`<small>${t}</small>`:""}</span>`; }).join(""):'<span class="ok">No codes stored</span>'; }
       const vin=parseVin(await btSend(bt.std==="uds"?"22F802":"0902",4000)); if(vin){ $$("phVin").textContent=vin; vinFromDongle(vin); bt.carVin=vin; vinDecode(vin,"dongle"); }
       const rv=await btSend("ATRV"); if(rv) $$("phRv").textContent=rv.replace(/\s/g,"");
       const dp=await btSend("ATDP"); if(dp) $$("phProto").textContent=dp.replace(/^AUTO,\s*/i,"").trim();
@@ -1249,7 +1259,9 @@ function demoElm(cmd){
   if(DEMO_UDS) return demoUds(cmd);
   const p=PIDS.find(q=>q.pid===cmd);
   if(p) return "41"+cmd.slice(2)+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join("")+"\r";
-  if(cmd==="03"){ const l=dtcList().filter(c=>/^[PCBU][0-3][0-9A-F]{3}$/.test(c)); return "43"+l.length.toString(16).padStart(2,"0")+l.map(c=>(("PCBU".indexOf(c[0])<<2)|+c[1]).toString(16)+c.slice(2)).join("")+"\r"; }
+  if(!demoIgn && !/^AT/.test(cmd)) return "NO DATA\r";
+  const dk={"03":["43","dtc"],"07":["47","dtc7"],"0A":["4A","dtcA"]}[cmd];
+  if(dk){ const l=dtcList(dk[1]).filter(dtcOk); return dk[0]+l.length.toString(16).padStart(2,"0")+l.map(c=>(("PCBU".indexOf(c[0])<<2)|+c[1]).toString(16)+c.slice(2)).join("")+"\r"; }
   if(cmd==="0902"){ const v=demoVin; return "0:490201"+[...v].map(ch=>ch.charCodeAt(0).toString(16).toUpperCase()).join("")+"\r"; }
   if(cmd==="AT@1") return "OBDII to RS232 Interpreter"; if(cmd==="STI") return "?"; if(cmd==="ATDPN") return "A6";
   if(cmd==="0100") return "4100BE3FA813"; if(cmd==="0120") return "41208007A011"; if(cmd==="0140") return "4140FED00400"; if(cmd==="011C") return "411C06"; if(cmd==="0900") return "49005500000000";
@@ -1736,7 +1748,7 @@ $("driveSim").onchange=e=>{
 
 // ---------- Vehicle / DTC / console ----------
 $("connectBtn").onclick=connect;
-$("setBus").onclick=()=>send("ATSET BUS "+$("bus").value);
+$("setBus").onclick=()=>send("ATBUS "+$("bus").value);
 // VIN box: shows what the emulator really has (read through the dongle), or what you've typed but not sent
 let vinDirty=false, vinKnown="", vinPending="";
 function vinNote(t){ $("vinSrc").textContent=t; }
@@ -1753,10 +1765,18 @@ $("setVin").onclick=async()=>{ const v=$("vin").value.trim().toUpperCase(); if(!
 $("getVin").onclick=async()=>{ const v=await send("ATGET VIN",{single:true}); if(v[0]&&!/ERROR/i.test(v[0])) $("vin").value=v[0]; else log("This firmware can't read the VIN back. Setting it still works.","sys"); };
 $("reset").onclick=async()=>{ log("Restarting the emulator. This takes a few seconds and sets every value to zero.","sys");
   await send("ATZ",{single:true,timeout:12000,until:/EMULATOR|OBD/i}); await send("ATE0"); await readBack(); };
-function dtcList(){ return $("dtc").value.toUpperCase().split(/[\s,]+/).filter(Boolean); }
-function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; dtcList().forEach(c=>{const s=document.createElement("span"); s.className="code"+(/^[PCBU][0-3][0-9A-F]{3}$/.test(c)?"":" bad"); s.textContent=c; el.appendChild(s);}); }
-$("dtc").oninput=renderDtc; renderDtc();
-$("setDtc").onclick=()=>{ const l=dtcList(); if(l.length>6){log("The emulator holds up to 6 codes","er");return;} if(l.some(c=>!/^[PCBU][0-3][0-9A-F]{3}$/.test(c))){log("Codes look like P0301 or U0100","er");return;} send("ATSET DTC="+l.join(",")); };
+// Three kinds of code, each set with its own command: stored (Mode 03), pending (Mode 07) and permanent (Mode 0A).
+const DTC_KINDS=[{id:"dtc",cmd:"DTC",name:"Stored",tag:""},{id:"dtc7",cmd:"DTC7",name:"Pending",tag:"pending"},{id:"dtcA",cmd:"DTCA",name:"Permanent",tag:"permanent"}];
+function dtcList(id="dtc"){ return $(id).value.toUpperCase().split(/[\s,]+/).filter(Boolean); }
+const dtcOk=c=>/^[PCBU][0-3][0-9A-F]{3}$/.test(c);
+function renderDtc(){ const el=$("dtcChips"); el.innerHTML=""; DTC_KINDS.forEach(k=>dtcList(k.id).forEach(c=>{const s=document.createElement("span"); s.className="code"+(dtcOk(c)?"":" bad"); s.textContent=c; if(k.tag){ const t=document.createElement("small"); t.textContent=k.tag; s.appendChild(t); } el.appendChild(s);})); }
+DTC_KINDS.forEach(k=>$(k.id).oninput=renderDtc); renderDtc();
+$("setDtc").onclick=async()=>{
+  for(const k of DTC_KINDS){ const l=dtcList(k.id); if(l.length>6){log(`The emulator holds up to 6 ${k.name.toLowerCase()} codes`,"er");return;} if(l.some(c=>!dtcOk(c))){log("Codes look like P0301 or U0100","er");return;} }
+  await send("ATCLR DTC");
+  for(const k of DTC_KINDS){ const l=dtcList(k.id); if(l.length) await send(`ATSET ${k.cmd}=`+l.join(",")); }
+};
+$("ign").onchange=()=>{ const on=$("ign").checked; send(on?"ATACC1":"ATACC0"); log(on?"Ignition on.":"Ignition off. The emulator stops answering the dongle the way a parked car would.","sys"); };
 $("clrDtc").onclick=()=>send("ATCLR DTC");
 $("sendRaw").onclick=()=>{ const c=$("raw").value.trim(); if(c){ send(c.toUpperCase()); $("raw").value=""; } };
 $("raw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("sendRaw").click(); });
@@ -1772,7 +1792,7 @@ if(!DEMO && !("serial" in navigator)){
 log(DEMO?"Demo mode: no hardware needed.":"Plug in the emulator's 12V power and USB, then press Connect and pick the USB serial device.");
 
 // ---------- Demo replies (for screenshots and trying it without hardware) ----------
-let demoVin="WP0BB2A90TS200123";
+let demoVin="WP0BB2A90TS200123", demoIgn=true;
 function demoReply(cmd){
   setTimeout(()=>{
     let out=["OK"];
@@ -1780,6 +1800,7 @@ function demoReply(cmd){
     else if(cmd==="ATGET VIN") out=["ERROR"];
     else if(/^ATGET 01/.test(cmd)){ const p=PIDS.find(q=>q.pid===cmd.slice(6)); out=[p.pid+"="+p.enc(+p.el.value).map(b=>b.toString(16).toUpperCase().padStart(2,"0")).join(" ")]; }
     else if(cmd.startsWith("ATSET VIN=")) demoVin=cmd.slice(10);
+    else if(/^ATACC[01]$/.test(cmd)) demoIgn=cmd==="ATACC1";
     else if(!/^AT/.test(cmd)) out=["ERROR"];
     out.forEach(onLine);
   },60);
