@@ -5,3 +5,7 @@ workers_dev = true
 
 # Secret, set in the Cloudflare dashboard (Settings > Variables and Secrets) or with: npx wrangler secret put CI_KEY
 # CI_KEY = the CarImages API key. It is never stored in this repo.
+
+[vars]
+# Apple push key "Ke push" (the .p8 itself is the secret APNS_KEY, set in the Cloudflare dashboard)
+APNS_KEY_ID = "YK4G8JUZ5T"
