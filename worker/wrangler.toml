@@ -2,6 +2,9 @@ name = "ke-carimages"
 main = "carimages-proxy.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
+# Keep variables added in the Cloudflare dashboard when the Worker is redeployed from this repo.
+# Keys should still be added as type Secret, which deploys never touch.
+keep_vars = true
 
 # Secret, set in the Cloudflare dashboard (Settings > Variables and Secrets) or with: npx wrangler secret put CI_KEY
 # CI_KEY = the CarImages API key. It is never stored in this repo.
