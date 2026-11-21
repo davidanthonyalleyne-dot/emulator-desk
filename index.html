@@ -277,6 +277,74 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 .mk .more .lt{background:var(--fill);color:var(--label);font-size:20px;font-weight:600}
 :root[data-theme="light"] .mk .lt,:root[data-theme="light"] .carrow .lt{box-shadow:inset 0 0 0 1px var(--sep)}
 @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .mk .lt,:root:not([data-theme="dark"]) .carrow .lt{box-shadow:inset 0 0 0 1px var(--sep)} }
+/* Kē iPhone app view: the same screens as the real app, fed by what the Kē reads */
+.kapp{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:inherit;color:inherit;border-radius:42px;overflow:hidden;--ka-blue:#0A84FF;--ka-green:#30D158;--ka-yellow:#FFD60A;--ka-red:#FF453A;--ka-orange:#FF9F0A}
+.kapp[hidden]{display:none}
+.ka-body{flex:1;overflow-y:auto;scrollbar-width:none;padding:44px 0 120px}
+.ka-pin{padding:0 14px 6px}
+.ka-card{background:var(--g);border-radius:18px;padding:12px 14px}
+.ka-h{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.ka-h em{margin-left:auto;font-style:normal;font-weight:400;color:var(--l2)}
+.ka-score{display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px}
+.ka-score b{font:800 34px/1 ui-rounded,-apple-system,sans-serif;font-variant-numeric:tabular-nums}
+.ka-score small{font-size:13px;color:var(--l2);margin-left:6px}
+.ka-bars{display:flex;align-items:flex-end;gap:4px;height:34px}
+.ka-bars i{width:7px;border-radius:2px;background:rgba(128,128,128,.35)}
+.ka-bars i.on{background:var(--ka-green)}
+.ka-title{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 2px}
+.ka-title h3{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em}
+.ka-ke{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.ka-ke i{width:9px;height:9px;border-radius:5px;box-sizing:border-box;border:1.5px solid var(--l2)}
+.ka-ke i.on{border:0;background:var(--ka-blue)}
+.ka-day{display:flex;justify-content:space-between;align-items:baseline;padding:12px 18px 6px;font-size:17px;font-weight:700}
+.ka-day span{font-size:13px;font-weight:400;color:var(--l2)}
+.ka-row{display:flex;gap:8px;padding:0 12px 0 6px;cursor:default}
+.ka-row .t{width:52px;flex:none;text-align:right;padding-top:15px;font-size:11px;font-weight:600;color:var(--l2);white-space:nowrap}
+.ka-row.new .t{color:var(--ka-orange)}
+.ka-row .ln{width:10px;flex:none;display:flex;flex-direction:column;align-items:center}
+.ka-row .ln i{width:8px;height:8px;border-radius:4px;margin-top:18px;background:rgba(128,128,128,.5)}
+.ka-row.new .ln i{background:var(--ka-orange)}
+.ka-row .ln u{flex:1;width:2px;background:rgba(128,128,128,.18);margin-top:3px;text-decoration:none}
+.ka-row.last .ln u{background:transparent}
+.ka-trip{flex:1;min-width:0;background:var(--g);border-radius:14px;margin-bottom:6px;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px}
+.ka-trip svg{flex:none}
+.ka-trip .m{flex:1;min-width:0}
+.ka-trip .m b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ka-trip .m span{font-size:12px;color:var(--l2);display:flex;align-items:center;gap:4px}
+.ka-trip .s{font:700 17px ui-rounded,-apple-system,sans-serif}
+.ka-warn{color:var(--ka-yellow);font-size:11px}
+.ka-empty{padding:20px;color:var(--l2);font-size:14px;text-align:center}
+.ka-sec{padding:16px 20px 6px;font-size:17px;font-weight:700}
+.ka-code{background:var(--g);border-radius:16px;margin:0 14px 8px;padding:11px 13px}
+.ka-code .top{display:flex;align-items:center;gap:6px}
+.ka-code .top b{font:700 13px ui-monospace,Menlo,monospace}
+.ka-pill{font-size:11px;font-weight:700;padding:1px 7px;border-radius:7px}
+.ka-code h4{margin:5px 0 2px;font-size:15px}
+.ka-code p{margin:0;font-size:12px;color:var(--l2);line-height:1.35}
+.ka-strip2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 14px 0}
+.ka-strip2 div{background:var(--g);border-radius:14px;padding:9px 10px}
+.ka-strip2 span{display:block;font-size:11px;color:var(--l2)}
+.ka-strip2 b{font-size:17px}
+.ka-list{background:var(--g);border-radius:16px;margin:0 14px;overflow:hidden}
+.ka-list>div{display:flex;justify-content:space-between;gap:8px;padding:11px 13px;font-size:14px;border-top:.5px solid rgba(128,128,128,.25)}
+.ka-list>div:first-child{border-top:0}
+.ka-list span{color:var(--l2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ka-me{display:flex;align-items:center;gap:12px;padding:13px}
+.ka-me .ka-av{width:48px;height:48px;font-size:17px}
+.ka-av{width:26px;height:26px;border-radius:50%;background:#8E8E93;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ka-strip{position:absolute;left:12px;right:12px;bottom:82px;height:40px;border-radius:20px;background:rgba(44,44,46,.94);color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.ka-strip[hidden]{display:none}
+.ka-strip i{width:8px;height:8px;border-radius:4px;background:var(--ka-red)}
+.ka-strip.park i{background:var(--ka-orange)}
+.ka-strip span{color:#8E8E93}
+.ka-strip em{margin-left:auto;font-style:normal;font-variant-numeric:tabular-nums}
+.ka-tabs{position:absolute;left:12px;right:12px;bottom:18px;height:56px;border-radius:28px;display:grid;grid-template-columns:repeat(3,1fr);padding:4px;background:rgba(44,44,46,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08)}
+.ka-tabs button{position:relative;border:0;background:none;color:#fff;font:600 10px -apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:24px;cursor:pointer}
+.ka-tabs button svg{width:22px;height:20px}
+.ka-tabs button[aria-selected="true"]{background:rgba(255,255,255,.12);color:var(--ka-orange)}
+.ka-badge{position:absolute;top:2px;right:22%;min-width:15px;height:15px;border-radius:8px;background:var(--ka-red);color:#fff;font:700 10px/15px -apple-system,sans-serif;font-style:normal}
+.ka-badge[hidden]{display:none}
+#kaToggle[aria-pressed="true"]{background:var(--acc,#FF9F0A);color:#000}
 /* Kē phone in light mode */
 @media (prefers-color-scheme: light){
 :root:not([data-theme="dark"]) .phone{background:#e5e5ea;box-shadow:0 0 0 1.5px #c7c7cc,0 0 0 3.5px #d1d1d6,0 24px 60px rgba(0,0,0,.15)}
@@ -303,6 +371,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 :root:not([data-theme="dark"]) .ph-btn{background:#ff9500}
 :root:not([data-theme="dark"]) .ph-btn.on{background:#e5e5ea;color:#d70015}
 :root:not([data-theme="dark"]) .tabbar{background:rgba(249,249,249,.9);border-top-color:rgba(60,60,67,.29)}
+:root:not([data-theme="dark"]) .ka-tabs{background:rgba(249,249,249,.92);border-color:rgba(0,0,0,.08)}:root:not([data-theme="dark"]) .ka-tabs button{color:#000}:root:not([data-theme="dark"]) .ka-tabs button[aria-selected="true"]{background:rgba(0,0,0,.06);color:#C93400}:root:not([data-theme="dark"]) .kapp{--ka-yellow:#B25000;--ka-green:#248A3D}
 :root:not([data-theme="dark"]) .tabbar button{color:#8e8e93}
 :root:not([data-theme="dark"]) .tabbar button[aria-selected="true"]{color:#c35a00}
 :root:not([data-theme="dark"]) .home-ind{background:rgba(0,0,0,.85)}
@@ -346,6 +415,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 :root[data-theme="light"] .ph-btn{background:#ff9500}
 :root[data-theme="light"] .ph-btn.on{background:#e5e5ea;color:#d70015}
 :root[data-theme="light"] .tabbar{background:rgba(249,249,249,.9);border-top-color:rgba(60,60,67,.29)}
+:root[data-theme="light"] .ka-tabs{background:rgba(249,249,249,.92);border-color:rgba(0,0,0,.08)}:root[data-theme="light"] .ka-tabs button{color:#000}:root[data-theme="light"] .ka-tabs button[aria-selected="true"]{background:rgba(0,0,0,.06);color:#C93400}:root[data-theme="light"] .kapp{--ka-yellow:#B25000;--ka-green:#248A3D}
 :root[data-theme="light"] .tabbar button{color:#8e8e93}
 :root[data-theme="light"] .tabbar button[aria-selected="true"]{color:#c35a00}
 :root[data-theme="light"] .home-ind{background:rgba(0,0,0,.85)}
@@ -520,7 +590,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
 <div class="wrap">
   <header class="toolbar">
     <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.4" fill="#000"/></svg></div>
-    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.29</span></div></div>
+    <div class="title"><h1>Emulator Desk</h1><div class="sub">Freematics OBD-II Emulator MK2 · <span class="ver">v2.30</span></div></div>
     <div class="spacer"></div>
     <div class="appear" role="radiogroup" aria-label="Appearance" id="appear">
       <button role="radio" data-t="auto" title="Auto: match the Mac" aria-label="Auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
@@ -592,7 +662,7 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
     </section>
 
     <section class="phone-col" id="btCard">
-      <div class="sh"><h2>Kē over Bluetooth</h2><button class="rot" id="phRotate" aria-pressed="false" title="Turn the simulated phone sideways"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 9a8 8 0 0 0-4-5M18.5 4.2 16 4l.4 2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rotate</span></button></div>
+      <div class="sh"><h2>Kē over Bluetooth</h2><button class="rot" id="kaToggle" aria-pressed="false" title="Show the phone as the Kē iPhone app"><span>Kē app</span></button><button class="rot" id="phRotate" aria-pressed="false" title="Turn the simulated phone sideways"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 9a8 8 0 0 0-4-5M18.5 4.2 16 4l.4 2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rotate</span></button></div>
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
@@ -761,6 +831,15 @@ select.field{font-family:var(--font);font-size:14px;letter-spacing:0;padding-rig
             <div class="scan-msg" id="scanMsg" aria-live="polite">Line up the VIN barcode inside the box.</div>
             <button class="scan-alt" id="scanPhoto">Take a Photo Instead</button>
             <input type="file" id="scanFile" accept="image/*" capture="environment" hidden>
+          </div>
+          <div class="kapp" id="kApp" hidden aria-label="Kē iPhone app">
+            <div class="ka-body" id="kaBody"></div>
+            <a class="ka-strip" id="kaStrip" hidden href="#" aria-label="Trip recording"><i></i><b id="kaStripT">0:00</b><span id="kaStripL">Recording</span><em id="kaStripK">0.0 km</em></a>
+            <nav class="ka-tabs" role="tablist" aria-label="Kē app tabs">
+              <button role="tab" data-ka="trips" aria-selected="true"><svg viewBox="0 0 24 22" aria-hidden="true"><path d="M3 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Trips</span><i class="ka-badge" id="kaTripBadge" hidden></i></button>
+              <button role="tab" data-ka="car" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.2C6 5.9 7 5 8.4 5h7.2c1.4 0 2.4.9 2.9 2.2L19.7 11c.8.3 1.3 1.1 1.3 2v3.5c0 .6-.4 1-1 1h-.6v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H8v1.2c0 .7-.5 1.3-1.2 1.3h-1c-.7 0-1.2-.6-1.2-1.3v-1.2H4c-.6 0-1-.4-1-1V13c0-.9.5-1.7 1.3-2zM7.3 10.5h9.4l-.9-2.7c-.2-.5-.6-.8-1.1-.8H9.3c-.5 0-.9.3-1.1.8z" fill="currentColor"/></svg><span>Car</span><i class="ka-badge" id="kaCarBadge" hidden></i></button>
+              <button role="tab" data-ka="driver" aria-selected="false"><span class="ka-av">DA</span><span>Driver</span></button>
+            </nav>
           </div>
           <nav class="tabbar" role="tablist" aria-label="Phone sections">
             <button role="tab" id="tabLive" aria-controls="paneLive" aria-selected="false" data-pane="paneLive">
@@ -1713,6 +1792,80 @@ document.querySelectorAll(".tabbar [role=tab]").forEach((t,i,all)=>{
 });
 phTab("paneBt");
 function phBadge(n){ const b=$("tbBadge"); b.hidden=!n; b.textContent=n||""; }
+
+// ---------- Kē iPhone app view: Trips, Car and Driver like the real app, fed by what the Kē reads ----------
+const KA={tab:"trips",trips:[],cur:null,codes:{}};
+try{ KA.trips=JSON.parse(localStorage.getItem("ed.ka.trips")||"[]"); }catch{}
+if(!KA.trips.length){ const d=Date.now(), h=3600e3;
+  KA.trips=[{start:d-26*h,end:d-25.6*h,km:9.4,brakes:1,starts:1,seen:true},{start:d-50*h,end:d-49.7*h,km:6.2,brakes:0,starts:0,seen:true},{start:d-98*h,end:d-97.6*h,km:10.6,brakes:0,starts:0,seen:true}]; }
+const kaSave=()=>{ try{ localStorage.setItem("ed.ka.trips",JSON.stringify(KA.trips.slice(0,60))); }catch{} };
+const kaScore=t=>Math.max(0,Math.round(100-(t.brakes*7+t.starts*5)*10/Math.max(t.km,10)));
+const kaCol=s=>s>=90?"var(--ka-green)":s>=70?"var(--ka-yellow)":"var(--ka-red)";
+const kaOn=()=>!!(bt.dev||bt.demo);
+const esc2=t=>String(t??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function kaRoute(seed){ let x=seed%997, pts=[]; for(let i=0;i<5;i++){ x=(x*73+19)%997; pts.push([6+i*7,8+(x%26)]); }
+  const d="M"+pts.map(p=>p.join(" ")).join(" L"), a=pts[0], b=pts[pts.length-1];
+  return `<svg width="40" height="40" viewBox="0 0 40 40"><path d="${d}" fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${a[0]}" cy="${a[1]}" r="1.6" fill="#A8A8AD"/><circle cx="${b[0]}" cy="${b[1]}" r="1.6" fill="#A8A8AD"/></svg>`; }
+function kaCodes(){ return [...document.querySelectorAll("#phDtc .dtc")].map(e=>{ const k=(e.querySelector("small")||{}).textContent||""; return {code:e.firstChild.textContent.trim(), kind:/pend/.test(k)?"pending":/perm/.test(k)?"permanent":"stored"}; }).filter(c=>/^[PCBU][0-9A-F]{4}$/.test(c.code)); }
+function kaTick(){
+  if(!kaOn()){ if(KA.cur) kaEnd(); kaRender(); return; }
+  const now=Date.now(), spd=LV["010D"], rpm=LV["010C"];
+  if(spd==null){ kaRender(); return; }
+  if(!KA.cur && spd>3) KA.cur={start:now,km:0,brakes:0,starts:0,last:spd,lastT:now,lastEv:0,stop:null,codes:[]};
+  const c=KA.cur;
+  if(c){
+    const dt=Math.max(.2,(now-c.lastT)/1000), g=(spd-c.last)/3.6/dt/9.81;
+    c.km+=spd*dt/3600;
+    if(now-c.lastEv>3000){ if(g>=.30){ c.starts++; c.lastEv=now; } else if(g<=-.33 && c.last>12){ c.brakes++; c.lastEv=now; } }
+    c.last=spd; c.lastT=now;
+    kaCodes().forEach(k=>{ if(!KA.codes[k.code]){ KA.codes[k.code]=c.start; if(k.kind!=="permanent") c.codes.push(k.code); } });
+    if(spd<1){ c.stop=c.stop||now; const off=!rpm, wait=off?90:600; c.savesIn=Math.max(0,wait-(now-c.stop)/1000); if(c.savesIn<=0) kaEnd(); }
+    else { c.stop=null; c.savesIn=null; }
+  }
+  kaRender();
+}
+function kaEnd(){ const c=KA.cur; KA.cur=null; if(!c||c.km<.3) return; KA.trips.unshift({start:c.start,end:c.stop||Date.now(),km:+c.km.toFixed(1),brakes:c.brakes,starts:c.starts,codes:c.codes,seen:false}); kaSave(); }
+function kaDayName(t){ const d=new Date(t), n=new Date(); const a=new Date(d.getFullYear(),d.getMonth(),d.getDate()), b=new Date(n.getFullYear(),n.getMonth(),n.getDate()); const k=Math.round((b-a)/864e5); return k===0?"Today":k===1?"Yesterday":k<7?d.toLocaleDateString("en-CA",{weekday:"long"}):d.toLocaleDateString("en-CA",{month:"short",day:"numeric"}); }
+const kaCar=()=>{ const t=(($$("phCar")&&!$$("phCar").hidden)?$$("phCar").textContent:"").trim(); const w=t.split(" "); return t? {title:w.slice(1,3).join(" "), line:t} : {title:"Your car", line:"Not read yet"}; };
+function kaRender(){
+  if($$("kApp").hidden) return;
+  const on=kaOn(), ke=`<span class="ka-ke" role="button" style="cursor:pointer" onclick="document.querySelector('.ka-tabs [data-ka=driver]').click()" aria-label="Kē ${on?"connected":"not connected"}"><i class="${on?"on":""}"></i>Kē</span>`, body=$$("kaBody");
+  const recent=KA.trips.filter(t=>Date.now()-t.start<30*864e5), w=recent.reduce((a,t)=>a+Math.max(t.km,.3),0);
+  const score=w?Math.round(recent.reduce((a,t)=>a+kaScore(t)*Math.max(t.km,.3),0)/w):null;
+  $$("kaTripBadge").hidden=!KA.trips.some(t=>!t.seen); $$("kaTripBadge").textContent=KA.trips.filter(t=>!t.seen).length;
+  const codes=on?kaCodes():[]; $$("kaCarBadge").hidden=!codes.length; $$("kaCarBadge").textContent=codes.length;
+  if(KA.tab==="trips"){
+    const bars=[...Array(7)].map((_,i)=>{ const day=new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate()-6+i); const ts=KA.trips.filter(t=>t.start>=+day&&t.start<+day+864e5); const s=ts.length?Math.round(ts.reduce((a,t)=>a+kaScore(t),0)/ts.length):null; return `<i class="${i===6&&s!=null?"on":""}" style="height:${s==null?3:Math.max(4,(s-55)/45*34)}px"></i>`; }).join("");
+    const groups={}; KA.trips.forEach(t=>{ const k=kaDayName(t.start); (groups[k]=groups[k]||[]).push(t); });
+    body.innerHTML=`<div class="ka-pin">${score!=null?`<div class="ka-card"><div class="ka-h" style="color:${kaCol(score)}">Drive score<em>last 30 days ›</em></div><div class="ka-score"><div><b>${score}</b></div><div class="ka-bars">${bars}</div></div></div>`:""}</div>
+      <div class="ka-title"><h3>Trips</h3>${ke}</div>`+
+      (KA.trips.length?Object.entries(groups).map(([day,ts])=>`<div class="ka-day">${day}<span>${ts.length} trip${ts.length>1?"s":""} · ${ts.reduce((a,t)=>a+t.km,0).toFixed(0)} km</span></div>`+ts.map((t,i)=>{ const s=kaScore(t), mins=Math.max(1,Math.round((t.end-t.start)/6e4));
+        return `<div class="ka-row${t.seen?"":" new"}${i===ts.length-1?" last":""}"><div class="t">${new Date(t.start).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}</div><div class="ln"><i></i><u></u></div><div class="ka-trip">${kaRoute(t.start)}<div class="m"><b>${(h=>h<12?"Morning":h<17?"Afternoon":"Evening")(new Date(t.start).getHours())} drive</b><span>${t.km.toFixed(1)} km · ${mins} min${t.codes&&t.codes.length?` <i class="ka-warn" aria-label="Trouble code found on this trip">▲</i>`:""}</span></div><div class="s" style="color:${kaCol(s)}">${s}</div></div></div>`; }).join("")).join(""):`<div class="ka-empty">No trips yet. Drive the emulator and each trip saves itself when you park.</div>`);
+  } else if(KA.tab==="car"){
+    const car=kaCar(), v=k=>LV[k]==null?"–":LV[k];
+    body.innerHTML=`<div class="ka-title"><h3>${esc2(car.title)}</h3>${ke}</div><div style="padding:0 20px;font-size:13px;color:var(--l2)">${esc2(car.line)}${on?" · checked "+new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}):""}</div>
+      <div class="ka-strip2"><div><span>Battery</span><b>${v("0142")==="–"?"–":(+v("0142")).toFixed(1)+" V"}</b></div><div><span>Coolant</span><b>${v("0105")==="–"?"–":Math.round(v("0105"))+"°"}</b></div><div><span>Fuel</span><b>${v("012F")==="–"?"–":Math.round(v("012F"))+"%"}</b></div></div>
+      <div class="ka-sec">Trouble codes</div>`+(codes.length?codes.map(c=>{ const col=c.kind==="pending"?"#0A84FF":c.kind==="permanent"?"var(--ka-orange)":"var(--ka-yellow)", maker=/^P[13]|^[BCU][12]/.test(c.code), t=KA.trips.find(x=>(x.codes||[]).includes(c.code));
+        return `<div class="ka-code"><div class="top"><b>${c.code}</b><span class="ka-pill" style="color:${col};background:color-mix(in srgb, ${col} 18%, transparent)">${c.kind[0].toUpperCase()+c.kind.slice(1)}</span>${maker?'<span class="ka-pill" style="color:var(--l2);background:rgba(128,128,128,.18)">Maker code</span>':""}</div><h4>${maker?"Maker-specific code":"Trouble code"}</h4><p>${t?`Found on the ${kaDayName(t.start).toLowerCase()} trip. `:""}${c.kind==="pending"?"Seen once, not confirmed yet.":c.kind==="permanent"?"Stays until the car has checked the fix itself.":"Get it checked soon."}</p></div>`; }).join(""):`<div class="ka-empty">${on?"No codes stored":"Codes are read when the Kē connects"}</div>`);
+  } else {
+    body.innerHTML=`<div class="ka-title"><h3>Settings</h3></div><div class="ka-list" style="margin-top:8px"><div class="ka-me"><span class="ka-av">DA</span><div><b style="font-size:16px">Driver</b><div style="font-size:12px;color:var(--l2)">Signed in with Apple</div></div></div></div>
+      <div class="ka-sec">Kē</div><div class="ka-list"><div>Kē<span>${on?"Connected":"Not connected"}</span></div><div style="cursor:pointer;color:${on?"var(--ka-red)":"var(--ka-orange)"}" id="kaConn" role="button">${on?"Disconnect Kē":"Connect Kē"}</div><div>Name<span>${esc2(($$("btName")||{}).textContent||"–")}</span></div><div>Readings<span>${($$("phReq")||{}).textContent||0} requests</span></div></div>
+      <div class="ka-sec">Cars</div><div class="ka-list"><div>${esc2(kaCar().line)}<span>${esc2(bt.carVin||"")}</span></div></div>
+      <div class="ka-sec">Your data</div><div class="ka-list"><div>Trips<span>${KA.trips.length}</span></div><div style="cursor:pointer" id="kaReset">Clear demo trips<span>›</span></div></div>`;
+    const r=$$("kaReset"); if(r) r.onclick=()=>{ KA.trips=[]; kaSave(); kaRender(); };
+    $$("kaConn").onclick=()=>{ $$("btBtn").click(); setTimeout(kaRender,600); };
+  }
+  const st=$$("kaStrip"), c=KA.cur; st.hidden=!c;
+  if(c){ const parked=c.savesIn!=null; st.classList.toggle("park",parked); const e=Math.floor((Date.now()-c.start)/1000);
+    $$("kaStripT").textContent=parked?`${Math.floor(c.savesIn/60)}:${String(Math.floor(c.savesIn%60)).padStart(2,"0")}`:`${Math.floor(e/60)}:${String(e%60).padStart(2,"0")}`;
+    $$("kaStripL").textContent=parked?"Parked, saving in":"Recording"; $$("kaStripK").textContent=c.km.toFixed(1)+" km"; }
+}
+document.querySelectorAll(".ka-tabs [role=tab]").forEach(b=>b.onclick=()=>{ KA.tab=b.dataset.ka; document.querySelectorAll(".ka-tabs [role=tab]").forEach(x=>x.setAttribute("aria-selected",x===b)); if(KA.tab==="trips"){} kaRender(); $$("kaBody").scrollTop=0; if(KA.tab==="trips"){ KA.trips.forEach(t=>t.seen=true); kaSave(); } });
+$$("kaStrip").onclick=e=>{ e.preventDefault(); document.querySelector('.ka-tabs [data-ka="trips"]').click(); };
+function kaShow(on){ $$("kApp").hidden=!on; $$("kaToggle").setAttribute("aria-pressed",on); try{ localStorage.setItem("ed.ka.on",on?"1":"0"); }catch{} kaRender(); }
+$$("kaToggle").onclick=()=>kaShow($$("kApp").hidden);
+try{ if(localStorage.getItem("ed.ka.on")==="1"||new URLSearchParams(location.search).has("keapp")) kaShow(true); }catch{}
+setInterval(kaTick,1000);
 
 
 function sendPid(p,quiet=false){ return send(`ATSET ${p.pid}=`+p.enc(+p.el.value).map(hex).join(","),{quiet}); }
